@@ -1,9 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
+import { geminiStream } from '@/lib/gemini'
 
 export const dynamic = 'force-dynamic'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
   const { idea, format } = await req.json() as { idea: string; format?: string }
@@ -19,38 +17,17 @@ export async function POST(req: NextRequest) {
     : format === 'text-overlay' ? 'This will appear as text overlay — write punchy, short phrases.'
     : 'Write it as a natural spoken script.'
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      try {
-        const messageStream = client.messages.stream({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 220,
-          system: `You write short, punchy video scripts for small businesses. Write in a natural, conversational tone — like the business owner is speaking directly to potential customers. No stage directions, no labels, no titles. Just the spoken words. Keep it to 4–6 sentences maximum.`,
-          messages: [
-            {
-              role: 'user',
-              content: `Write a video script based on this content idea:\n"${idea}"\n\n${formatHint}`,
-            },
-          ],
-        })
+  if (!process.env.GEMINI_API_KEY) {
+    return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 503 })
+  }
 
-        for await (const chunk of messageStream) {
-          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-            controller.enqueue(new TextEncoder().encode(chunk.delta.text))
-          }
-        }
-        controller.close()
-      } catch (err) {
-        controller.error(err)
-      }
-    },
+  const stream = geminiStream({
+    system: 'You write short, punchy video scripts for small businesses. Write in a natural, conversational tone — like the business owner is speaking directly to potential customers. No stage directions, no labels, no titles. Just the spoken words. Keep it to 4–6 sentences maximum.',
+    messages: [{ role: 'user', parts: [{ text: `Write a video script based on this content idea:\n"${idea}"\n\n${formatHint}` }] }],
+    maxTokens: 220,
   })
 
   return new NextResponse(stream, {
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Transfer-Encoding': 'chunked',
-      'Cache-Control': 'no-cache',
-    },
+    headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' },
   })
 }
