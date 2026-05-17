@@ -43,12 +43,12 @@ const GRADE_META: { key: GradeKey; label: string; bg: string }[] = [
 ]
 
 const MUSIC_MOODS = [
-  { id: 'none',      label: 'No music',  icon: '🔇', desc: 'Keep it clean' },
-  { id: 'hype',      label: 'Hype',      icon: '🔥', desc: 'High energy, trendy' },
-  { id: 'chill',     label: 'Chill',     icon: '🌊', desc: 'Lo-fi, relaxed vibes' },
-  { id: 'corporate', label: 'Corporate', icon: '💼', desc: 'Clean and professional' },
-  { id: 'emotional', label: 'Emotional', icon: '💫', desc: 'Heartfelt storytelling' },
-  { id: 'trending',  label: 'Trending',  icon: '📈', desc: 'TikTok & Reels sounds' },
+  { id: 'none',      label: 'No music',  icon: '🔇', desc: 'Keep it clean',          url: null },
+  { id: 'hype',      label: 'Hype',      icon: '🔥', desc: 'High energy, trendy',    url: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3' },
+  { id: 'chill',     label: 'Chill',     icon: '🌊', desc: 'Lo-fi, relaxed vibes',   url: 'https://assets.mixkit.co/music/preview/mixkit-dreaming-big-31.mp3' },
+  { id: 'corporate', label: 'Corporate', icon: '💼', desc: 'Clean and professional',  url: 'https://assets.mixkit.co/music/preview/mixkit-corporate-achievement-27.mp3' },
+  { id: 'emotional', label: 'Emotional', icon: '💫', desc: 'Heartfelt storytelling',  url: 'https://assets.mixkit.co/music/preview/mixkit-sad-piano-loop-565.mp3' },
+  { id: 'trending',  label: 'Trending',  icon: '📈', desc: 'TikTok & Reels sounds',  url: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3' },
 ]
 
 const SCRIPT_TEMPLATES = [
@@ -139,6 +139,7 @@ function VideosInner() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
   const streamingRef = useRef(false)
 
   // Core
@@ -171,9 +172,12 @@ function VideosInner() {
   const [captions, setCaptions] = useState<Caption[]>([])
   const [captionsEnabled, setCaptionsEnabled] = useState(false)
   const [currentCaption, setCurrentCaption] = useState('')
+  const [transcribing, setTranscribing] = useState(false)
+  const [transcribeError, setTranscribeError] = useState('')
   const [trimStart, setTrimStart] = useState(0)
   const [trimEnd, setTrimEnd] = useState(100)
   const [videoDuration, setVideoDuration] = useState(0)
+  const [tabVisible, setTabVisible] = useState(true)
 
   const hasIdea = ideaHook.length > 0
   const currentTemplate = SCRIPT_TEMPLATES.find(t => t.id === selectedTemplate)!
@@ -191,6 +195,51 @@ function VideosInner() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage])
+
+  /* ── Tab transition ─────────────────────────────────────────────────────────── */
+  const switchTab = useCallback((tab: StudioTab) => {
+    setTabVisible(false)
+    setTimeout(() => { setActiveTab(tab); setTabVisible(true) }, 120)
+  }, [])
+
+  /* ── Music playback ──────────────────────────────────────────────────────────── */
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    const mood = MUSIC_MOODS.find(m => m.id === selectedMusic)
+    if (!mood?.url) { audio.pause(); audio.src = ''; return }
+    audio.src = mood.url
+    audio.volume = 0.35
+    audio.loop = true
+    audio.play().catch(() => {})
+    return () => { audio.pause() }
+  }, [selectedMusic])
+
+  /* ── Transcribe from audio ───────────────────────────────────────────────────── */
+  const transcribeFromAudio = useCallback(async () => {
+    if (!displayUrl) return
+    setTranscribing(true)
+    setTranscribeError('')
+    try {
+      const res = await fetch('/api/video/transcribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl: displayUrl }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Transcription failed')
+      if (data.segments?.length > 0) {
+        setCaptions(data.segments)
+        setCaptionsEnabled(true)
+      } else {
+        setTranscribeError('No speech detected in the video')
+      }
+    } catch (err) {
+      setTranscribeError(err instanceof Error ? err.message : 'Transcription failed')
+    } finally {
+      setTranscribing(false)
+    }
+  }, [displayUrl])
 
   /* ── Video timeupdate (trim + captions) ────────────────────────────────────── */
   const handleTimeUpdate = useCallback(() => {
@@ -312,6 +361,8 @@ function VideosInner() {
     setColorGrade('original'); setHookText(''); setCtaText(''); setShowHook(false); setShowCta(false)
     setSelectedMusic('none'); setCaptions([]); setCaptionsEnabled(false); setCurrentCaption('')
     setTrimStart(0); setTrimEnd(100); setVideoDuration(0); setActiveTab('captions')
+    setTranscribing(false); setTranscribeError(''); setTabVisible(true)
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
   }
 
   const isProcessing = stage === 'uploading'
@@ -541,6 +592,9 @@ function VideosInner() {
                 )}
               </div>
 
+              {/* Hidden audio element for music preview */}
+              <audio ref={audioRef} />
+
               {/* Enhancement Studio panel */}
               <div className="rounded-2xl overflow-hidden" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
 
@@ -553,7 +607,7 @@ function VideosInner() {
                     { id: 'text'     as StudioTab, label: 'Text',     Icon: MessageSquare },
                     { id: 'trim'     as StudioTab, label: 'Trim',     Icon: Scissors },
                   ] as const).map(({ id, label, Icon }) => (
-                    <button key={id} onClick={() => setActiveTab(id)}
+                    <button key={id} onClick={() => switchTab(id)}
                       className="flex-1 flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors duration-150"
                       style={{
                         color: activeTab === id ? '#818cf8' : '#52525B',
@@ -566,7 +620,7 @@ function VideosInner() {
                 </div>
 
                 {/* Tab content */}
-                <div className="p-5">
+                <div className="p-5" style={{ opacity: tabVisible ? 1 : 0, transform: tabVisible ? 'translateY(0)' : 'translateY(4px)', transition: 'opacity 120ms ease, transform 120ms ease' }}>
 
                   {/* Captions */}
                   {activeTab === 'captions' && (
@@ -574,10 +628,33 @@ function VideosInner() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-[14px] font-medium text-[#FAFAFA]">AI Captions</p>
-                          <p className="text-[12px] text-[#52525B] mt-0.5">Auto-generated from your script — shows while playing</p>
+                          <p className="text-[12px] text-[#52525B] mt-0.5">Generated from your video's actual audio</p>
                         </div>
                         <Toggle on={captionsEnabled} onToggle={() => setCaptionsEnabled(p => !p)} />
                       </div>
+
+                      {/* Generate from audio button */}
+                      <button
+                        onClick={transcribeFromAudio}
+                        disabled={transcribing}
+                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200"
+                        style={{
+                          background: transcribing ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.12)',
+                          border: '1px solid rgba(99,102,241,0.3)',
+                          color: transcribing ? '#52525B' : '#a5b4fc',
+                        }}
+                      >
+                        {transcribing ? (
+                          <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Transcribing audio… this takes ~30s</>
+                        ) : (
+                          <><Sparkles className="w-3.5 h-3.5" />Generate captions from audio</>
+                        )}
+                      </button>
+
+                      {transcribeError && (
+                        <p className="text-[12px] text-red-400 text-center">{transcribeError}</p>
+                      )}
+
                       {captions.length > 0 ? (
                         <div className="flex flex-col gap-1 max-h-44 overflow-y-auto pr-1">
                           {captions.map((c, i) => (
@@ -592,10 +669,10 @@ function VideosInner() {
                         </div>
                       ) : (
                         <div className="px-4 py-4 rounded-xl text-center" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.05)' }}>
-                          <p className="text-[12px] text-[#52525B]">Add a script on the previous step to generate captions automatically</p>
+                          <p className="text-[12px] text-[#52525B]">Click the button above to transcribe the audio from your video</p>
                         </div>
                       )}
-                      <p className="text-[11px] text-[#3f3f46]">Captions appear live in the preview above. Baked in on export.</p>
+                      <p className="text-[11px] text-[#3f3f46]">Captions show live in the preview above while playing.</p>
                     </div>
                   )}
 
@@ -619,8 +696,11 @@ function VideosInner() {
                       </div>
                       {selectedMusic !== 'none' && (
                         <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg" style={{ background: 'rgba(99,102,241,0.05)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
-                          <Sparkles className="w-3.5 h-3.5 text-[#6366f1] flex-shrink-0" />
-                          <p className="text-[12px] text-[#818cf8]"><span className="font-semibold capitalize">{selectedMusic}</span> mood selected — music will be mixed into your export at the right volume automatically.</p>
+                          <span className="relative flex-shrink-0">
+                            <span className="block w-2 h-2 rounded-full bg-[#4ADE80]" />
+                            <span className="absolute inset-0 w-2 h-2 rounded-full bg-[#4ADE80] animate-ping opacity-60" />
+                          </span>
+                          <p className="text-[12px] text-[#818cf8]">Now previewing: <span className="font-semibold capitalize">{selectedMusic}</span> — playing in the background at 35% volume</p>
                         </div>
                       )}
                     </div>
