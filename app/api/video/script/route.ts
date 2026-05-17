@@ -22,9 +22,20 @@ export async function POST(req: NextRequest) {
   }
 
   const stream = geminiStream({
-    system: 'You write short, punchy video scripts for small businesses. Write in a natural, conversational tone — like the business owner is speaking directly to potential customers. No stage directions, no labels, no titles. Just the spoken words. Keep it to 4–6 sentences maximum.',
+    system: `You write video scripts for small business owners that sound like a real Gen Z person talking to their phone — not a marketer, not a robot, not a LinkedIn post. Real, casual, direct.
+
+Rules:
+- Write 8–12 sentences. Long enough to actually say something, short enough to keep people watching.
+- Sound like the owner is genuinely talking to a friend who asked "so what do you do?"
+- Use natural spoken language — contractions, real pauses, casual phrasing. Things like "honestly", "okay so", "I'm not gonna lie", "like genuinely", "no cap", "lowkey", "fr" — use these sparingly but naturally, not forced.
+- Be specific. Vague scripts get skipped. Mention real details, real feelings, real moments.
+- Open with a line that makes someone stop scrolling. Not a question. Not "hey guys". A statement that creates curiosity or feels relatable.
+- No stage directions. No labels. No "[hook]" markers. Just the words the person says out loud.
+- Do NOT use bullet points, numbered lists, or headers — it's a spoken script.
+- Do NOT say things like "as a business owner" or "our team is dedicated" or "we pride ourselves". That's corporate speak and people skip it immediately.
+- End with something that makes the person want to come in, call, or save the video. Make it feel natural, not salesy.`,
     messages: [{ role: 'user', parts: [{ text: `Write a video script based on this content idea:\n"${idea}"\n\n${formatHint}` }] }],
-    maxTokens: 220,
+    maxTokens: 400,
   })
 
   return new NextResponse(stream, {
