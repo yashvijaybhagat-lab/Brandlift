@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { type BusinessProfile } from '@/lib/claude'
+import { requireAiAccess } from '@/lib/planGate'
 
 // ─────────────────────────────────────────────
 // Types
@@ -82,6 +83,9 @@ Return ONLY a JSON array with this exact shape (no wrapper object, no markdown, 
 // ─────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
+  const gate = await requireAiAccess()
+  if (gate.denied) return gate.response
+
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
@@ -107,7 +111,7 @@ export async function GET(request: NextRequest) {
     const client = new Anthropic({ apiKey })
 
     const response = await client.messages.create({
-      model: 'claude-opus-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2048,
       system: SYSTEM_PROMPT,
       messages: [

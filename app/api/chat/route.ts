@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAiAccess } from '@/lib/planGate'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -25,6 +26,9 @@ interface ChatRequestBody {
 // ─────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  const gate = await requireAiAccess()
+  if (gate.denied) return gate.response
+
   let body: ChatRequestBody
 
   try {

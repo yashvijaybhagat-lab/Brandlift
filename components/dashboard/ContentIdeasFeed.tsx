@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { RefreshCw, ArrowRight } from 'lucide-react'
+import { RefreshCw, ArrowRight, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Badge } from '@/components/ui/Badge'
 
@@ -26,142 +26,53 @@ type PlatformFilter = 'all' | Platform
 type FormatFilter = 'all' | Format
 
 // ─────────────────────────────────────────────
-// Static content ideas (15 realistic ideas)
+// API fetch
 // ─────────────────────────────────────────────
 
-const ALL_IDEAS: ContentIdea[] = [
-  {
-    id: '1',
-    hook: "I asked 10 customers what they wish they'd known before coming to us. Their answers surprised me.",
-    format: 'talking-head',
-    platforms: ['tiktok', 'instagram'],
-    trend: 'trending',
-    reach: '2.1K–14K',
-  },
-  {
-    id: '2',
-    hook: 'POV: you finally stop guessing and just let the expert handle it. Here\'s what changed in 30 days.',
-    format: 'b-roll',
-    platforms: ['tiktok', 'instagram'],
-    trend: 'trending',
-    reach: '3.5K–22K',
-  },
-  {
-    id: '3',
-    hook: 'The one mistake 90% of people make before reaching out to a business like ours — and how to avoid it.',
-    format: 'talking-head',
-    platforms: ['youtube', 'instagram'],
-    trend: 'rising',
-    reach: '1.8K–9K',
-  },
-  {
-    id: '4',
-    hook: "Here's what your Saturday morning could look like. No stress. No second-guessing.",
-    format: 'b-roll',
-    platforms: ['instagram', 'tiktok'],
-    trend: 'trending',
-    reach: '4.2K–18K',
-  },
-  {
-    id: '5',
-    hook: 'Before vs. after we got involved. I\'ll let the results speak for themselves.',
-    format: 'b-roll',
-    platforms: ['tiktok', 'instagram', 'youtube'],
-    trend: 'classic',
-    reach: '2.8K–16K',
-  },
-  {
-    id: '6',
-    hook: '3 questions to ask any business in our industry before you hand them your money.',
-    format: 'talking-head',
-    platforms: ['youtube', 'tiktok'],
-    trend: 'rising',
-    reach: '1.4K–7K',
-  },
-  {
-    id: '7',
-    hook: "A day in our operation — what actually happens behind the scenes so your experience is seamless.",
-    format: 'b-roll',
-    platforms: ['instagram', 'youtube'],
-    trend: 'classic',
-    reach: '900–5K',
-  },
-  {
-    id: '8',
-    hook: 'How we turned a complete disaster into our most loyal client story.',
-    format: 'talking-head',
-    platforms: ['tiktok', 'youtube'],
-    trend: 'trending',
-    reach: '5.1K–28K',
-  },
-  {
-    id: '9',
-    hook: "We break down the exact process so you know what you're getting before day one.",
-    format: 'tutorial',
-    platforms: ['youtube', 'instagram'],
-    trend: 'rising',
-    reach: '1.2K–6K',
-  },
-  {
-    id: '10',
-    hook: '5 things our best customers have in common — and what that tells us about great results.',
-    format: 'text-overlay',
-    platforms: ['instagram', 'tiktok'],
-    trend: 'rising',
-    reach: '2.3K–11K',
-  },
-  {
-    id: '11',
-    hook: "If you're still DIY-ing this, here's the real cost most people forget to calculate.",
-    format: 'talking-head',
-    platforms: ['youtube', 'tiktok'],
-    trend: 'trending',
-    reach: '3.9K–21K',
-  },
-  {
-    id: '12',
-    hook: "Real talk: what we'd tell you if you were our close friend asking for advice.",
-    format: 'talking-head',
-    platforms: ['tiktok', 'instagram'],
-    trend: 'trending',
-    reach: '6.2K–35K',
-  },
-  {
-    id: '13',
-    hook: 'Step by step: what to expect from first contact to final delivery. Zero surprises.',
-    format: 'tutorial',
-    platforms: ['youtube'],
-    trend: 'classic',
-    reach: '800–4K',
-  },
-  {
-    id: '14',
-    hook: 'Why we say no to about 20% of projects — and why that makes us better for you.',
-    format: 'talking-head',
-    platforms: ['youtube', 'instagram'],
-    trend: 'rising',
-    reach: '1.7K–8K',
-  },
-  {
-    id: '15',
-    hook: "The review we didn't expect — and what it taught us about raising our own standards.",
-    format: 'b-roll',
-    platforms: ['tiktok', 'instagram', 'youtube'],
-    trend: 'trending',
-    reach: '4.8K–26K',
-  },
-]
+async function fetchIdeas(): Promise<ContentIdea[]> {
+  const res = await fetch('/api/content/ideas')
+  if (!res.ok) throw new Error('Failed to fetch ideas')
+  const data = await res.json() as { ideas: ContentIdea[] }
+  return data.ideas
+}
 
-// Shuffle deterministically for "refresh" (returns different 12-item set)
-function shuffleWithSeed(arr: ContentIdea[], seed: number): ContentIdea[] {
-  const copy = [...arr]
-  let s = seed
-  for (let i = copy.length - 1; i > 0; i--) {
-    s = (s * 1664525 + 1013904223) & 0xffffffff
-    const j = Math.abs(s) % (i + 1)
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy
+// ─────────────────────────────────────────────
+// Skeleton card
+// ─────────────────────────────────────────────
+
+function SkeletonCard({ index }: { index: number }) {
+  return (
+    <div
+      style={{
+        background: '#111113',
+        borderRadius: 14,
+        overflow: 'hidden',
+        border: '0.5px solid rgba(255,255,255,0.06)',
+        animation: `stagger-in 280ms cubic-bezier(0.23,1,0.32,1) ${index * 55}ms forwards`,
+        opacity: 0,
+      }}
+    >
+      <div className="flex flex-col gap-3 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="h-5 w-20 rounded-md bg-white/[0.05] animate-pulse" />
+          <div className="h-5 w-16 rounded-md bg-white/[0.05] animate-pulse" />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <div className="h-3.5 w-full rounded bg-white/[0.05] animate-pulse" />
+          <div className="h-3.5 w-5/6 rounded bg-white/[0.05] animate-pulse" />
+          <div className="h-3.5 w-4/6 rounded bg-white/[0.05] animate-pulse" />
+        </div>
+        <div className="flex gap-1.5">
+          <div className="h-5 w-14 rounded-full bg-white/[0.05] animate-pulse" />
+          <div className="h-5 w-14 rounded-full bg-white/[0.05] animate-pulse" />
+        </div>
+        <div className="flex items-center justify-between pt-2.5" style={{ borderTop: '0.5px solid rgba(255,255,255,0.05)' }}>
+          <div className="h-3 w-20 rounded bg-white/[0.05] animate-pulse" />
+          <div className="h-3 w-16 rounded bg-white/[0.05] animate-pulse" />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ─────────────────────────────────────────────
@@ -404,43 +315,53 @@ export function ContentIdeasFeed({
 }: ContentIdeasFeedProps) {
   const [platformFilter, setPlatformFilter] = React.useState<PlatformFilter>('all')
   const [formatFilter, setFormatFilter] = React.useState<FormatFilter>('all')
-  const [seed, setSeed] = React.useState(1)
+  const [ideas, setIdeas] = React.useState<ContentIdea[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
   const [refreshing, setRefreshing] = React.useState(false)
   const [visible, setVisible] = React.useState(true)
   const [rotating, setRotating] = React.useState(false)
 
+  const loadIdeas = React.useCallback(async () => {
+    try {
+      const data = await fetchIdeas()
+      setIdeas(data)
+      setError(null)
+    } catch {
+      setError('Could not generate ideas. Check that ANTHROPIC_API_KEY is set.')
+    }
+  }, [])
+
+  React.useEffect(() => {
+    loadIdeas().finally(() => setLoading(false))
+  }, [loadIdeas])
+
   // Filter ideas
   const filtered = React.useMemo(() => {
-    let ideas = shuffleWithSeed(ALL_IDEAS, seed)
+    let result = ideas
     if (platformFilter !== 'all') {
-      ideas = ideas.filter((i) => i.platforms.includes(platformFilter as Platform))
+      result = result.filter((i) => i.platforms.includes(platformFilter as Platform))
     }
     if (formatFilter !== 'all') {
-      ideas = ideas.filter((i) => i.format === formatFilter)
+      result = result.filter((i) => i.format === formatFilter)
     }
-    return limit ? ideas.slice(0, limit) : ideas
-  }, [seed, platformFilter, formatFilter, limit])
+    return limit ? result.slice(0, limit) : result
+  }, [ideas, platformFilter, formatFilter, limit])
 
   const handleRefresh = React.useCallback(async () => {
     if (refreshing) return
 
     setRotating(true)
     setRefreshing(true)
-
-    // Exit animation
     setVisible(false)
     await new Promise((r) => setTimeout(r, 220))
 
-    // New seed → new shuffle
-    setSeed((s) => s + 1)
+    await loadIdeas()
 
-    // Enter animation
     setVisible(true)
     setRefreshing(false)
-
-    // Stop rotation after one full turn
     setTimeout(() => setRotating(false), 420)
-  }, [refreshing])
+  }, [refreshing, loadIdeas])
 
   const platformOptions: { label: string; value: PlatformFilter }[] = [
     { label: 'All', value: 'all' },
@@ -475,7 +396,7 @@ export function ContentIdeasFeed({
             Content Ideas
           </h2>
           <p style={{ fontSize: 13, color: '#52525B', marginTop: 4 }}>
-            AI-tailored hooks for your business
+            {loading ? 'Generating ideas…' : 'AI-tailored hooks for your business'}
           </p>
         </div>
 
@@ -504,14 +425,18 @@ export function ContentIdeasFeed({
             el.style.background = '#111113'
           }}
         >
-          <RefreshCw
-            className="w-3 h-3"
-            style={{
-              transform: rotating ? 'rotate(360deg)' : 'rotate(0deg)',
-              transition: rotating ? 'transform 400ms cubic-bezier(0.23,1,0.32,1)' : 'transform 0ms',
-            }}
-          />
-          Refresh
+          {refreshing ? (
+            <Sparkles className="w-3 h-3 animate-pulse" />
+          ) : (
+            <RefreshCw
+              className="w-3 h-3"
+              style={{
+                transform: rotating ? 'rotate(360deg)' : 'rotate(0deg)',
+                transition: rotating ? 'transform 400ms cubic-bezier(0.23,1,0.32,1)' : 'transform 0ms',
+              }}
+            />
+          )}
+          {refreshing ? 'Generating…' : 'Refresh'}
         </button>
       </div>
 
@@ -545,41 +470,59 @@ export function ContentIdeasFeed({
         </div>
       )}
 
-      {/* Card grid with stagger animation */}
-      <div
-        className={cn('grid gap-4', gridClass)}
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(-4px)',
-          transition: 'opacity 180ms cubic-bezier(0.23,1,0.32,1), transform 180ms cubic-bezier(0.23,1,0.32,1)',
-        }}
-      >
-        {filtered.map((idea, index) => (
-          <ContentIdeaCard
-            key={`${idea.id}-${seed}`}
-            idea={idea}
-            onSelect={onSelectIdea}
-            style={{
-              opacity: 0,
-              animation: visible
-                ? `stagger-in 280ms cubic-bezier(0.23,1,0.32,1) ${index * 55}ms forwards`
-                : 'none',
-            }}
-          />
-        ))}
+      {/* Card grid */}
+      {error ? (
+        <div className="py-16 flex flex-col items-center gap-3 text-center">
+          <p className="text-[14px] text-[#A1A1AA]">{error}</p>
+          <button
+            onClick={() => { setLoading(true); loadIdeas().finally(() => setLoading(false)) }}
+            className="text-[13px] text-[#6366f1] hover:underline"
+          >
+            Try again
+          </button>
+        </div>
+      ) : loading ? (
+        <div className={cn('grid gap-4', gridClass)}>
+          {Array.from({ length: limit ?? 6 }).map((_, i) => (
+            <SkeletonCard key={i} index={i} />
+          ))}
+        </div>
+      ) : (
+        <div
+          className={cn('grid gap-4', gridClass)}
+          style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'translateY(0)' : 'translateY(-4px)',
+            transition: 'opacity 180ms cubic-bezier(0.23,1,0.32,1), transform 180ms cubic-bezier(0.23,1,0.32,1)',
+          }}
+        >
+          {filtered.map((idea, index) => (
+            <ContentIdeaCard
+              key={idea.id}
+              idea={idea}
+              onSelect={onSelectIdea}
+              style={{
+                opacity: 0,
+                animation: visible
+                  ? `stagger-in 280ms cubic-bezier(0.23,1,0.32,1) ${index * 55}ms forwards`
+                  : 'none',
+              }}
+            />
+          ))}
 
-        {filtered.length === 0 && (
-          <div className="col-span-full py-16 flex flex-col items-center gap-2 text-center">
-            <p className="text-[14px] text-[#A1A1AA]">No ideas match those filters.</p>
-            <button
-              onClick={() => { setPlatformFilter('all'); setFormatFilter('all') }}
-              className="text-[13px] text-[#6366f1] hover:underline"
-            >
-              Clear filters
-            </button>
-          </div>
-        )}
-      </div>
+          {filtered.length === 0 && (
+            <div className="col-span-full py-16 flex flex-col items-center gap-2 text-center">
+              <p className="text-[14px] text-[#A1A1AA]">No ideas match those filters.</p>
+              <button
+                onClick={() => { setPlatformFilter('all'); setFormatFilter('all') }}
+                className="text-[13px] text-[#6366f1] hover:underline"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   )
 }
