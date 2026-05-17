@@ -114,9 +114,6 @@ export default function Footer() {
             <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
               © {new Date().getFullYear()} BrandLift. All rights reserved.
             </span>
-            <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Developed by Yash Bhagat and Ansh Thakar
-            </span>
           </div>
 
           {/* Nav links */}
