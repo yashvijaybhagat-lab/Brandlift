@@ -17,9 +17,14 @@ export default function Footer() {
   const [submitted, setSubmitted] = useState(false)
   const [typeIndex] = useState(() => Math.floor(Math.random() * BUSINESS_TYPES.length))
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!email.trim()) return
+    await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim() }),
+    })
     setSubmitted(true)
     setEmail('')
   }

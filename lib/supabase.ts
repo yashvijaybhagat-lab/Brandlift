@@ -5,6 +5,19 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 // ─────────────────────────────────────────────
 
 export interface DatabaseTables {
+  subscribers: {
+    Row: {
+      id: string
+      email: string
+      subscribed_at: string
+    }
+    Insert: {
+      id?: string
+      email: string
+      subscribed_at?: string
+    }
+    Update: Partial<DatabaseTables['subscribers']['Insert']>
+  }
   users: {
     Row: {
       id: string
