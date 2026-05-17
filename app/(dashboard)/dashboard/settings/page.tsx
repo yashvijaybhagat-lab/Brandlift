@@ -153,20 +153,18 @@ const PLATFORM_OPTIONS: { label: string; value: BusinessProfile['platforms'][num
 
 export default function SettingsPage() {
   const [profile, setProfile] = React.useState<BusinessProfile>({
-    businessName: 'Maple & Co.',
-    description: 'A boutique home goods and lifestyle shop specialising in handcrafted furniture and artisan home accessories.',
-    audience: 'Homeowners aged 28–45 who value quality craftsmanship and sustainable design.',
-    location: 'Portland, OR',
-    services: ['Custom furniture', 'Home staging consultations', 'Curated home accessories'],
-    differentiator: 'Every piece is made by local artisans and backed by a lifetime repair guarantee.',
+    businessName: '',
+    description: '',
+    audience: '',
+    location: '',
+    services: [],
+    differentiator: '',
     tone: 'friendly',
-    platforms: ['instagram', 'tiktok'],
+    platforms: [],
     style: 'warm',
   })
 
-  const [servicesText, setServicesText] = React.useState(
-    profile.services.join(', ')
-  )
+  const [servicesText, setServicesText] = React.useState('')
 
   const [saving, setSaving] = React.useState(false)
   const [saved, setSaved] = React.useState(false)

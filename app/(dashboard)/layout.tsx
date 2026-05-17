@@ -35,8 +35,8 @@ export default function DashboardLayout({
       <Sidebar
         collapsed={collapsed}
         onCollapsedChange={handleCollapsedChange}
-        businessName="Maple & Co."
-        userEmail="owner@mapleandco.com"
+        businessName="Your Business"
+        userEmail="hello@yourbusiness.com"
       />
 
       {/* Main content area */}

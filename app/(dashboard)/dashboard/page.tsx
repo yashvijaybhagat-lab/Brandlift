@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import { TrendingUp, TrendingDown, ArrowRight, Video, Lightbulb, Eye, BarChart2 } from 'lucide-react'
 import { TopBar } from '@/components/dashboard/TopBar'
-import { ContentIdeasFeed } from '@/components/dashboard/ContentIdeasFeed'
+import { ContentIdeasFeed, ContentIdea } from '@/components/dashboard/ContentIdeasFeed'
 import { Badge } from '@/components/ui/Badge'
 
 /* ─── Mini sparkline ──────────────────────────────────────────────────────── */
@@ -59,47 +59,47 @@ interface Stat {
 
 const STATS: Stat[] = [
   {
-    label: 'Est. Monthly Reach',
-    value: 142000,
+    label: 'Predicted Monthly Reach',
+    value: 8400,
     format: 'compact',
-    delta: '+28%',
+    delta: 'projected',
     deltaPositive: true,
-    period: 'vs last month',
+    period: 'after first video',
     icon: Eye,
-    sparkData: [62, 71, 68, 88, 94, 101, 115, 128, 142],
+    sparkData: [0, 0, 0, 0, 1, 2, 4, 6, 8],
     color: '#6366f1',
   },
   {
     label: 'Videos Published',
-    value: 8,
+    value: 0,
     format: 'number',
-    delta: '+3',
+    delta: 'post first',
     deltaPositive: true,
-    period: 'vs last month',
+    period: 'to unlock stats',
     icon: Video,
-    sparkData: [2, 3, 3, 4, 4, 5, 6, 7, 8],
+    sparkData: [0, 0, 0, 0, 0, 0, 0, 0, 0],
     color: '#8b5cf6',
   },
   {
     label: 'Ideas Saved',
-    value: 24,
+    value: 0,
     format: 'number',
-    delta: '+12',
+    delta: 'save ideas',
     deltaPositive: true,
-    period: 'this week',
+    period: 'from the feed below',
     icon: Lightbulb,
-    sparkData: [4, 6, 8, 10, 12, 14, 17, 21, 24],
+    sparkData: [0, 0, 0, 0, 0, 0, 0, 0, 0],
     color: '#06b6d4',
   },
   {
-    label: 'Avg. Engagement',
-    value: 4.2,
+    label: 'Predicted Engagement',
+    value: 4.8,
     format: 'percent',
-    delta: '+0.8pp',
+    delta: 'estimated',
     deltaPositive: true,
-    period: 'vs last month',
+    period: 'for your industry',
     icon: BarChart2,
-    sparkData: [2.1, 2.4, 2.8, 3.0, 3.2, 3.6, 3.9, 4.0, 4.2],
+    sparkData: [0, 0, 0, 1, 2, 3, 4, 4, 5],
     color: '#4ADE80',
   },
 ]
@@ -183,16 +183,52 @@ function StatCard({ stat }: { stat: Stat }) {
   )
 }
 
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
+function parseReachLow(reach: string): number {
+  const low = reach.split('–')[0].trim()
+  if (low.endsWith('K')) return Math.round(parseFloat(low) * 1000)
+  return Math.round(parseFloat(low))
+}
+function parseReachHigh(reach: string): number {
+  const parts = reach.split('–')
+  const high = parts[parts.length - 1].trim()
+  if (high.endsWith('K')) return Math.round(parseFloat(high) * 1000)
+  return Math.round(parseFloat(high))
+}
+
 /* ─── Quick Stats section ─────────────────────────────────────────────────── */
-function QuickStats() {
+function QuickStats({ selectedIdea }: { selectedIdea: ContentIdea | null }) {
+  const stats = React.useMemo((): Stat[] => {
+    if (!selectedIdea) return STATS
+    const lo = parseReachLow(selectedIdea.reach)
+    const hi = parseReachHigh(selectedIdea.reach)
+    const mid = Math.round((lo + hi) / 2)
+    const engEst = selectedIdea.trend === 'trending' ? 5.8 : selectedIdea.trend === 'rising' ? 4.6 : 3.2
+    const sparkReach = [0, 0, 0, Math.round(lo * 0.2), Math.round(lo * 0.5), lo, Math.round(lo * 1.3), Math.round(mid * 0.8), mid]
+    const sparkEng = [0, 0, 0, 1.2, 2.1, 3.0, engEst * 0.7, engEst * 0.9, engEst]
+    return [
+      { ...STATS[0], label: 'Predicted Reach', value: mid, format: 'compact', delta: `${selectedIdea.reach}`, period: 'estimated range', sparkData: sparkReach },
+      { ...STATS[1] },
+      { ...STATS[2] },
+      { ...STATS[3], value: engEst, format: 'percent', delta: selectedIdea.trend === 'trending' ? 'high potential' : selectedIdea.trend === 'rising' ? 'growing niche' : 'steady performer', period: 'for this format', sparkData: sparkEng },
+    ]
+  }, [selectedIdea])
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Performance</h2>
-        <span style={{ fontSize: 11, color: '#3f3f46', fontFamily: 'var(--font-mono)' }}>Last 30 days</span>
+        <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>
+          {selectedIdea ? 'Idea Forecast' : 'Predicted Performance'}
+        </h2>
+        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '0.5px solid rgba(99,102,241,0.2)' }}>Beta</span>
       </div>
+      {selectedIdea && (
+        <p style={{ fontSize: 11, color: '#52525B', lineHeight: 1.5, fontStyle: 'italic' }}>
+          &ldquo;{selectedIdea.hook.slice(0, 60)}…&rdquo;
+        </p>
+      )}
       <div className="flex flex-col gap-2">
-        {STATS.map((stat) => (
+        {stats.map((stat) => (
           <StatCard key={stat.label} stat={stat} />
         ))}
       </div>
@@ -209,11 +245,7 @@ interface VideoRow {
   views?: string
 }
 
-const RECENT_VIDEOS: VideoRow[] = [
-  { id: '1', filename: 'Before & After — May Results.mp4', date: 'May 14', status: 'published', views: '12.4K' },
-  { id: '2', filename: 'Meet Our Team.mp4', date: 'May 11', status: 'published', views: '8.1K' },
-  { id: '3', filename: 'New Arrivals Walkthrough.mp4', date: 'May 9', status: 'draft' },
-]
+const RECENT_VIDEOS: VideoRow[] = []
 
 const STATUS_CONFIG: Record<VideoRow['status'], { label: string; variant: 'success' | 'default' | 'warning' }> = {
   published: { label: 'Live', variant: 'success' },
@@ -239,6 +271,30 @@ function RecentVideos() {
       </div>
 
       <div className="flex flex-col gap-2">
+        {RECENT_VIDEOS.length === 0 && (
+          <div
+            className="flex flex-col items-center justify-center text-center py-8 rounded-xl"
+            style={{ border: '0.5px dashed rgba(255,255,255,0.08)', background: 'rgba(17,17,19,0.5)' }}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+              style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)' }}
+            >
+              <Video className="w-4 h-4" style={{ color: '#3f3f46' }} />
+            </div>
+            <p style={{ fontSize: 12, fontWeight: 500, color: '#52525B', marginBottom: 4 }}>No videos yet</p>
+            <p style={{ fontSize: 11, color: '#3f3f46', maxWidth: '18ch', lineHeight: 1.5 }}>Upload your first video to get started</p>
+            <Link
+              href="/dashboard/videos"
+              className="mt-3 text-[11px] font-medium transition-colors duration-150"
+              style={{ color: '#6366f1' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#a5b4fc')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#6366f1')}
+            >
+              Upload now →
+            </Link>
+          </div>
+        )}
         {RECENT_VIDEOS.map((video) => {
           const st = STATUS_CONFIG[video.status]
           return (
@@ -295,6 +351,8 @@ function RecentVideos() {
 
 /* ─── Page ────────────────────────────────────────────────────────────────── */
 export default function DashboardPage() {
+  const [selectedIdea, setSelectedIdea] = React.useState<ContentIdea | null>(null)
+
   return (
     <div className="flex flex-col h-full">
       <TopBar />
@@ -305,12 +363,13 @@ export default function DashboardPage() {
             limit={6}
             showFilters={false}
             gridClass="grid-cols-1 sm:grid-cols-2"
+            onSelectIdea={setSelectedIdea}
           />
         </div>
 
         {/* Right sidebar */}
         <aside className="hidden lg:flex flex-col gap-6 w-[296px] flex-shrink-0 overflow-auto p-5 border-l border-white/[0.05]">
-          <QuickStats />
+          <QuickStats selectedIdea={selectedIdea} />
           <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
           <RecentVideos />
         </aside>

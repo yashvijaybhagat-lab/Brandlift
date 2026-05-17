@@ -1,33 +1,8 @@
 'use client'
 
 import { TopBar } from '@/components/dashboard/TopBar'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { Plus, Upload } from 'lucide-react'
-
-interface VideoItem {
-  id: string
-  filename: string
-  date: string
-  status: 'published' | 'draft' | 'processing'
-  duration: string
-  platform: 'tiktok' | 'instagram' | 'youtube'
-}
-
-const VIDEOS: VideoItem[] = [
-  { id: '1', filename: 'Before & After — May Results', date: 'May 14, 2026', status: 'published', duration: '0:42', platform: 'instagram' },
-  { id: '2', filename: 'Meet Our Team', date: 'May 11, 2026', status: 'published', duration: '1:03', platform: 'tiktok' },
-  { id: '3', filename: 'New Arrivals Walkthrough', date: 'May 9, 2026', status: 'draft', duration: '2:14', platform: 'youtube' },
-  { id: '4', filename: 'Customer Story — Sarah M.', date: 'May 6, 2026', status: 'published', duration: '0:58', platform: 'tiktok' },
-  { id: '5', filename: 'Behind the Scenes: Packaging Day', date: 'May 2, 2026', status: 'published', duration: '1:22', platform: 'instagram' },
-  { id: '6', filename: 'FAQ: Shipping & Returns', date: 'Apr 28, 2026', status: 'processing', duration: '3:07', platform: 'youtube' },
-]
-
-const STATUS_MAP: Record<VideoItem['status'], { label: string; variant: 'success' | 'default' | 'warning' }> = {
-  published: { label: 'Published', variant: 'success' },
-  draft: { label: 'Draft', variant: 'default' },
-  processing: { label: 'Processing', variant: 'warning' },
-}
+import { Upload, Video, Plus } from 'lucide-react'
 
 export default function VideosPage() {
   return (
@@ -40,7 +15,7 @@ export default function VideosPage() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <h1 className="text-[20px] font-medium text-[#FAFAFA]">My Videos</h1>
-              <p className="text-[14px] text-[#71717A] mt-0.5">{VIDEOS.length} videos in your library</p>
+              <p className="text-[14px] text-[#71717A] mt-0.5">Your video library is empty — upload your first one</p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" className="gap-1.5">
@@ -54,40 +29,61 @@ export default function VideosPage() {
             </div>
           </div>
 
-          {/* Video list */}
-          <div className="flex flex-col gap-2">
-            {VIDEOS.map((video) => {
-              const status = STATUS_MAP[video.status]
-              return (
-                <div
-                  key={video.id}
-                  className="flex items-center gap-4 p-4 rounded-[12px] bg-[#111113] border border-white/[0.06] group"
-                  style={{
-                    transition: 'background-color 160ms cubic-bezier(0.23,1,0.32,1)',
-                  }}
-                >
-                  {/* Thumbnail */}
-                  <div
-                    className="flex-shrink-0 rounded-[8px] bg-[#18181C] flex items-center justify-center"
-                    style={{ width: 80, height: 52 }}
-                  >
-                    <span className="text-[10px] text-[#71717A] font-mono">{video.duration}</span>
-                  </div>
+          {/* Empty state */}
+          <div
+            className="flex flex-col items-center justify-center text-center py-24 rounded-2xl gap-6"
+            style={{ border: '0.5px dashed rgba(255,255,255,0.09)', background: 'rgba(17,17,19,0.5)' }}
+          >
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center"
+              style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)' }}
+            >
+              <Video className="w-8 h-8 text-[#3f3f46]" />
+            </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-medium text-[#FAFAFA] truncate">{video.filename}</p>
-                    <p className="text-[12px] text-[#71717A] mt-0.5">{video.date}</p>
-                  </div>
+            <div>
+              <h2 className="text-[18px] font-semibold text-[#FAFAFA] mb-2" style={{ letterSpacing: '-0.02em' }}>
+                No videos yet
+              </h2>
+              <p className="text-[14px] text-[#71717A] max-w-[36ch] mx-auto leading-relaxed">
+                Upload your raw iPhone footage and BrandLift will transform it into polished, branded content ready to post.
+              </p>
+            </div>
 
-                  {/* Platform */}
-                  <Badge variant="platform" platform={video.platform} />
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <button
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-semibold text-white"
+                style={{
+                  background: 'linear-gradient(135deg, #6366f1 0%, #5558e8 100%)',
+                  boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.25)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                  e.currentTarget.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.5), 0 12px 32px rgba(99,102,241,0.35)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.25)'
+                }}
+              >
+                <Upload className="w-4 h-4" />
+                Upload your first video
+              </button>
+              <span style={{ fontSize: 13, color: '#3f3f46' }}>or drag &amp; drop a file here</span>
+            </div>
 
-                  {/* Status */}
-                  <Badge variant={status.variant}>{status.label}</Badge>
+            <div className="flex items-center gap-6 mt-2">
+              {[
+                { icon: '📱', label: 'iPhone footage' },
+                { icon: '✂️', label: 'Auto-edited' },
+                { icon: '📲', label: 'Ready to post' },
+              ].map(({ icon, label }) => (
+                <div key={label} className="flex flex-col items-center gap-1.5">
+                  <span className="text-xl">{icon}</span>
+                  <span style={{ fontSize: 11, color: '#52525B', fontWeight: 500 }}>{label}</span>
                 </div>
-              )
-            })}
+              ))}
+            </div>
           </div>
         </div>
       </div>

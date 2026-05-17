@@ -199,12 +199,15 @@ const TREND_BORDER: Record<Trend, string> = {
 function ContentIdeaCard({
   idea,
   style,
+  onSelect,
 }: {
   idea: ContentIdea
   style?: React.CSSProperties
+  onSelect?: (idea: ContentIdea) => void
 }) {
   const trend = TREND_CONFIG[idea.trend]
   const [hovered, setHovered] = React.useState(false)
+  const [selected, setSelected] = React.useState(false)
 
   return (
     <article
@@ -321,12 +324,18 @@ function ContentIdeaCard({
           </span>
 
           <button
-            className="inline-flex items-center gap-1 text-[12px] font-medium rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60"
-            style={{ color: hovered ? '#818cf8' : '#52525B' }}
+            className="inline-flex items-center gap-1 text-[12px] font-medium rounded-md transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60"
+            style={{
+              color: selected ? '#4ADE80' : hovered ? '#818cf8' : '#52525B',
+            }}
             aria-label={`Use idea: ${idea.hook.slice(0, 50)}…`}
+            onClick={() => {
+              setSelected(true)
+              onSelect?.(idea)
+            }}
           >
-            Use this idea
-            <ArrowRight className="w-3 h-3" />
+            {selected ? '✓ Selected' : 'Use this idea'}
+            {!selected && <ArrowRight className="w-3 h-3" />}
           </button>
         </div>
       </div>
@@ -378,19 +387,20 @@ function FilterChip({
 // ContentIdeasFeed
 // ─────────────────────────────────────────────
 
+export type { ContentIdea }
+
 interface ContentIdeasFeedProps {
-  /** Limit cards shown — useful for dashboard sidebar panel */
   limit?: number
-  /** Show full filter controls */
   showFilters?: boolean
-  /** Grid columns class */
   gridClass?: string
+  onSelectIdea?: (idea: ContentIdea) => void
 }
 
 export function ContentIdeasFeed({
   limit,
   showFilters = true,
   gridClass = 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+  onSelectIdea,
 }: ContentIdeasFeedProps) {
   const [platformFilter, setPlatformFilter] = React.useState<PlatformFilter>('all')
   const [formatFilter, setFormatFilter] = React.useState<FormatFilter>('all')
@@ -548,6 +558,7 @@ export function ContentIdeasFeed({
           <ContentIdeaCard
             key={`${idea.id}-${seed}`}
             idea={idea}
+            onSelect={onSelectIdea}
             style={{
               opacity: 0,
               animation: visible

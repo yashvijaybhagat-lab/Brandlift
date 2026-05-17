@@ -165,23 +165,30 @@ export default function SocialProof() {
           className="text-sm text-center"
           style={{ color: 'var(--color-text-muted)' }}
         >
-          Trusted by businesses who don&apos;t have time for bad software
+          Built for businesses who don&apos;t have time for bad software
         </p>
 
         {/* Marquee */}
         <Marquee />
 
-        {/* Stats */}
+        {/* Beta badge */}
         <div
-          className="grid grid-cols-3 gap-8 w-full max-w-lg"
-          style={{
-            borderTop: '0.5px solid var(--color-border)',
-            paddingTop: 32,
-          }}
+          className="flex flex-col items-center gap-3"
+          style={{ borderTop: '0.5px solid var(--color-border)', paddingTop: 32, width: '100%' }}
         >
-          <Stat rawValue={2400} suffix="+" label="businesses live" started={statsStarted} duration={1400} />
-          <Stat rawValue={18} suffix="M" label="videos processed" started={statsStarted} duration={1600} />
-          <Stat rawValue={4.9} suffix="★" label="average rating" started={statsStarted} duration={1200} decimals={1} />
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium"
+            style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.2)', color: '#818cf8' }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: '#4ADE80', boxShadow: '0 0 0 3px rgba(74,222,128,0.2)' }}
+            />
+            Currently in private beta
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', textAlign: 'center', maxWidth: '38ch', lineHeight: 1.6 }}>
+            We&apos;re onboarding founding businesses now. Real analytics unlock the moment you post your first video.
+          </p>
         </div>
       </div>
     </section>

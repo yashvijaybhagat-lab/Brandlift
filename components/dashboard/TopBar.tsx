@@ -154,13 +154,8 @@ export function TopBar() {
         {/* Breadcrumb separator */}
         <div className="h-3 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} aria-hidden />
         <span style={{ fontSize: 12, color: '#3f3f46', fontFamily: 'var(--font-mono)' }}>
-          May 2025
+          May 2026
         </span>
-      </div>
-
-      {/* Center: content score */}
-      <div className="flex-shrink-0">
-        <ContentScoreGauge score={72} />
       </div>
 
       {/* Right: actions */}

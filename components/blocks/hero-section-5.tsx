@@ -212,7 +212,7 @@ export function HeroSection() {
                     />
                     <style>{`@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 3px rgba(74,222,128,0.2)}50%{box-shadow:0 0 0 5px rgba(74,222,128,0.08)}}`}</style>
                     <span style={{ fontSize: 13, color: '#A1A1AA', fontWeight: 500 }}>
-                      2,400+ businesses growing on BrandLift
+                      Now in private beta — founding businesses welcome
                     </span>
                   </div>
                 </motion.div>
@@ -321,7 +321,6 @@ export function HeroSection() {
                     Free forever · No credit card · Setup in 5 minutes
                   </p>
                   <div className="flex gap-3 flex-wrap">
-                    <StatBadge value="2.4K+" label="Businesses active" />
                     <StatBadge value="10x" label="Faster editing" />
                     <StatBadge value="8 min" label="Avg. setup time" />
                   </div>
@@ -380,11 +379,17 @@ export function HeroSection() {
                 <InfiniteSlider speedOnHover={20} speed={40} gap={96}>
                   {PLATFORM_LOGOS.map((p) => (
                     <div key={p.name} className="flex items-center gap-2 opacity-40 hover:opacity-70 transition-opacity duration-200">
-                      <img
-                        src={`https://cdn.simpleicons.org/${p.slug}/ffffff`}
-                        alt={p.name}
-                        style={{ height: p.h, width: 'auto', display: 'block' }}
-                      />
+                      {p.svgPath ? (
+                        <svg height={p.h} viewBox="0 0 24 24" fill="white" aria-label={p.name} style={{ width: 'auto', display: 'block' }}>
+                          <path d={p.svgPath} />
+                        </svg>
+                      ) : (
+                        <img
+                          src={`https://cdn.simpleicons.org/${p.slug}/ffffff`}
+                          alt={p.name}
+                          style={{ height: p.h, width: 'auto', display: 'block' }}
+                        />
+                      )}
                     </div>
                   ))}
                 </InfiniteSlider>
@@ -402,15 +407,18 @@ export function HeroSection() {
   )
 }
 
-const PLATFORM_LOGOS = [
+type PlatformLogo = { name: string; h: number } & ({ slug: string; svgPath?: never } | { svgPath: string; slug?: never })
+
+const PLATFORM_LOGOS: PlatformLogo[] = [
   { name: 'TikTok', slug: 'tiktok', h: 20 },
   { name: 'Instagram', slug: 'instagram', h: 20 },
   { name: 'YouTube', slug: 'youtube', h: 18 },
   { name: 'X', slug: 'x', h: 17 },
-  { name: 'LinkedIn', slug: 'linkedin', h: 20 },
+  { name: 'LinkedIn', svgPath: 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z', h: 20 },
   { name: 'Facebook', slug: 'facebook', h: 20 },
+  { name: 'Canva', svgPath: 'M12.006 0C5.622 0 .419 4.88.012 11.262c-.43 6.838 4.703 12.77 11.33 13.184.222.014.442.02.663.02 6.408 0 11.637-4.914 11.982-11.37C24.394 6.22 18.976.375 12.557.012A12.52 12.52 0 0 0 12.006 0zm-.82 6.956c.627 0 1.195.142 1.7.422.504.28.903.676 1.192 1.183.29.508.434 1.095.434 1.758 0 .67-.144 1.263-.434 1.775a3.07 3.07 0 0 1-1.192 1.19 3.42 3.42 0 0 1-1.7.424 3.454 3.454 0 0 1-1.707-.424 3.085 3.085 0 0 1-1.188-1.19c-.288-.512-.433-1.105-.433-1.775 0-.663.145-1.25.433-1.758a3.07 3.07 0 0 1 1.188-1.183 3.454 3.454 0 0 1 1.707-.422z', h: 20 },
   { name: 'Shopify', slug: 'shopify', h: 20 },
-  { name: 'Canva', slug: 'canva', h: 20 },
+  { name: 'Pinterest', slug: 'pinterest', h: 20 },
 ]
 
 /* ─── Before/After Slider ─────────────────────────────────────────────────── */

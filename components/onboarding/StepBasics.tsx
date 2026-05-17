@@ -222,7 +222,7 @@ export default function StepBasics({ onComplete }: StepBasicsProps) {
     <div className="w-full max-w-lg mx-auto" style={combinedStyle}>
       {/* Question */}
       <h2
-        className="text-[32px] font-[500] tracking-tight text-brand-text mb-8"
+        className="text-[22px] font-[600] tracking-tight text-brand-text mb-4"
         style={{ letterSpacing: '-0.02em' }}
       >
         {q.question}
@@ -238,15 +238,28 @@ export default function StepBasics({ onComplete }: StepBasicsProps) {
             onKeyDown={handleKeyDown}
             placeholder={q.placeholder}
             className={cn(
-              'w-full bg-transparent border-0 border-b-2 border-brand-border-strong',
-              'text-[48px] font-[500] tracking-tight text-brand-text',
-              'placeholder:text-brand-text-muted/40',
-              'outline-none focus:border-brand-primary',
-              'pb-2 pt-0',
-              'transition-colors duration-160',
+              'w-full rounded-xl px-4 py-3',
+              'text-[15px] font-[400] text-brand-text',
+              'placeholder:text-brand-text-muted/50',
+              'outline-none',
+              'transition-all duration-160',
               'caret-brand-primary'
             )}
-            style={{ letterSpacing: '-0.02em', lineHeight: 1.15 }}
+            style={{
+              background: 'rgba(24,24,28,0.7)',
+              border: '0.5px solid rgba(255,255,255,0.1)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              letterSpacing: '-0.01em',
+              lineHeight: 1.5,
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1), 0 1px 3px rgba(0,0,0,0.2)'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)'
+            }}
           />
         ) : (
           <div className="relative">
@@ -259,23 +272,35 @@ export default function StepBasics({ onComplete }: StepBasicsProps) {
               rows={3}
               maxLength={q.maxLength}
               className={cn(
-                'w-full bg-transparent border-0 border-b-2 border-brand-border-strong',
-                'text-[28px] font-[400] text-brand-text resize-none',
-                'placeholder:text-brand-text-muted/40',
-                'outline-none focus:border-brand-primary',
-                'pb-2 pt-0',
-                'transition-colors duration-160',
-                'caret-brand-primary leading-snug',
-                // Streaming: amber color while receiving AI text
+                'w-full rounded-xl px-4 py-3',
+                'text-[15px] font-[400] text-brand-text resize-none',
+                'placeholder:text-brand-text-muted/50',
+                'outline-none',
+                'transition-all duration-160',
+                'caret-brand-primary',
                 isStreaming && 'text-brand-primary'
               )}
-              style={{ letterSpacing: '-0.01em', lineHeight: 1.3 }}
+              style={{
+                background: 'rgba(24,24,28,0.7)',
+                border: '0.5px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                letterSpacing: '-0.01em',
+                lineHeight: 1.6,
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1), 0 1px 3px rgba(0,0,0,0.2)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)'
+              }}
             />
             {/* Char count */}
             {q.maxLength && (
               <span
                 className={cn(
-                  'absolute bottom-3 right-0 text-[12px] tabular-nums',
+                  'absolute bottom-3 right-3 text-[11px] tabular-nums',
                   charCount > (q.maxLength * 0.9)
                     ? 'text-brand-warning'
                     : 'text-brand-text-muted'
