@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { upload } from '@vercel/blob/client'
+import { put } from '@vercel/blob/client'
 import { TopBar } from '@/components/dashboard/TopBar'
 import { Button } from '@/components/ui/Button'
 import {
@@ -287,9 +287,18 @@ function VideosInner() {
 
     let blobUrl = ''
     try {
-      const blob = await upload(file.name, file, {
+      // Step 1: get a pre-generated client token (no callback URL needed)
+      const tokenRes = await fetch(`/api/video/upload?filename=${encodeURIComponent(file.name)}`)
+      if (!tokenRes.ok) {
+        const e = await tokenRes.json().catch(() => ({}))
+        throw new Error(e.error ?? `Token request failed (${tokenRes.status})`)
+      }
+      const { clientToken, pathname } = await tokenRes.json()
+
+      // Step 2: upload directly to Vercel Blob with progress
+      const blob = await put(pathname, file, {
         access: 'public',
-        handleUploadUrl: '/api/video/upload',
+        token: clientToken,
         onUploadProgress: ({ percentage }) => setUploadProgress(percentage),
       })
       blobUrl = blob.url

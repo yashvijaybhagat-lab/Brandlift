@@ -146,9 +146,6 @@ function LeftPanel() {
           >
             BrandLift
           </span>
-          <p style={{ fontSize: 13, color: '#52525B', textAlign: 'center', maxWidth: 200, lineHeight: 1.5 }}>
-            Your digital presence, on autopilot
-          </p>
         </div>
       </motion.div>
 
