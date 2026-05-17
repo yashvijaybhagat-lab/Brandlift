@@ -63,23 +63,23 @@ const FORMAT_LABELS: Record<Format, string> = {
   'text-overlay': 'Text Overlay',
 }
 
-const TREND_CONFIG: Record<Trend, { emoji: string; label: string }> = {
+const TREND_CONFIG: Record<string, { emoji: string; label: string }> = {
   trending: { emoji: '🔥', label: 'Trending' },
   rising:   { emoji: '📈', label: 'Rising' },
   classic:  { emoji: '⭐', label: 'Classic' },
 }
 
-const TREND_ACCENT: Record<Trend, string> = {
+const TREND_ACCENT: Record<string, string> = {
   trending: 'rgba(251,191,36,0.15)',
   rising:   'rgba(74,222,128,0.12)',
   classic:  'rgba(161,161,170,0.1)',
 }
-const TREND_BORDER: Record<Trend, string> = {
+const TREND_BORDER: Record<string, string> = {
   trending: 'rgba(251,191,36,0.25)',
   rising:   'rgba(74,222,128,0.2)',
   classic:  'rgba(255,255,255,0.06)',
 }
-const TREND_TEXT: Record<Trend, string> = {
+const TREND_TEXT: Record<string, string> = {
   trending: '#FBBF24',
   rising:   '#4ADE80',
   classic:  '#A1A1AA',
@@ -105,7 +105,8 @@ function ContentIdeaCard({
   onToggleSave?: (idea: ContentIdea) => void
 }) {
   const router = useRouter()
-  const trend = TREND_CONFIG[idea.trend]
+  const trendKey = idea.trend in TREND_CONFIG ? idea.trend : 'classic'
+  const trend = TREND_CONFIG[trendKey]
   const [hovered, setHovered] = React.useState(false)
   const selected = isSelected ?? false
 
@@ -152,7 +153,7 @@ function ContentIdeaCard({
           </span>
 
           <div className="flex items-center gap-2">
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 600, letterSpacing: '0.02em', background: TREND_ACCENT[idea.trend], border: `0.5px solid ${TREND_BORDER[idea.trend]}`, color: TREND_TEXT[idea.trend] }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 600, letterSpacing: '0.02em', background: TREND_ACCENT[trendKey], border: `0.5px solid ${TREND_BORDER[trendKey]}`, color: TREND_TEXT[trendKey] }}>
               <span aria-hidden>{trend.emoji}</span>
               {trend.label}
             </span>
@@ -181,7 +182,7 @@ function ContentIdeaCard({
 
         {/* Platform badges */}
         <div className="flex flex-wrap gap-1.5">
-          {idea.platforms.map(p => <Badge key={p} variant="platform" platform={p} />)}
+          {(idea.platforms ?? []).map(p => <Badge key={p} variant="platform" platform={p} />)}
         </div>
 
         {/* Footer */}
@@ -282,7 +283,7 @@ export function ContentIdeasFeed({
   gridClass = 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
   onSelectIdea,
 }: ContentIdeasFeedProps) {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const email = session?.user?.email ?? ''
 
   const [activeTab, setActiveTab] = React.useState<ActiveTab>('foryou')
@@ -294,6 +295,11 @@ export function ContentIdeasFeed({
   const [visible, setVisible] = React.useState(true)
   const [rotating, setRotating] = React.useState(false)
   const [selectedIdeaId, setSelectedIdeaId] = React.useState<string | null>(null)
+
+  // Stop loading if session finished and no user
+  React.useEffect(() => {
+    if (status !== 'loading' && !email) setLoading(false)
+  }, [status, email])
 
   // Load ideas on mount (or when email is ready)
   React.useEffect(() => {
