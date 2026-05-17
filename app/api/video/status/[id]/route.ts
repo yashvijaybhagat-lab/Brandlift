@@ -1,0 +1,32 @@
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  const token = process.env.REPLICATE_API_TOKEN
+  if (!token || token === 'your_replicate_token') {
+    return NextResponse.json({ error: 'API not configured' }, { status: 503 })
+  }
+
+  const res = await fetch(
+    `https://api.replicate.com/v1/predictions/${params.id}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    },
+  )
+
+  if (!res.ok) {
+    return NextResponse.json({ error: 'Failed to fetch status' }, { status: res.status })
+  }
+
+  const data = await res.json()
+  return NextResponse.json({
+    id: data.id,
+    status: data.status,
+    output: data.output,
+    error: data.error,
+    metrics: data.metrics,
+  })
+}

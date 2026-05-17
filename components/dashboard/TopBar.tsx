@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Bell, Plus } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
@@ -124,6 +124,7 @@ function ContentScoreGauge({ score = 72 }: { score?: number }) {
 
 export function TopBar() {
   const pathname = usePathname()
+  const router = useRouter()
   const title = PAGE_TITLES[pathname] ?? 'Dashboard'
 
   return (
@@ -164,6 +165,7 @@ export function TopBar() {
           variant="primary"
           size="sm"
           className="gap-1.5 rounded-lg text-[12px] h-8"
+          onClick={() => router.push('/dashboard/videos?upload=1')}
         >
           <Plus className="w-3 h-3" />
           Add video

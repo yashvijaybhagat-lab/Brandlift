@@ -49,7 +49,7 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ['localhost:3000', 'brandlift.app'],
+      allowedOrigins: ['localhost:3000', 'brandlift.dev', 'www.brandlift.dev'],
     },
   },
 }

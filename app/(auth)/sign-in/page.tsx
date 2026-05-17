@@ -1,6 +1,7 @@
 'use client'
 import { useState, ChangeEvent, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import { motion } from 'motion/react'
 import Link from 'next/link'
 import { ArrowRight, TrendingUp, Video, Lightbulb, Eye } from 'lucide-react'
@@ -305,7 +306,7 @@ export default function SignInPage() {
             {/* Google button */}
             <button
               type="button"
-              onClick={() => router.push('/dashboard')}
+              onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
               className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[14px] font-medium transition-all duration-150"
               style={{
                 background: 'rgba(255,255,255,0.04)',
