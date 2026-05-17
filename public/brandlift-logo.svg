@@ -1,0 +1,35 @@
+<svg width="320" height="80" viewBox="0 0 320 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c7ef7"/>
+      <stop offset="100%" stop-color="#6d42e8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon: rounded square -->
+  <rect x="0" y="0" width="80" height="80" rx="18" fill="url(#bg)"/>
+
+  <!-- Letter B -->
+  <text
+    x="50%"
+    y="56"
+    font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    font-size="42"
+    font-weight="700"
+    fill="white"
+    text-anchor="middle"
+    dominant-baseline="auto"
+    transform="translate(-120, 0)"
+  >B</text>
+
+  <!-- Wordmark -->
+  <text
+    x="100"
+    y="52"
+    font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    font-size="32"
+    font-weight="600"
+    letter-spacing="-0.5"
+    fill="#FAFAFA"
+  >BrandLift</text>
+</svg>
