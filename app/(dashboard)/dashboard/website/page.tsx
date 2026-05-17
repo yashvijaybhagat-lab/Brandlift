@@ -34,8 +34,8 @@ export default function WebsitePage() {
 
           {/* Domain card */}
           <div className="flex items-center gap-4 p-4 rounded-[12px] bg-[#111113] border border-white/[0.06]">
-            <div className="w-10 h-10 rounded-[10px] bg-[rgba(245,166,35,0.1)] flex items-center justify-center flex-shrink-0">
-              <Globe className="w-5 h-5 text-[#F5A623]" />
+            <div className="w-10 h-10 rounded-[10px] bg-[rgba(99,102,241,0.1)] flex items-center justify-center flex-shrink-0">
+              <Globe className="w-5 h-5 text-[#6366f1]" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-medium text-[#FAFAFA]">mapleandco.com</p>
@@ -45,7 +45,7 @@ export default function WebsitePage() {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[24px] font-semibold text-[#F5A623] leading-none">72</p>
+              <p className="text-[24px] font-semibold text-[#6366f1] leading-none">72</p>
               <p className="text-[11px] text-[#71717A] mt-0.5">Website score</p>
             </div>
           </div>

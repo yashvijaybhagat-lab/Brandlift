@@ -91,7 +91,7 @@ function ContentScoreGauge({ score = 72 }: { score?: number }) {
             cy={24}
             r={radius}
             fill="none"
-            stroke="#F5A623"
+            stroke="#6366f1"
             strokeWidth={4}
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -127,40 +127,79 @@ export function TopBar() {
   const title = PAGE_TITLES[pathname] ?? 'Dashboard'
 
   return (
-    <header className="flex items-center h-14 px-6 border-b border-white/[0.06] bg-[#0A0A0B]/80 backdrop-blur-sm sticky top-0 z-10 gap-4">
+    <header
+      className="flex items-center h-13 px-6 sticky top-0 z-10 gap-4"
+      style={{
+        height: 52,
+        background: 'rgba(10,10,11,0.85)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+      }}
+    >
       {/* Left: page title */}
-      <div className="flex-1 min-w-0">
-        <h1 className="text-[18px] font-medium text-[#FAFAFA] truncate leading-tight">
+      <div className="flex-1 min-w-0 flex items-center gap-3">
+        <h1
+          className="truncate"
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 17,
+            fontWeight: 700,
+            color: '#FAFAFA',
+            letterSpacing: '-0.03em',
+          }}
+        >
           {title}
         </h1>
+        {/* Breadcrumb separator */}
+        <div className="h-3 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} aria-hidden />
+        <span style={{ fontSize: 12, color: '#3f3f46', fontFamily: 'var(--font-mono)' }}>
+          May 2025
+        </span>
       </div>
 
-      {/* Center: content score gauge */}
+      {/* Center: content score */}
       <div className="flex-shrink-0">
         <ContentScoreGauge score={72} />
       </div>
 
       {/* Right: actions */}
       <div className="flex-1 flex items-center justify-end gap-2">
-        <Button variant="primary" size="sm" className="gap-1.5">
-          <Plus className="w-3.5 h-3.5" />
+        <Button
+          variant="primary"
+          size="sm"
+          className="gap-1.5 rounded-lg text-[12px] h-8"
+        >
+          <Plus className="w-3 h-3" />
           Add video
         </Button>
 
         <button
           aria-label="Notifications"
           className={cn(
-            'relative flex items-center justify-center w-8 h-8 rounded-[8px]',
-            'text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#18181C]',
-            'transition-colors duration-160',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]/60',
+            'relative flex items-center justify-center w-8 h-8 rounded-lg',
+            'transition-colors duration-150',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60',
           )}
+          style={{ color: '#52525B', border: '0.5px solid rgba(255,255,255,0.07)' }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget as HTMLButtonElement
+            el.style.color = '#FAFAFA'
+            el.style.background = '#18181C'
+            el.style.borderColor = 'rgba(255,255,255,0.12)'
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget as HTMLButtonElement
+            el.style.color = '#52525B'
+            el.style.background = 'transparent'
+            el.style.borderColor = 'rgba(255,255,255,0.07)'
+          }}
         >
-          <Bell className="w-4 h-4" />
-          {/* Notification dot */}
+          <Bell className="w-3.5 h-3.5" />
           <span
-            className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#F5A623]"
-            aria-hidden="true"
+            className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+            style={{ background: '#6366f1', boxShadow: '0 0 4px rgba(99,102,241,0.6)' }}
+            aria-hidden
           />
         </button>
       </div>

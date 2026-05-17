@@ -243,7 +243,7 @@ export default function StepServices({ onComplete }: StepServicesProps) {
             'placeholder:text-brand-text-muted',
             'resize-none outline-none',
             'transition-colors duration-160',
-            'focus:border-brand-primary focus:shadow-focus-amber',
+            'focus:border-brand-primary focus:shadow-focus-indigo',
             'caret-brand-primary'
           )}
         />

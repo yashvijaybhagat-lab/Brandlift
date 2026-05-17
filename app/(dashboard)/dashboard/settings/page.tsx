@@ -108,10 +108,10 @@ function ChipGroup<T extends string>({
             className={cn(
               'px-3 py-1.5 rounded-pill text-[13px] font-medium',
               'transition-colors duration-160',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]/60',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60',
               'overflow-hidden relative',
               active
-                ? 'bg-[rgba(245,166,35,0.15)] text-[#F5A623] border border-[rgba(245,166,35,0.35)]'
+                ? 'bg-[rgba(99,102,241,0.15)] text-[#6366f1] border border-[rgba(99,102,241,0.35)]'
                 : 'bg-[#18181C] text-[#71717A] border border-white/[0.06] hover:text-[#A1A1AA]',
             )}
           >
@@ -228,8 +228,8 @@ export default function SettingsPage() {
                   'w-full px-3 py-2.5 rounded-[8px] text-[14px] resize-none',
                   'bg-[#18181C] border border-white/[0.1] text-[#FAFAFA] placeholder:text-[#71717A]',
                   'transition-colors duration-160',
-                  'focus:outline-none focus:border-[rgba(245,166,35,0.5)] focus:ring-0',
-                  'focus-visible:ring-2 focus-visible:ring-[#F5A623]/40',
+                  'focus:outline-none focus:border-[rgba(99,102,241,0.5)] focus:ring-0',
+                  'focus-visible:ring-2 focus-visible:ring-[#6366f1]/40',
                 )}
               />
             </Field>

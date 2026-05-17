@@ -53,7 +53,7 @@ function MarchingAntsBorder({ active }: { active: boolean }) {
         rx="11"
         ry="11"
         fill="none"
-        stroke={active ? 'rgba(245,166,35,0.6)' : 'rgba(255,255,255,0.08)'}
+        stroke={active ? 'rgba(99,102,241,0.6)' : 'rgba(255,255,255,0.08)'}
         strokeWidth="2"
         strokeDasharray="8 6"
         style={{
@@ -91,7 +91,7 @@ function FileThumbnail({ item }: { item: UploadedFile }) {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'linear-gradient(135deg, rgba(245,166,35,0.03), rgba(245,166,35,0.06))',
+              'linear-gradient(135deg, rgba(99,102,241,0.03), rgba(99,102,241,0.06))',
             animation: 'thumbnailPulse 3s ease-in-out infinite',
           }}
           aria-hidden="true"
@@ -272,7 +272,7 @@ export default function StepUpload({ onComplete }: StepUploadProps) {
         Got any video content?
       </h2>
       <p className="text-[14px] text-brand-text-muted mb-8">
-        Upload clips from your business and we'll use them to craft posts that show the real you.
+        Upload clips from your business and we&apos;ll use them to craft posts that show the real you.
       </p>
 
       {!hasFiles ? (
@@ -299,8 +299,8 @@ export default function StepUpload({ onComplete }: StepUploadProps) {
             'transition-all duration-200',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg',
             isDragging
-              ? 'bg-[rgba(245,166,35,0.02)]'
-              : 'bg-brand-surface hover:bg-[rgba(245,166,35,0.015)]'
+              ? 'bg-[rgba(99,102,241,0.02)]'
+              : 'bg-brand-surface hover:bg-[rgba(99,102,241,0.015)]'
           )}
         >
           {/* Marching ants SVG border */}
@@ -384,7 +384,7 @@ export default function StepUpload({ onComplete }: StepUploadProps) {
         >
           Skip for now →
           <span className="text-[12px] text-brand-text-muted/60">
-            We'll remind you when you're ready.
+            We&apos;ll remind you when you&apos;re ready.
           </span>
         </button>
       </div>

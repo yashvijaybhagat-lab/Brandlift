@@ -133,6 +133,7 @@ export default function OnboardPage() {
   )
 
   const handleUploadComplete = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (_data: StepUploadData) => {
       // files not persisted to profile — video processing is separate
       goNext()

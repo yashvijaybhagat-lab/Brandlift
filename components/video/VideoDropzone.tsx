@@ -40,7 +40,7 @@ function MarchingBorder({ active }: MarchingBorderProps) {
         rx="12"
         ry="12"
         fill="none"
-        stroke={active ? '#F5A623' : 'rgba(255,255,255,0.12)'}
+        stroke={active ? '#6366f1' : 'rgba(255,255,255,0.12)'}
         strokeWidth="1.5"
         strokeDasharray="8 4"
         style={{
@@ -185,13 +185,13 @@ export function VideoDropzone({
           'select-none',
           'outline-none',
           'transition-colors duration-200',
-          'focus-visible:ring-2 focus-visible:ring-[#F5A623]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0B]',
+          'focus-visible:ring-2 focus-visible:ring-[#6366f1]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0B]',
           className
         )}
         style={{
           height,
           background: isDragOver
-            ? 'rgba(245, 166, 35, 0.06)'
+            ? 'rgba(99, 102, 241, 0.06)'
             : 'rgba(255,255,255,0.02)',
           transition: 'background 200ms cubic-bezier(0.23,1,0.32,1)',
         }}
@@ -205,8 +205,8 @@ export function VideoDropzone({
             <div
               className="flex items-center justify-center w-9 h-9 rounded-full"
               style={{
-                background: 'rgba(245,166,35,0.1)',
-                color: '#F5A623',
+                background: 'rgba(99,102,241,0.1)',
+                color: '#6366f1',
               }}
             >
               <UploadIcon size={18} />
@@ -225,8 +225,8 @@ export function VideoDropzone({
             <div
               className="flex items-center justify-center w-9 h-9 rounded-full"
               style={{
-                background: isDragOver ? 'rgba(245,166,35,0.15)' : 'rgba(255,255,255,0.06)',
-                color: isDragOver ? '#F5A623' : '#71717A',
+                background: isDragOver ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.06)',
+                color: isDragOver ? '#6366f1' : '#71717A',
                 transition: 'background 200ms cubic-bezier(0.23,1,0.32,1), color 200ms cubic-bezier(0.23,1,0.32,1)',
               }}
             >
@@ -236,7 +236,7 @@ export function VideoDropzone({
               <p
                 className="text-[13px] font-medium"
                 style={{
-                  color: isDragOver ? '#F5A623' : '#A1A1AA',
+                  color: isDragOver ? '#6366f1' : '#A1A1AA',
                   transition: 'color 200ms cubic-bezier(0.23,1,0.32,1)',
                 }}
               >

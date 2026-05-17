@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,16 +8,20 @@
    CSS Custom Properties — BrandLift Design System
    ───────────────────────────────────────────── */
 :root {
+  /* Display font */
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
   /* Colors */
   --color-bg: #0A0A0B;
   --color-surface: #111113;
   --color-surface-elevated: #18181C;
   --color-border: rgba(255, 255, 255, 0.06);
   --color-border-strong: rgba(255, 255, 255, 0.12);
-  --color-primary: #F5A623;
-  --color-primary-hover: #F0941A;
-  --color-primary-muted: rgba(245, 166, 35, 0.12);
-  --color-accent: #E8825C;
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-muted: rgba(99, 102, 241, 0.12);
+  --color-accent: #8b5cf6;
   --color-text: #FAFAFA;
   --color-text-secondary: #A1A1AA;
   --color-text-muted: #71717A;
@@ -28,6 +32,25 @@
   /* Semantic aliases (for shadcn compat) */
   --background: #0A0A0B;
   --foreground: #FAFAFA;
+  --card: #0f0f14;
+  --card-foreground: #e2e8f0;
+  --muted: #111118;
+  --muted-foreground: #64748b;
+  --secondary: #1a1a24;
+  --secondary-foreground: #e2e8f0;
+  --accent: #1a1a2e;
+  --accent-foreground: #818cf8;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.06);
+  --skeleton: rgba(255, 255, 255, 0.05);
+  --btn-border: rgba(255, 255, 255, 0.12);
+  --radius: 0.5rem;
+
+  /* Tech accent — indigo, no orange */
+  --tech-primary: #6366f1;
+  --tech-primary-glow: rgba(99, 102, 241, 0.25);
+  --tech-secondary: #8b5cf6;
+  --tech-ring: rgba(99, 102, 241, 0.15);
 
   /* Easing curves */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -127,7 +150,7 @@ textarea:focus-visible,
 select:focus-visible,
 [role="button"]:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px rgba(245, 166, 35, 0.6);
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px rgba(99, 102, 241, 0.6);
 }
 
 /* ─────────────────────────────────────────────
@@ -153,7 +176,7 @@ select:focus-visible,
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(245, 166, 35, 0.3);
+  background-color: rgba(99, 102, 241, 0.3);
 }
 
 /* ─────────────────────────────────────────────
@@ -371,9 +394,76 @@ select:focus-visible,
 /* ─────────────────────────────────────────────
    Layer utilities
    ───────────────────────────────────────────── */
+@layer components {
+  .g-button {
+    @apply rounded-lg border;
+    border-color: var(--btn-border);
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono-dm {
+    font-family: var(--font-mono);
+  }
+
+  .text-gradient-indigo {
+    background: linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .noise-overlay {
+    position: relative;
+  }
+
+  .noise-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: inherit;
+  }
+
+  .glass-surface {
+    background: rgba(17, 17, 19, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glow-indigo {
+    box-shadow: 0 0 0 1px rgba(99,102,241,0.2), 0 0 30px rgba(99,102,241,0.15), 0 0 60px rgba(99,102,241,0.06);
+  }
+
+  .glow-card {
+    box-shadow: 0 0 0 0.5px rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .glow-card-hover {
+    box-shadow: 0 0 0 1px rgba(99,102,241,0.2), 0 12px 40px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.4);
+  }
+
+  .dot-grid {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .text-mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
   }
 
   .bg-hero-gradient {

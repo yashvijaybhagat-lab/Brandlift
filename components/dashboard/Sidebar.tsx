@@ -60,7 +60,7 @@ function BusinessAvatar({ name, size = 32 }: { name: string; size?: number }) {
 
   // Deterministic color from name
   const colors = [
-    'from-amber-500 to-orange-600',
+    'from-indigo-500 to-violet-600',
     'from-violet-500 to-purple-600',
     'from-blue-500 to-cyan-600',
     'from-emerald-500 to-teal-600',
@@ -148,13 +148,17 @@ export function Sidebar({
         aria-label="Main navigation"
       >
         {/* ── Top section ── */}
-        <div className="flex items-center gap-3 px-3 pt-4 pb-3 border-b border-white/[0.06] min-h-[60px] flex-shrink-0">
+        <div className="flex items-center gap-3 px-3 pt-4 pb-3 border-b border-white/[0.05] min-h-[60px] flex-shrink-0">
           <BusinessAvatar name={businessName} size={32} />
 
           {/* Business name — fades out when collapsed */}
           <span
-            className="flex-1 text-[14px] font-medium text-[#FAFAFA] truncate leading-tight"
+            className="flex-1 truncate leading-tight"
             style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#FAFAFA',
+              letterSpacing: '-0.02em',
               opacity: collapsed ? 0 : 1,
               transition: 'opacity 160ms cubic-bezier(0.23,1,0.32,1)',
               pointerEvents: collapsed ? 'none' : 'auto',
@@ -172,7 +176,7 @@ export function Sidebar({
               'flex-shrink-0 w-6 h-6 rounded-[6px] flex items-center justify-center',
               'text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#18181C]',
               'transition-colors duration-160',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]/60',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60',
             )}
           >
             {collapsed ? (
@@ -201,29 +205,20 @@ export function Sidebar({
                     'relative flex items-center gap-3 rounded-[8px] h-9 px-2.5',
                     'text-[14px] font-medium select-none',
                     'transition-colors duration-160',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]/60',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60',
                     isActive
-                      ? [
-                          'bg-[rgba(245,166,35,0.1)]',
-                          'text-[#F5A623]',
-                          // Left border via pseudo-element workaround using box-shadow
-                        ]
-                      : [
-                          'text-[#71717A]',
-                          'hover:bg-[#18181C]',
-                          'hover:text-[#A1A1AA]',
-                        ]
+                      ? ['text-[#818cf8]']
+                      : ['text-[#52525B]', 'hover:bg-[#18181C]', 'hover:text-[#A1A1AA]']
                   )}
                   style={{
-                    boxShadow: isActive
-                      ? 'inset 2px 0 0 0 #F5A623'
-                      : undefined,
+                    background: isActive ? 'rgba(99,102,241,0.08)' : undefined,
+                    boxShadow: isActive ? 'inset 2px 0 0 0 #6366f1' : undefined,
                   }}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon
                     className="flex-shrink-0 w-4 h-4"
-                    style={{ color: isActive ? '#F5A623' : undefined }}
+                    style={{ color: isActive ? '#6366f1' : undefined }}
                   />
                   <span
                     className="truncate"
@@ -256,24 +251,24 @@ export function Sidebar({
             }}
           >
             <div
-              className="rounded-[10px] p-3"
+              className="rounded-xl p-3.5"
               style={{
-                background: 'linear-gradient(135deg, rgba(245,166,35,0.08) 0%, rgba(232,130,92,0.08) 100%)',
-                border: '0.5px solid rgba(245,166,35,0.25)',
+                background: 'linear-gradient(135deg, rgba(99,102,241,0.07) 0%, rgba(139,92,246,0.07) 100%)',
+                border: '0.5px solid rgba(99,102,241,0.2)',
               }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-3.5 h-3.5 text-[#F5A623] flex-shrink-0" />
-                <span className="text-[12px] font-medium text-[#F5A623]">Upgrade to Pro</span>
+              <div className="flex items-center gap-2 mb-1.5">
+                <Zap className="w-3 h-3 flex-shrink-0" style={{ color: '#818cf8' }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#818cf8', letterSpacing: '-0.01em' }}>Upgrade to Pro</span>
               </div>
-              <p className="text-[11px] text-[#71717A] leading-relaxed mb-2.5">
-                Unlock unlimited videos and AI content ideas.
+              <p style={{ fontSize: 11, color: '#52525B', lineHeight: 1.5, marginBottom: 10 }}>
+                Unlimited videos, AI captions, and priority support.
               </p>
               <Button
                 variant="primary"
                 size="sm"
                 fullWidth
-                className="text-[12px] h-7"
+                className="text-[11px] h-7 rounded-lg"
               >
                 Upgrade
               </Button>

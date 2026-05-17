@@ -156,7 +156,7 @@ function VideoReveal() {
         style={{
           clipPath: afterClip,
           background: 'linear-gradient(160deg, #1a1508 0%, #0A0A0B 100%)',
-          border: '0.5px solid rgba(245,166,35,0.2)',
+          border: '0.5px solid rgba(99,102,241,0.2)',
         }}
       >
         {/* Vibrant, sharp content placeholder */}
@@ -165,16 +165,16 @@ function VideoReveal() {
           <div
             className="absolute inset-0 opacity-10"
             style={{
-              background: 'radial-gradient(ellipse at 50% 30%, rgba(245,166,35,0.5) 0%, transparent 70%)',
+              background: 'radial-gradient(ellipse at 50% 30%, rgba(99,102,241,0.5) 0%, transparent 70%)',
             }}
             aria-hidden
           />
           <div
             className="relative w-14 h-14 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(245,166,35,0.15)', border: '0.5px solid rgba(245,166,35,0.3)' }}
+            style={{ background: 'rgba(99,102,241,0.15)', border: '0.5px solid rgba(99,102,241,0.3)' }}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" fill="rgba(245,166,35,0.9)" />
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" fill="rgba(99,102,241,0.9)" />
             </svg>
           </div>
           {/* Caption bars */}
@@ -194,9 +194,9 @@ function VideoReveal() {
         <div
           className="absolute bottom-3 right-3 text-xs px-2.5 py-1 rounded-pill"
           style={{
-            background: 'rgba(245,166,35,0.15)',
+            background: 'rgba(99,102,241,0.15)',
             color: 'var(--color-primary)',
-            border: '0.5px solid rgba(245,166,35,0.3)',
+            border: '0.5px solid rgba(99,102,241,0.3)',
             backdropFilter: 'blur(8px)',
           }}
         >
@@ -224,7 +224,7 @@ function VideoReveal() {
         {/* Divider line */}
         <div
           className="absolute top-0 bottom-0 w-px"
-          style={{ background: 'rgba(245,166,35,0.5)', left: '50%' }}
+          style={{ background: 'rgba(99,102,241,0.5)', left: '50%' }}
           aria-hidden
         />
         {/* Handle circle */}
@@ -232,7 +232,7 @@ function VideoReveal() {
           className="relative flex items-center justify-center w-9 h-9 rounded-full shadow-lg"
           style={{
             background: 'var(--color-primary)',
-            boxShadow: '0 0 0 2px rgba(245,166,35,0.3), 0 4px 12px rgba(0,0,0,0.5)',
+            boxShadow: '0 0 0 2px rgba(99,102,241,0.3), 0 4px 12px rgba(0,0,0,0.5)',
           }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -267,7 +267,7 @@ export default function Hero() {
             right: '-5%',
             width: '50%',
             height: '60%',
-            background: 'radial-gradient(ellipse at center, rgba(245,166,35,0.08) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.08) 0%, transparent 70%)',
             animation: 'meshMove1 25s ease-in-out infinite',
           }}
         />
@@ -278,7 +278,7 @@ export default function Hero() {
             left: '-5%',
             width: '45%',
             height: '50%',
-            background: 'radial-gradient(ellipse at center, rgba(232,130,92,0.07) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.07) 0%, transparent 70%)',
             animation: 'meshMove2 30s ease-in-out infinite',
           }}
         />
@@ -289,7 +289,7 @@ export default function Hero() {
             left: '20%',
             width: '35%',
             height: '40%',
-            background: 'radial-gradient(ellipse at center, rgba(245,166,35,0.05) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.05) 0%, transparent 70%)',
             animation: 'meshMove3 20s ease-in-out infinite',
           }}
         />

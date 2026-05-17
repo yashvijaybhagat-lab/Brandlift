@@ -55,7 +55,7 @@ export default function Footer() {
               }}
             >
               <span aria-hidden>✓</span>
-              You're in — check your inbox
+              You&apos;re in — check your inbox
             </div>
           ) : (
             <form
@@ -78,8 +78,8 @@ export default function Footer() {
                   outline: 'none',
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(245,166,35,0.4)'
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(245,166,35,0.1)'
+                  e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)'
                 }}
                 onBlur={(e) => {
                   e.currentTarget.style.borderColor = 'var(--color-border-strong)'
@@ -122,7 +122,7 @@ export default function Footer() {
               {[
                 { label: 'Privacy', href: '/privacy' },
                 { label: 'Terms', href: '/terms' },
-                { label: 'Contact', href: 'mailto:hello@brandlift.app' },
+                { label: 'Contact', href: '/contact' },
               ].map(({ label, href }) => (
                 <li key={label}>
                   <Link
@@ -147,13 +147,8 @@ export default function Footer() {
             </ul>
           </nav>
 
-          {/* Attribution */}
-          <div
-            className="text-xs flex items-center gap-1.5"
-            style={{ color: 'var(--color-text-muted)' }}
-          >
-            Built with
-            <span style={{ color: 'var(--color-primary)' }}>Claude AI</span>
+          <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            © 2026 BrandLift
           </div>
         </div>
       </div>

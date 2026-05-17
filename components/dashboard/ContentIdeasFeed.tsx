@@ -185,6 +185,17 @@ const TREND_CONFIG: Record<Trend, { emoji: string; label: string; color: string 
 // ContentIdeaCard
 // ─────────────────────────────────────────────
 
+const TREND_ACCENT: Record<Trend, string> = {
+  trending: 'rgba(251,191,36,0.15)',
+  rising: 'rgba(74,222,128,0.12)',
+  classic: 'rgba(161,161,170,0.1)',
+}
+const TREND_BORDER: Record<Trend, string> = {
+  trending: 'rgba(251,191,36,0.25)',
+  rising: 'rgba(74,222,128,0.2)',
+  classic: 'rgba(255,255,255,0.06)',
+}
+
 function ContentIdeaCard({
   idea,
   style,
@@ -194,88 +205,130 @@ function ContentIdeaCard({
 }) {
   const trend = TREND_CONFIG[idea.trend]
   const [hovered, setHovered] = React.useState(false)
-  const [pressed, setPressed] = React.useState(false)
-
-  // Detect hover capability once on mount
-  const supportsHover =
-    typeof window !== 'undefined' &&
-    window.matchMedia('(hover: hover)').matches
-
-  const prefersReduced =
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-  const liftStyle: React.CSSProperties = prefersReduced
-    ? {}
-    : {
-        transform: pressed
-          ? 'scale(0.98)'
-          : hovered && supportsHover
-          ? 'translateY(-2px)'
-          : 'translateY(0)',
-        boxShadow:
-          hovered && supportsHover && !pressed
-            ? '0 8px 32px rgba(0,0,0,0.4)'
-            : undefined,
-        transition:
-          'transform 160ms cubic-bezier(0.23,1,0.32,1), box-shadow 160ms cubic-bezier(0.23,1,0.32,1)',
-      }
 
   return (
     <article
-      style={{ ...style, ...liftStyle }}
-      className="relative flex flex-col gap-3 p-4 rounded-[12px] bg-[#111113] border border-white/[0.06] cursor-default"
+      style={{
+        ...style,
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        boxShadow: hovered
+          ? '0 0 0 1px rgba(99,102,241,0.15), 0 12px 36px rgba(0,0,0,0.45)'
+          : '0 0 0 0.5px rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.2)',
+        transition: 'transform 180ms cubic-bezier(0.23,1,0.32,1), box-shadow 180ms cubic-bezier(0.23,1,0.32,1), background 180ms ease',
+        background: hovered ? '#141416' : '#111113',
+        borderRadius: 14,
+        overflow: 'hidden',
+        cursor: 'default',
+        position: 'relative',
+      }}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setPressed(false) }}
-      onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
+      onMouseLeave={() => setHovered(false)}
     >
-      {/* Top row: format badge + trend indicator */}
-      <div className="flex items-center justify-between gap-2">
-        <span
-          className={cn(
-            'inline-flex items-center px-2 py-0.5 rounded-[6px]',
-            'text-[11px] font-medium',
-            'bg-[#18181C] text-[#71717A] border border-white/[0.06]',
-          )}
+      {/* Left accent bar */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px] transition-opacity duration-200"
+        style={{
+          background: 'linear-gradient(to bottom, #6366f1, #8b5cf6)',
+          opacity: hovered ? 1 : 0,
+          borderRadius: '0 2px 2px 0',
+        }}
+        aria-hidden
+      />
+
+      {/* Indigo glow on top edge */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px transition-opacity duration-200"
+        style={{
+          background: 'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.5) 50%, transparent 100%)',
+          opacity: hovered ? 1 : 0,
+        }}
+        aria-hidden
+      />
+
+      <div className="flex flex-col gap-3 p-4">
+        {/* Top row */}
+        <div className="flex items-center justify-between gap-2">
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '2px 8px',
+              borderRadius: 6,
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              background: '#18181C',
+              color: '#52525B',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+            }}
+          >
+            {FORMAT_LABELS[idea.format]}
+          </span>
+
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '2px 8px',
+              borderRadius: 6,
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: '0.02em',
+              background: TREND_ACCENT[idea.trend],
+              border: `0.5px solid ${TREND_BORDER[idea.trend]}`,
+              color: idea.trend === 'trending' ? '#FBBF24' : idea.trend === 'rising' ? '#4ADE80' : '#A1A1AA',
+            }}
+          >
+            <span aria-hidden>{trend.emoji}</span>
+            {trend.label}
+          </span>
+        </div>
+
+        {/* Hook */}
+        <p
+          style={{
+            fontSize: 14,
+            fontWeight: 500,
+            color: hovered ? '#FAFAFA' : '#E4E4E7',
+            lineHeight: 1.55,
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            transition: 'color 180ms ease',
+            flex: 1,
+          }}
         >
-          {FORMAT_LABELS[idea.format]}
-        </span>
+          {idea.hook}
+        </p>
 
-        <span className={cn('flex items-center gap-1 text-[11px] font-medium', trend.color)}>
-          <span aria-hidden="true">{trend.emoji}</span>
-          {trend.label}
-        </span>
-      </div>
+        {/* Platform badges */}
+        <div className="flex flex-wrap gap-1.5">
+          {idea.platforms.map((p) => (
+            <Badge key={p} variant="platform" platform={p} />
+          ))}
+        </div>
 
-      {/* Hook */}
-      <p className="text-[15px] font-medium text-[#FAFAFA] leading-snug line-clamp-3 flex-1">
-        {idea.hook}
-      </p>
-
-      {/* Platform badges */}
-      <div className="flex flex-wrap gap-1.5">
-        {idea.platforms.map((p) => (
-          <Badge key={p} variant="platform" platform={p} />
-        ))}
-      </div>
-
-      {/* Reach + CTA row */}
-      <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/[0.04]">
-        <span className="text-[12px] text-[#71717A]">Est. reach: {idea.reach}</span>
-
-        <button
-          className={cn(
-            'inline-flex items-center gap-1 text-[12px] font-medium',
-            'text-[#71717A] hover:text-[#F5A623]',
-            'transition-colors duration-160',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]/60 rounded-[4px]',
-          )}
-          aria-label={`Use idea: ${idea.hook.slice(0, 50)}…`}
+        {/* Footer row */}
+        <div
+          className="flex items-center justify-between gap-2 pt-2.5"
+          style={{ borderTop: '0.5px solid rgba(255,255,255,0.05)' }}
         >
-          Use this idea
-          <ArrowRight className="w-3 h-3" />
-        </button>
+          <span style={{ fontSize: 11, color: '#3f3f46', fontFamily: 'var(--font-mono)' }}>
+            {idea.reach} est. reach
+          </span>
+
+          <button
+            className="inline-flex items-center gap-1 text-[12px] font-medium rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60"
+            style={{ color: hovered ? '#818cf8' : '#52525B' }}
+            aria-label={`Use idea: ${idea.hook.slice(0, 50)}…`}
+          >
+            Use this idea
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
       </div>
     </article>
   )
@@ -300,7 +353,7 @@ function FilterChip({
       className={cn(
         'relative inline-flex items-center px-3 py-1 rounded-pill text-[13px] font-medium',
         'transition-colors duration-160',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]/60',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60',
         'overflow-hidden',
         active
           ? 'text-[#0A0A0B]'
@@ -310,7 +363,7 @@ function FilterChip({
       {/* Clip-path fill reveal for active state */}
       <span
         aria-hidden="true"
-        className="absolute inset-0 bg-[#F5A623] rounded-pill"
+        className="absolute inset-0 bg-[#6366f1] rounded-pill"
         style={{
           clipPath: active ? 'inset(0 0 0 0 round 24px)' : 'inset(0 100% 0 0 round 24px)',
           transition: 'clip-path 200ms cubic-bezier(0.23,1,0.32,1)',
@@ -395,12 +448,25 @@ export function ContentIdeasFeed({
   ]
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-5">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-[20px] font-medium text-[#FAFAFA]">Content Ideas</h2>
-          <p className="text-[14px] text-[#71717A] mt-0.5">Fresh ideas tailored to your business</p>
+          <h2
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 22,
+              fontWeight: 700,
+              color: '#FAFAFA',
+              letterSpacing: '-0.04em',
+              lineHeight: 1.1,
+            }}
+          >
+            Content Ideas
+          </h2>
+          <p style={{ fontSize: 13, color: '#52525B', marginTop: 4 }}>
+            AI-tailored hooks for your business
+          </p>
         </div>
 
         <button
@@ -408,21 +474,31 @@ export function ContentIdeasFeed({
           disabled={refreshing}
           aria-label="Refresh ideas"
           className={cn(
-            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px]',
-            'text-[13px] font-medium text-[#71717A]',
-            'hover:bg-[#18181C] hover:text-[#A1A1AA]',
-            'transition-colors duration-160',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5A623]/60',
+            'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg',
+            'text-[12px] font-medium',
+            'transition-all duration-150',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60',
             'disabled:opacity-40 disabled:cursor-not-allowed',
           )}
+          style={{ color: '#52525B', border: '0.5px solid rgba(255,255,255,0.07)', background: '#111113' }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget as HTMLButtonElement
+            el.style.color = '#A1A1AA'
+            el.style.borderColor = 'rgba(255,255,255,0.12)'
+            el.style.background = '#18181C'
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget as HTMLButtonElement
+            el.style.color = '#52525B'
+            el.style.borderColor = 'rgba(255,255,255,0.07)'
+            el.style.background = '#111113'
+          }}
         >
           <RefreshCw
-            className="w-3.5 h-3.5"
+            className="w-3 h-3"
             style={{
               transform: rotating ? 'rotate(360deg)' : 'rotate(0deg)',
-              transition: rotating
-                ? 'transform 400ms cubic-bezier(0.23,1,0.32,1)'
-                : 'transform 0ms',
+              transition: rotating ? 'transform 400ms cubic-bezier(0.23,1,0.32,1)' : 'transform 0ms',
             }}
           />
           Refresh
@@ -486,7 +562,7 @@ export function ContentIdeasFeed({
             <p className="text-[14px] text-[#A1A1AA]">No ideas match those filters.</p>
             <button
               onClick={() => { setPlatformFilter('all'); setFormatFilter('all') }}
-              className="text-[13px] text-[#F5A623] hover:underline"
+              className="text-[13px] text-[#6366f1] hover:underline"
             >
               Clear filters
             </button>

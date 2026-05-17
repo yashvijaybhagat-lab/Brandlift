@@ -1,4 +1,5 @@
-import Hero from '@/components/marketing/Hero'
+import { HeroSection } from '@/components/blocks/hero-section-5'
+import { AnimatedBackground } from '@/components/marketing/AnimatedBackground'
 import SocialProof from '@/components/marketing/SocialProof'
 import Features from '@/components/marketing/Features'
 import Pricing from '@/components/marketing/Pricing'
@@ -12,12 +13,18 @@ export const metadata = {
 
 export default function LandingPage() {
   return (
-    <>
-      <Hero />
-      <SocialProof />
-      <Features />
-      <Pricing />
-      <Footer />
-    </>
+    <div className="relative">
+      {/* Ambient orbit background — fixed, scroll-animated */}
+      <AnimatedBackground />
+
+      {/* Page content sits above z-0 */}
+      <div className="relative z-10">
+        <HeroSection />
+        <SocialProof />
+        <Features />
+        <Pricing />
+        <Footer />
+      </div>
+    </div>
   )
 }

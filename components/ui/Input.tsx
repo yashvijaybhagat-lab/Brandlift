@@ -100,7 +100,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             // Disabled
             disabled && 'opacity-50 cursor-not-allowed',
             // Focus within
-            !hasError && 'focus-within:border-brand-primary focus-within:shadow-focus-amber',
+            !hasError && 'focus-within:border-brand-primary focus-within:shadow-focus-indigo',
             hasError && 'focus-within:shadow-focus-error',
           )}
         >

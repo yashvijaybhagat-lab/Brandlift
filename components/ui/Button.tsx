@@ -1,22 +1,25 @@
 'use client'
 
 import * as React from 'react'
+import { Slot } from '@radix-ui/react-slot'
 import { cn } from '@/lib/cn'
 
 // ─────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
-type ButtonSize = 'sm' | 'md' | 'lg'
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'default' | 'destructive' | 'link'
+type ButtonSize = 'sm' | 'md' | 'lg' | 'icon'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
   size?: ButtonSize
   loading?: boolean
+  /** Render as child element (Radix Slot — enables asChild pattern) */
+  asChild?: boolean
   /** If true, button fills the width of its container */
   fullWidth?: boolean
-  children: React.ReactNode
+  children?: React.ReactNode
 }
 
 // ─────────────────────────────────────────────
@@ -44,7 +47,16 @@ const variantStyles: Record<ButtonVariant, string> = {
     'border border-transparent',
     'shadow-sm',
     'hover:brightness-105',
-    'focus-visible:shadow-focus-amber',
+    'focus-visible:shadow-focus-indigo',
+  ].join(' '),
+  // shadcn alias for primary
+  default: [
+    'bg-gradient-to-br from-brand-primary to-brand-primary-hover',
+    'text-[#0A0A0B]',
+    'border border-transparent',
+    'shadow-sm',
+    'hover:brightness-105',
+    'focus-visible:shadow-focus-indigo',
   ].join(' '),
 
   secondary: [
@@ -54,7 +66,16 @@ const variantStyles: Record<ButtonVariant, string> = {
     'hover:bg-brand-surface-elevated',
     'hover:text-brand-text',
     'hover:border-brand-border-strong',
-    'focus-visible:shadow-focus-amber',
+    'focus-visible:shadow-focus-indigo',
+  ].join(' '),
+
+  outline: [
+    'bg-transparent',
+    'text-brand-text',
+    'border border-brand-border-strong',
+    'hover:bg-brand-surface',
+    'hover:border-brand-border-strong',
+    'focus-visible:shadow-focus-indigo',
   ].join(' '),
 
   ghost: [
@@ -64,7 +85,7 @@ const variantStyles: Record<ButtonVariant, string> = {
     'hover:bg-brand-surface',
     'hover:text-brand-text',
     'hover:border-brand-border',
-    'focus-visible:shadow-focus-amber',
+    'focus-visible:shadow-focus-indigo',
   ].join(' '),
 
   danger: [
@@ -75,12 +96,26 @@ const variantStyles: Record<ButtonVariant, string> = {
     'hover:border-[rgba(248,113,113,0.35)]',
     'focus-visible:shadow-focus-error',
   ].join(' '),
+
+  destructive: [
+    'bg-[rgba(248,113,113,0.12)]',
+    'text-brand-error',
+    'border border-[rgba(248,113,113,0.2)]',
+    'hover:bg-[rgba(248,113,113,0.2)]',
+    'focus-visible:shadow-focus-error',
+  ].join(' '),
+
+  link: [
+    'bg-transparent border-transparent underline-offset-4 hover:underline',
+    'text-brand-primary',
+  ].join(' '),
 }
 
 const sizeStyles: Record<ButtonSize, string> = {
   sm: 'h-8 px-3 text-[13px] gap-1.5 rounded-[8px]',
   md: 'h-9 px-4 text-[14px] gap-2 rounded-[8px]',
   lg: 'h-11 px-6 text-[15px] gap-2.5 rounded-[10px]',
+  icon: 'h-10 w-10 rounded-[8px]',
 }
 
 // ─────────────────────────────────────────────
@@ -93,6 +128,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variant = 'primary',
       size = 'md',
       loading = false,
+      asChild = false,
       fullWidth = false,
       disabled,
       className,
@@ -101,38 +137,33 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
+    const Comp = asChild ? Slot : 'button'
     const isDisabled = disabled || loading
 
     return (
-      <button
+      <Comp
         ref={ref}
-        disabled={isDisabled}
-        aria-busy={loading}
+        disabled={asChild ? undefined : isDisabled}
+        aria-busy={loading || undefined}
         className={cn(
-          // Base
           'inline-flex items-center justify-center',
           'font-medium font-sans',
           'select-none',
           'outline-none',
           'transition-all',
           'duration-130',
-          // Variant
           variantStyles[variant],
-          // Size
           sizeStyles[size],
-          // Press effect
           'active:scale-[0.97]',
           'transition-transform duration-130',
-          // Full width
           fullWidth && 'w-full',
-          // Disabled
-          isDisabled && 'opacity-40 cursor-not-allowed pointer-events-none',
+          isDisabled && !asChild && 'opacity-40 cursor-not-allowed pointer-events-none',
           className
         )}
         {...props}
       >
         {loading ? <LoadingDots /> : children}
-      </button>
+      </Comp>
     )
   }
 )

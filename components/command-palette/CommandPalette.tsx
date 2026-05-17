@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { cn } from '@/lib/cn'
 import { useCommandPalette } from './CommandPaletteProvider'
 
 // ─────────────────────────────────────────────
@@ -352,7 +351,7 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
                   style={{
                     fontSize: 16,
                     color: '#FAFAFA',
-                    caretColor: '#F5A623',
+                    caretColor: '#6366f1',
                   }}
                 />
 
@@ -361,8 +360,8 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
                   <span
                     className="flex-shrink-0 w-1.5 h-1.5 rounded-full"
                     style={{
-                      background: '#F5A623',
-                      animation: 'amberCursorBlink 1s ease-in-out infinite',
+                      background: '#6366f1',
+                      animation: 'indigoCursorBlink 1s ease-in-out infinite',
                     }}
                     aria-hidden="true"
                   />
@@ -397,9 +396,9 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
                           }}
                           onMouseEnter={(e) => {
                             const el = e.currentTarget
-                            el.style.borderColor = 'rgba(245,166,35,0.4)'
+                            el.style.borderColor = 'rgba(99,102,241,0.4)'
                             el.style.color = '#FAFAFA'
-                            el.style.background = 'rgba(245,166,35,0.05)'
+                            el.style.background = 'rgba(99,102,241,0.05)'
                           }}
                           onMouseLeave={(e) => {
                             const el = e.currentTarget
@@ -433,10 +432,10 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
                             display: 'inline-block',
                             width: 2,
                             height: '1em',
-                            background: '#F5A623',
+                            background: '#6366f1',
                             marginLeft: 2,
                             verticalAlign: 'text-bottom',
-                            animation: 'amberCursorBlink 900ms ease-in-out infinite',
+                            animation: 'indigoCursorBlink 900ms ease-in-out infinite',
                           }}
                         />
                       )}
@@ -458,21 +457,21 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
                             onClick={() => close()}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[13px] font-medium"
                             style={{
-                              background: 'rgba(245,166,35,0.1)',
-                              border: '0.5px solid rgba(245,166,35,0.3)',
-                              color: '#F5A623',
+                              background: 'rgba(99,102,241,0.1)',
+                              border: '0.5px solid rgba(99,102,241,0.3)',
+                              color: '#6366f1',
                               textDecoration: 'none',
                               transition: 'background 150ms, border-color 150ms',
                             }}
                             onMouseEnter={(e) => {
                               const el = e.currentTarget
-                              el.style.background = 'rgba(245,166,35,0.18)'
-                              el.style.borderColor = 'rgba(245,166,35,0.5)'
+                              el.style.background = 'rgba(99,102,241,0.18)'
+                              el.style.borderColor = 'rgba(99,102,241,0.5)'
                             }}
                             onMouseLeave={(e) => {
                               const el = e.currentTarget
-                              el.style.background = 'rgba(245,166,35,0.1)'
-                              el.style.borderColor = 'rgba(245,166,35,0.3)'
+                              el.style.background = 'rgba(99,102,241,0.1)'
+                              el.style.borderColor = 'rgba(99,102,241,0.3)'
                             }}
                           >
                             {action.label}
@@ -535,7 +534,7 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
 
       {/* Keyframes for cursor blink + chip stagger */}
       <style>{`
-        @keyframes amberCursorBlink {
+        @keyframes indigoCursorBlink {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0; }
         }
@@ -544,7 +543,7 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
           to   { opacity: 1; transform: translateY(0); }
         }
         @media (prefers-reduced-motion: reduce) {
-          @keyframes amberCursorBlink { 0%, 100% { opacity: 1; } }
+          @keyframes indigoCursorBlink { 0%, 100% { opacity: 1; } }
           @keyframes chipIn { from { opacity: 1; transform: none; } }
         }
       `}</style>

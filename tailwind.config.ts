@@ -11,15 +11,26 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        card: "var(--card)",
+        "card-foreground": "var(--card-foreground)",
+        muted: "var(--muted)",
+        "muted-foreground": "var(--muted-foreground)",
+        secondary: "var(--secondary)",
+        "secondary-foreground": "var(--secondary-foreground)",
+        accent: "var(--accent)",
+        "accent-foreground": "var(--accent-foreground)",
+        border: "var(--border)",
+        input: "var(--input)",
+        skeleton: "var(--skeleton)",
         "brand-bg": "#0A0A0B",
         "brand-surface": "#111113",
         "brand-surface-elevated": "#18181C",
         "brand-border": "rgba(255,255,255,0.06)",
         "brand-border-strong": "rgba(255,255,255,0.12)",
-        "brand-primary": "#F5A623",
-        "brand-primary-hover": "#F0941A",
-        "brand-primary-muted": "rgba(245,166,35,0.12)",
-        "brand-accent": "#E8825C",
+        "brand-primary": "#6366f1",
+        "brand-primary-hover": "#4f46e5",
+        "brand-primary-muted": "rgba(99,102,241,0.12)",
+        "brand-accent": "#8b5cf6",
         "brand-text": "#FAFAFA",
         "brand-text-secondary": "#A1A1AA",
         "brand-text-muted": "#71717A",
@@ -89,6 +100,14 @@ const config: Config = {
           "0%, 80%, 100%": { transform: "translateY(0)", opacity: "0.4" },
           "40%": { transform: "translateY(-4px)", opacity: "1" },
         },
+        ripple: {
+          "0%, 100%": { transform: "translate(-50%, -50%) scale(1)" },
+          "50%": { transform: "translate(-50%, -50%) scale(0.9)" },
+        },
+        orbit: {
+          "0%": { transform: "rotate(0deg) translateY(calc(var(--radius) * 1px)) rotate(0deg)" },
+          "100%": { transform: "rotate(360deg) translateY(calc(var(--radius) * 1px)) rotate(-360deg)" },
+        },
       },
       animation: {
         shimmer: "shimmer 2s linear infinite",
@@ -100,6 +119,8 @@ const config: Config = {
         "scale-in": "scale-in 250ms cubic-bezier(0.23, 1, 0.32, 1) forwards",
         "completion-bounce": "completion-bounce 300ms cubic-bezier(0.23, 1, 0.32, 1)",
         "dot-bounce": "dot-bounce 1.2s ease-in-out infinite",
+        ripple: "ripple 2s ease calc(var(--i, 0) * 0.2s) infinite",
+        orbit: "orbit calc(var(--duration) * 1s) linear infinite",
       },
       transitionTimingFunction: {
         "brand-enter": "cubic-bezier(0.23, 1, 0.32, 1)",
@@ -115,18 +136,18 @@ const config: Config = {
       },
       backgroundImage: {
         "hero-gradient": "linear-gradient(135deg, #0A0A0B 0%, #111113 50%, #18181C 100%)",
-        "primary-gradient": "linear-gradient(135deg, #F5A623 0%, #F0941A 100%)",
+        "primary-gradient": "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
         "shimmer-gradient":
           "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%)",
       },
       boxShadow: {
-        "focus-amber":
-          "0 0 0 3px rgba(245,166,35,0.25), inset 0 0 0 1px rgba(245,166,35,0.5)",
+        "focus-indigo":
+          "0 0 0 3px rgba(99,102,241,0.25), inset 0 0 0 1px rgba(99,102,241,0.5)",
         "focus-error":
           "0 0 0 3px rgba(248,113,113,0.2), inset 0 0 0 1px rgba(248,113,113,0.5)",
         "card-glow": "0 0 0 1px rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.4)",
         "card-hover": "0 0 0 1px rgba(255,255,255,0.1), 0 4px 16px rgba(0,0,0,0.5)",
-        "amber-glow": "0 0 20px rgba(245,166,35,0.15)",
+        "indigo-glow": "0 0 20px rgba(99,102,241,0.15)",
       },
     },
   },

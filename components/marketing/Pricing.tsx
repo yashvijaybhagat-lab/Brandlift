@@ -176,7 +176,7 @@ const PLANS: Plan[] = [
       'Dedicated support',
       'API access',
     ],
-    cta: 'primary',
+    cta: 'hold',
   },
 ]
 
@@ -191,9 +191,9 @@ function PricingCard({ plan, delay }: { plan: Plan; delay: number }) {
         style={{
           background: plan.popular ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
           border: plan.popular
-            ? '0.5px solid rgba(245,166,35,0.3)'
+            ? '0.5px solid rgba(99,102,241,0.3)'
             : '0.5px solid var(--color-border)',
-          boxShadow: plan.popular ? '0 0 0 1px rgba(245,166,35,0.08)' : 'none',
+          boxShadow: plan.popular ? '0 0 0 1px rgba(99,102,241,0.08)' : 'none',
         }}
       >
         {/* Most Popular badge */}
@@ -310,7 +310,7 @@ export default function Pricing() {
             Simple pricing. No surprises.
           </h2>
           <p className="max-w-md" style={{ color: 'var(--color-text-secondary)' }}>
-            Start free and upgrade when you're ready. No contracts, cancel anytime.
+            Start free and upgrade when you&apos;re ready. No contracts, cancel anytime.
           </p>
         </ScrollReveal>
 

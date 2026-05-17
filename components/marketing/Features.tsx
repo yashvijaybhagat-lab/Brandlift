@@ -69,7 +69,6 @@ function OnboardingMockup() {
   const [showAi, setShowAi] = useState(false)
 
   useEffect(() => {
-    const ref = { current: null as HTMLDivElement | null }
     const timer = { id: 0 }
 
     const observer = new IntersectionObserver(
@@ -140,8 +139,8 @@ function OnboardingMockup() {
           <div
             className="flex items-start gap-2.5 p-3 rounded-interactive"
             style={{
-              background: 'rgba(245,166,35,0.06)',
-              border: '0.5px solid rgba(245,166,35,0.2)',
+              background: 'rgba(99,102,241,0.06)',
+              border: '0.5px solid rgba(99,102,241,0.2)',
             }}
           >
             <div
@@ -155,7 +154,7 @@ function OnboardingMockup() {
                 AI is refining...
               </p>
               <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                "Premium barbershop creating sharp looks and lasting confidence for modern men."
+                &ldquo;Premium barbershop creating sharp looks and lasting confidence for modern men.&rdquo;
               </p>
             </div>
           </div>
@@ -374,22 +373,39 @@ export default function Features() {
       aria-labelledby="features-heading"
       className="py-24"
     >
-      <div className="max-w-6xl mx-auto px-6 flex flex-col gap-24">
-        {/* Section label */}
-        <ScrollReveal className="text-center">
+      <div className="max-w-6xl mx-auto px-6 flex flex-col gap-20">
+        {/* Section header */}
+        <ScrollReveal className="flex flex-col items-center gap-4 text-center">
           <div
-            className="inline-block text-xs uppercase tracking-widest font-medium mb-3"
-            style={{ color: 'var(--color-primary)' }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
+            style={{
+              background: 'rgba(99,102,241,0.08)',
+              border: '0.5px solid rgba(99,102,241,0.2)',
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: '#818cf8',
+            }}
           >
-            Features
+            Platform features
           </div>
           <h2
             id="features-heading"
-            className="text-heading"
-            style={{ fontSize: 'clamp(28px, 4vw, 40px)', color: 'var(--color-text)' }}
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 800,
+              fontSize: 'clamp(30px, 4.5vw, 48px)',
+              letterSpacing: '-0.04em',
+              lineHeight: 1.05,
+              color: '#FAFAFA',
+            }}
           >
-            Everything you need. Nothing you don't.
+            Everything you need.<br />Nothing you don&apos;t.
           </h2>
+          <p style={{ fontSize: 16, color: '#71717A', maxWidth: '46ch', lineHeight: 1.65 }}>
+            From smart onboarding to AI-powered video production — one platform that does the work of a full marketing team.
+          </p>
         </ScrollReveal>
 
         {/* 01 — Smart Onboarding */}
@@ -400,8 +416,7 @@ export default function Features() {
                 01 / Smart Onboarding
               </div>
               <h3
-                className="text-heading"
-                style={{ fontSize: 'clamp(22px, 3vw, 30px)', color: 'var(--color-text)' }}
+                style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(22px, 3vw, 30px)', letterSpacing: '-0.04em', lineHeight: 1.15, color: 'var(--color-text)' }}
               >
                 The intake form that thinks for you
               </h3>
@@ -438,13 +453,12 @@ export default function Features() {
                 02 / Content Intelligence
               </div>
               <h3
-                className="text-heading"
-                style={{ fontSize: 'clamp(22px, 3vw, 30px)', color: 'var(--color-text)' }}
+                style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(22px, 3vw, 30px)', letterSpacing: '-0.04em', lineHeight: 1.15, color: 'var(--color-text)' }}
               >
                 Content ideas that actually fit your business
               </h3>
               <p style={{ color: 'var(--color-text-secondary)' }}>
-                No generic tips. We analyze your niche, your location, and what's trending in your category — then surface ideas you can actually film this week.
+                No generic tips. We analyze your niche, your location, and what&apos;s trending in your category — then surface ideas you can actually film this week.
               </p>
               <ul className="flex flex-col gap-2.5">
                 {[
@@ -476,8 +490,7 @@ export default function Features() {
                 03 / Video Transformation
               </div>
               <h3
-                className="text-heading"
-                style={{ fontSize: 'clamp(22px, 3vw, 30px)', color: 'var(--color-text)' }}
+                style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(22px, 3vw, 30px)', letterSpacing: '-0.04em', lineHeight: 1.15, color: 'var(--color-text)' }}
               >
                 Send us your shaky iPhone footage. We send back pro content.
               </h3>

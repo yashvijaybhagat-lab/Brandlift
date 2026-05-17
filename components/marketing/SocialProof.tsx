@@ -165,7 +165,7 @@ export default function SocialProof() {
           className="text-sm text-center"
           style={{ color: 'var(--color-text-muted)' }}
         >
-          Trusted by businesses who don't have time for bad software
+          Trusted by businesses who don&apos;t have time for bad software
         </p>
 
         {/* Marquee */}

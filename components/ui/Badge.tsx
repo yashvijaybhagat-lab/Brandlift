@@ -24,9 +24,9 @@ const variantStyles: Record<BadgeVariant, string> = {
   warning: 'bg-[rgba(251,191,36,0.12)] text-brand-warning border border-[rgba(251,191,36,0.2)]',
   error: 'bg-[rgba(248,113,113,0.12)] text-brand-error border border-[rgba(248,113,113,0.2)]',
   trending: [
-    'bg-gradient-to-r from-[rgba(245,166,35,0.15)] to-[rgba(232,130,92,0.15)]',
+    'bg-gradient-to-r from-[rgba(99,102,241,0.15)] to-[rgba(139,92,246,0.15)]',
     'text-brand-primary',
-    'border border-[rgba(245,166,35,0.25)]',
+    'border border-[rgba(99,102,241,0.25)]',
   ].join(' '),
   platform: '', // handled by platformStyles
 }
@@ -39,7 +39,7 @@ const platformStyles: Record<PlatformType, string> = {
   tiktok: 'bg-black text-white border border-white/10',
   instagram: 'bg-[rgba(225,48,108,0.15)] text-[#E1306C] border border-[rgba(225,48,108,0.25)]',
   youtube: 'bg-[rgba(255,0,0,0.12)] text-[#FF4444] border border-[rgba(255,0,0,0.2)]',
-  website: 'bg-brand-surface-elevated text-brand-primary border border-[rgba(245,166,35,0.3)]',
+  website: 'bg-brand-surface-elevated text-brand-primary border border-[rgba(99,102,241,0.3)]',
   google: 'bg-[rgba(66,133,244,0.12)] text-[#4285F4] border border-[rgba(66,133,244,0.2)]',
 }
 

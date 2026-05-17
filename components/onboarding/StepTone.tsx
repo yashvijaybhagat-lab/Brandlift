@@ -151,7 +151,7 @@ export default function StepTone({ onComplete }: StepToneProps) {
           className="text-[32px] font-[500] tracking-tight text-brand-text mb-2"
           style={{ letterSpacing: '-0.02em' }}
         >
-          What's your brand personality?
+          What&apos;s your brand personality?
         </h2>
         <p className="text-[14px] text-brand-text-muted mb-6">
           Pick the one that feels most like you. This shapes every piece of content we create.
@@ -234,7 +234,7 @@ export default function StepTone({ onComplete }: StepToneProps) {
           Where do you want to show up?
         </h3>
         <p className="text-[13px] text-brand-text-muted mb-4">
-          Select all that apply. We'll tailor content for each platform.
+          Select all that apply. We&apos;ll tailor content for each platform.
         </p>
 
         <div className="flex flex-wrap gap-2">
