@@ -82,7 +82,7 @@ export default function Nav() {
 
         {/* CTA */}
         <Link
-          href="/onboard"
+          href="/sign-up"
           className="pressable text-sm font-medium px-4 py-2 rounded-interactive"
           style={{
             backgroundColor: 'var(--color-primary)',

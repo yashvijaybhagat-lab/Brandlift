@@ -397,7 +397,7 @@ export default function Hero() {
             <Reveal delay={320}>
               <div className="flex flex-wrap items-center gap-3">
                 <Link
-                  href="/onboard"
+                  href="/sign-up"
                   className="pressable inline-flex items-center gap-2 px-6 py-3 rounded-interactive text-sm font-medium"
                   style={{
                     background: 'var(--color-primary)',

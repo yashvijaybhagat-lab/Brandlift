@@ -256,10 +256,10 @@ function PricingCard({ plan, delay }: { plan: Plan; delay: number }) {
         {/* CTA */}
         <div className="mt-auto pt-2">
           {plan.cta === 'hold' ? (
-            <HoldButton onComplete={() => router.push('/onboard')} />
+            <HoldButton onComplete={() => router.push('/sign-up')} />
           ) : plan.cta === 'primary' ? (
             <button
-              onClick={() => router.push('/onboard')}
+              onClick={() => router.push('/sign-up')}
               className="pressable w-full py-3.5 rounded-interactive text-sm font-medium"
               style={{ background: 'var(--color-primary)', color: '#0A0A0B' }}
             >
@@ -267,7 +267,7 @@ function PricingCard({ plan, delay }: { plan: Plan; delay: number }) {
             </button>
           ) : (
             <button
-              onClick={() => router.push('/onboard')}
+              onClick={() => router.push('/sign-up')}
               className="pressable w-full py-3.5 rounded-interactive text-sm"
               style={{
                 background: 'transparent',

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { type BusinessProfile } from '@/lib/claude'
 
+export const dynamic = 'force-dynamic'
+
 // ─────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────

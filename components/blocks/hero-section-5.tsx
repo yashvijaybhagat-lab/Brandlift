@@ -123,7 +123,7 @@ const HeroHeader = () => {
                   Login
                 </Link>
                 <Link
-                  href="/onboard"
+                  href="/sign-up"
                   className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-medium text-white transition-all duration-150"
                   style={{
                     background: 'linear-gradient(135deg, #6366f1 0%, #5558e8 100%)',
@@ -271,7 +271,7 @@ export function HeroSection() {
                   className="flex flex-wrap items-center gap-3"
                 >
                   <Link
-                    href="/onboard"
+                    href="/sign-up"
                     className="pressable group inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all duration-200"
                     style={{
                       background: 'linear-gradient(135deg, #6366f1 0%, #5558e8 100%)',
