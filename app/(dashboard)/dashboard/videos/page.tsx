@@ -172,6 +172,8 @@ function VideosInner() {
   const [captions, setCaptions] = useState<Caption[]>([])
   const [captionsEnabled, setCaptionsEnabled] = useState(false)
   const [currentCaption, setCurrentCaption] = useState('')
+  const [displayedCaption, setDisplayedCaption] = useState('')
+  const [captionOpacity, setCaptionOpacity] = useState(0)
   const [transcribing, setTranscribing] = useState(false)
   const [transcribeError, setTranscribeError] = useState('')
   const [trimStart, setTrimStart] = useState(0)
@@ -240,6 +242,20 @@ function VideosInner() {
       setTranscribing(false)
     }
   }, [displayUrl])
+
+  /* ── Caption crossfade ───────────────────────────────────────────────────────── */
+  useEffect(() => {
+    if (currentCaption === displayedCaption) return
+    if (currentCaption) {
+      setCaptionOpacity(0)
+      const t = setTimeout(() => { setDisplayedCaption(currentCaption); setCaptionOpacity(1) }, 100)
+      return () => clearTimeout(t)
+    } else {
+      setCaptionOpacity(0)
+      const t = setTimeout(() => setDisplayedCaption(''), 200)
+      return () => clearTimeout(t)
+    }
+  }, [currentCaption, displayedCaption])
 
   /* ── Video timeupdate (trim + captions) ────────────────────────────────────── */
   const handleTimeUpdate = useCallback(() => {
@@ -362,6 +378,7 @@ function VideosInner() {
     setSelectedMusic('none'); setCaptions([]); setCaptionsEnabled(false); setCurrentCaption('')
     setTrimStart(0); setTrimEnd(100); setVideoDuration(0); setActiveTab('captions')
     setTranscribing(false); setTranscribeError(''); setTabVisible(true)
+    setDisplayedCaption(''); setCaptionOpacity(0)
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
   }
 
@@ -566,26 +583,61 @@ function VideosInner() {
                   onTimeUpdate={handleTimeUpdate}
                   onLoadedMetadata={() => { if (videoRef.current) setVideoDuration(videoRef.current.duration) }}
                 />
+                {/* Hook text — top of video */}
                 {showHook && hookText && (
-                  <div className="absolute top-4 left-0 right-0 flex justify-center pointer-events-none">
-                    <div className="px-4 py-2 rounded-lg text-[15px] font-bold text-white"
-                      style={{ background: 'rgba(0,0,0,0.72)', textShadow: '0 1px 4px rgba(0,0,0,0.6)', maxWidth: '85%', textAlign: 'center' }}>
+                  <div className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none" style={{ padding: '12px 16px 0' }}>
+                    <div style={{
+                      color: '#fff',
+                      fontSize: 15,
+                      fontWeight: 800,
+                      textAlign: 'center',
+                      lineHeight: 1.3,
+                      maxWidth: '88%',
+                      letterSpacing: '-0.01em',
+                      textShadow: '-1px -1px 3px #000,1px -1px 3px #000,-1px 1px 3px #000,1px 1px 3px #000,0 0 12px rgba(0,0,0,0.8)',
+                    }}>
                       {hookText}
                     </div>
                   </div>
                 )}
-                {captionsEnabled && currentCaption && (
-                  <div className="absolute bottom-14 left-0 right-0 flex justify-center pointer-events-none">
-                    <div className="px-4 py-2 rounded-lg text-[13px] font-semibold text-white"
-                      style={{ background: 'rgba(0,0,0,0.8)', maxWidth: '85%', textAlign: 'center', letterSpacing: '0.01em' }}>
-                      {currentCaption}
-                    </div>
+
+                {/* Captions — centered, above controls */}
+                {captionsEnabled && (
+                  <div className="absolute left-0 right-0 flex justify-center items-center pointer-events-none"
+                    style={{ bottom: '13%', padding: '0 10%' }}>
+                    <p style={{
+                      color: '#fff',
+                      fontSize: 15,
+                      fontWeight: 700,
+                      textAlign: 'center',
+                      lineHeight: 1.45,
+                      letterSpacing: '0.01em',
+                      maxWidth: '100%',
+                      opacity: captionOpacity,
+                      transition: 'opacity 150ms ease',
+                      textShadow: '-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 10px rgba(0,0,0,0.95)',
+                      WebkitTextStroke: '0.3px rgba(0,0,0,0.5)',
+                    }}>
+                      {displayedCaption}
+                    </p>
                   </div>
                 )}
+
+                {/* CTA — bottom bar */}
                 {showCta && ctaText && (
-                  <div className="absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none">
-                    <div className="px-5 py-2 rounded-full text-[13px] font-bold text-white"
-                      style={{ background: 'rgba(99,102,241,0.88)', maxWidth: '85%', textAlign: 'center' }}>
+                  <div className="absolute bottom-0 left-0 right-0 flex justify-center pointer-events-none" style={{ padding: '0 16px 10px' }}>
+                    <div style={{
+                      background: 'rgba(99,102,241,0.92)',
+                      backdropFilter: 'blur(6px)',
+                      borderRadius: 20,
+                      padding: '6px 18px',
+                      color: '#fff',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      textAlign: 'center',
+                      maxWidth: '85%',
+                      boxShadow: '0 2px 12px rgba(99,102,241,0.4)',
+                    }}>
                       {ctaText}
                     </div>
                   </div>
