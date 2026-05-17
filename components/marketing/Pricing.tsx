@@ -1,332 +1,113 @@
 'use client'
 
-import { useEffect, useRef, useState, ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Sparkles, Zap, Music, Type, Scissors, Palette, MessageSquare, Clock, TrendingUp, Video } from 'lucide-react'
 
-/* ─── Scroll-reveal ──────────────────────────────────────────────────────── */
-function ScrollReveal({
-  children,
-  className,
-  delay = 0,
-}: {
-  children: ReactNode
-  className?: string
-  delay?: number
-}) {
+function ScrollReveal({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
-
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => setVisible(true), delay)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.15 }
-    )
+    const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) { setTimeout(() => setVisible(true), delay); observer.disconnect() } }, { threshold: 0.12 })
     if (ref.current) observer.observe(ref.current)
     return () => observer.disconnect()
   }, [delay])
-
   return (
-    <div
-      ref={ref}
-      className={className}
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(16px)',
-        transition: 'opacity 280ms var(--ease-out), transform 280ms var(--ease-out)',
-      }}
-    >
+    <div ref={ref} className={className} style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 300ms ease, transform 300ms ease' }}>
       {children}
     </div>
   )
 }
 
-/* ─── Hold-to-subscribe button ───────────────────────────────────────────── */
-function HoldButton({ onComplete }: { onComplete: () => void }) {
-  const [holding, setHolding] = useState(false)
-  const [clip, setClip] = useState(100) // right inset %
-  const rafRef = useRef<number>(0)
-  const startTimeRef = useRef<number>(0)
-  const HOLD_DURATION = 2000
-
-  const startHold = () => {
-    setHolding(true)
-    startTimeRef.current = performance.now()
-
-    const tick = (now: number) => {
-      const elapsed = now - startTimeRef.current
-      const progress = Math.min(elapsed / HOLD_DURATION, 1)
-      const inset = 100 - progress * 100
-      setClip(inset)
-
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(tick)
-      } else {
-        // Complete
-        setTimeout(onComplete, 100)
-      }
-    }
-
-    rafRef.current = requestAnimationFrame(tick)
-  }
-
-  const endHold = () => {
-    setHolding(false)
-    cancelAnimationFrame(rafRef.current)
-    setClip(100)
-  }
-
-  useEffect(() => {
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [])
-
-  return (
-    <button
-      onMouseDown={startHold}
-      onMouseUp={endHold}
-      onMouseLeave={endHold}
-      onTouchStart={startHold}
-      onTouchEnd={endHold}
-      onTouchCancel={endHold}
-      aria-label="Hold to get started — hold the button for 2 seconds to proceed"
-      className="relative w-full overflow-hidden rounded-interactive py-3.5 text-sm font-medium select-none"
-      style={{
-        background: 'var(--color-surface-elevated)',
-        border: '0.5px solid var(--color-primary)',
-        color: 'var(--color-primary)',
-        transform: holding ? 'scale(0.97)' : 'scale(1)',
-        transition: holding
-          ? 'transform 130ms var(--ease-out)'
-          : 'transform 200ms var(--ease-out)',
-        cursor: 'pointer',
-      }}
-    >
-      {/* Amber fill overlay via clip-path */}
-      <span
-        aria-hidden
-        className="absolute inset-0 flex items-center justify-center text-sm font-medium pointer-events-none"
-        style={{
-          background: 'var(--color-primary)',
-          color: '#0A0A0B',
-          clipPath: `inset(0 ${clip}% 0 0)`,
-          transition: holding ? 'none' : 'clip-path 200ms var(--ease-out)',
-        }}
-      >
-        {clip < 50 ? 'Almost there...' : 'Hold to get started'}
-      </span>
-      <span className="relative z-10">
-        {clip < 50 ? 'Almost there...' : 'Hold to get started'}
-      </span>
-    </button>
-  )
-}
-
-/* ─── Plan types ─────────────────────────────────────────────────────────── */
-type Plan = {
-  name: string
-  price: string
-  period?: string
-  description: string
-  features: string[]
-  popular?: boolean
-  cta?: 'primary' | 'hold' | 'ghost'
-}
-
-const PLANS: Plan[] = [
-  {
-    name: 'Starter',
-    price: 'Free',
-    description: 'Everything you need to get your first win.',
-    features: [
-      '1 video/month',
-      'Basic content ideas',
-      'Your business profile',
-      'Community support',
-    ],
-    cta: 'ghost',
-  },
-  {
-    name: 'Growth',
-    price: '$49',
-    period: '/mo',
-    description: 'For businesses ready to grow consistently.',
-    features: [
-      '10 videos/month',
-      'Full content intelligence',
-      'Video transformation',
-      'Priority support',
-      'Content calendar',
-    ],
-    popular: true,
-    cta: 'hold',
-  },
-  {
-    name: 'Pro',
-    price: '$149',
-    period: '/mo',
-    description: "For agencies and businesses that don't compromise.",
-    features: [
-      'Unlimited videos',
-      'White-label option',
-      'Custom domain',
-      'Dedicated support',
-      'API access',
-    ],
-    cta: 'hold',
-  },
+const BETA_FEATURES = [
+  { icon: Video,        label: 'AI Script Generation',   desc: 'Gen Z-tuned scripts written like a real person' },
+  { icon: Sparkles,     label: 'AI Video Enhancement',   desc: '4× upscaling with Real-ESRGAN' },
+  { icon: Music,        label: 'AI Background Music',    desc: 'Auto-matched to your video mood' },
+  { icon: Type,         label: 'AI Captions',            desc: 'Auto-generated from your script, styled' },
+  { icon: Palette,      label: 'Color Grading',          desc: 'Cinematic presets in one click' },
+  { icon: Scissors,     label: 'Video Trimming',         desc: 'Set in/out points before export' },
+  { icon: MessageSquare,label: 'Text Overlays',          desc: 'Hook text and CTAs baked in' },
+  { icon: TrendingUp,   label: 'Posting Time Intel',     desc: 'Platform-specific peak time recommendations' },
+  { icon: Zap,          label: 'Content Ideas (AI)',     desc: 'Unlimited AI-tailored hooks for your business' },
+  { icon: Clock,        label: 'More features weekly',   desc: "We're shipping fast — join and shape the roadmap" },
 ]
 
-/* ─── Pricing card ───────────────────────────────────────────────────────── */
-function PricingCard({ plan, delay }: { plan: Plan; delay: number }) {
+export default function Pricing() {
   const router = useRouter()
-
   return (
-    <ScrollReveal delay={delay}>
-      <div
-        className="relative flex flex-col gap-6 rounded-container p-6 h-full card-hover"
-        style={{
-          background: plan.popular ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
-          border: plan.popular
-            ? '0.5px solid rgba(99,102,241,0.3)'
-            : '0.5px solid var(--color-border)',
-          boxShadow: plan.popular ? '0 0 0 1px rgba(99,102,241,0.08)' : 'none',
-        }}
-      >
-        {/* Most Popular badge */}
-        {plan.popular && (
-          <div
-            className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-medium px-3 py-1 rounded-pill"
-            style={{
-              background: 'var(--color-primary)',
-              color: '#0A0A0B',
-            }}
-          >
-            Most Popular
-          </div>
-        )}
+    <section id="pricing" aria-labelledby="pricing-heading" className="py-24" style={{ borderTop: '0.5px solid var(--color-border)' }}>
+      <div className="max-w-5xl mx-auto px-6 flex flex-col gap-16">
 
-        {/* Plan header */}
-        <div className="flex flex-col gap-1.5">
-          <div className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
-            {plan.name}
+        {/* Header */}
+        <ScrollReveal className="flex flex-col items-center gap-4 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-widest" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.25)', color: '#818cf8' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] animate-pulse inline-block" />
+            Beta · Completely Free
           </div>
-          <div className="flex items-baseline gap-1">
-            <span
-              className="font-medium"
-              style={{
-                fontSize: 'clamp(28px, 3vw, 36px)',
-                letterSpacing: '-0.03em',
-                color: 'var(--color-text)',
-              }}
-            >
-              {plan.price}
-            </span>
-            {plan.period && (
-              <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                {plan.period}
-              </span>
-            )}
-          </div>
-          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-            {plan.description}
+          <h2 id="pricing-heading" style={{ fontSize: 'clamp(30px, 4vw, 46px)', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-text)', lineHeight: 1.1 }}>
+            Everything is free.<br />
+            <span style={{ color: '#818cf8' }}>You&apos;re early.</span>
+          </h2>
+          <p className="max-w-lg text-[15px] leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+            BrandLift is in beta. No credit card, no plans, no paywalls. Every feature — including the ones still being built — is unlocked for all beta users. In exchange, we just ask you to tell us what sucks.
           </p>
+        </ScrollReveal>
+
+        {/* Features grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {BETA_FEATURES.map((f, i) => {
+            const Icon = f.icon
+            return (
+              <ScrollReveal key={f.label} delay={i * 35}>
+                <div
+                  className="flex items-start gap-3 p-4 rounded-2xl transition-all duration-200"
+                  style={{ background: 'var(--color-surface)', border: '0.5px solid var(--color-border)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.3)'; (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-elevated)' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)'; (e.currentTarget as HTMLElement).style.background = 'var(--color-surface)' }}
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
+                    <Icon className="w-4 h-4" style={{ color: '#818cf8' }} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-[13px] font-semibold" style={{ color: 'var(--color-text)' }}>{f.label}</p>
+                      <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded" style={{ background: 'rgba(74,222,128,0.1)', color: '#4ADE80', border: '0.5px solid rgba(74,222,128,0.2)' }}>Free</span>
+                    </div>
+                    <p className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>{f.desc}</p>
+                  </div>
+                </div>
+              </ScrollReveal>
+            )
+          })}
         </div>
-
-        {/* Divider */}
-        <div style={{ height: '0.5px', background: 'var(--color-border)' }} />
-
-        {/* Features */}
-        <ul className="flex flex-col gap-2.5 flex-1">
-          {plan.features.map((feature) => (
-            <li
-              key={feature}
-              className="flex items-center gap-2.5 text-sm"
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
-              <span style={{ color: 'var(--color-primary)', flexShrink: 0 }}>✓</span>
-              {feature}
-            </li>
-          ))}
-        </ul>
 
         {/* CTA */}
-        <div className="mt-auto pt-2">
-          {plan.cta === 'hold' ? (
-            <HoldButton onComplete={() => router.push('/sign-up')} />
-          ) : plan.cta === 'primary' ? (
+        <ScrollReveal className="flex flex-col items-center gap-5">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
             <button
               onClick={() => router.push('/sign-up')}
-              className="pressable w-full py-3.5 rounded-interactive text-sm font-medium"
-              style={{ background: 'var(--color-primary)', color: '#0A0A0B' }}
+              className="px-8 py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all duration-200"
+              style={{ background: 'linear-gradient(135deg, #6366f1 0%, #5558e8 100%)', boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.25)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.5), 0 12px 32px rgba(99,102,241,0.35)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.25)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}
             >
-              Get started
+              Join the beta — it&apos;s free
             </button>
-          ) : (
             <button
-              onClick={() => router.push('/sign-up')}
-              className="pressable w-full py-3.5 rounded-interactive text-sm"
-              style={{
-                background: 'transparent',
-                border: '0.5px solid var(--color-border-strong)',
-                color: 'var(--color-text-secondary)',
-              }}
+              onClick={() => router.push('/sign-in')}
+              className="px-6 py-3.5 rounded-xl text-[14px] transition-all duration-150"
+              style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', color: '#71717A' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#FAFAFA'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.18)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#71717A'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)' }}
             >
-              Start for free
+              Already have an account →
             </button>
-          )}
-        </div>
-      </div>
-    </ScrollReveal>
-  )
-}
-
-/* ─── Pricing section ────────────────────────────────────────────────────── */
-export default function Pricing() {
-  return (
-    <section
-      id="pricing"
-      aria-labelledby="pricing-heading"
-      className="py-24"
-      style={{ borderTop: '0.5px solid var(--color-border)' }}
-    >
-      <div className="max-w-6xl mx-auto px-6 flex flex-col gap-12">
-        {/* Header */}
-        <ScrollReveal className="text-center flex flex-col items-center gap-3">
-          <div
-            className="text-xs uppercase tracking-widest font-medium"
-            style={{ color: 'var(--color-primary)' }}
-          >
-            Pricing
           </div>
-          <h2
-            id="pricing-heading"
-            className="text-heading"
-            style={{ fontSize: 'clamp(28px, 4vw, 40px)', color: 'var(--color-text)' }}
-          >
-            Simple pricing. No surprises.
-          </h2>
-          <p className="max-w-md" style={{ color: 'var(--color-text-secondary)' }}>
-            Start free and upgrade when you&apos;re ready. No contracts, cancel anytime.
+          <p className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
+            No credit card · No limits · Cancel whenever (there&apos;s nothing to cancel)
           </p>
         </ScrollReveal>
 
-        {/* Cards */}
-        <div className="grid md:grid-cols-3 gap-5 items-start">
-          {PLANS.map((plan, i) => (
-            <PricingCard key={plan.name} plan={plan} delay={i * 60} />
-          ))}
-        </div>
-
-        {/* Bottom note */}
-        <ScrollReveal className="text-center">
-          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            All plans include a 14-day free trial on paid features · No credit card required to start
-          </p>
-        </ScrollReveal>
       </div>
     </section>
   )
