@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import {
   LayoutDashboard,
-  Lightbulb,
   Video,
   Globe,
   Settings,
@@ -39,8 +38,7 @@ interface SidebarProps {
 // ─────────────────────────────────────────────
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Content Ideas', href: '/dashboard/ideas', icon: Lightbulb },
+  { label: 'Home', href: '/dashboard', icon: LayoutDashboard },
   { label: 'My Videos', href: '/dashboard/videos', icon: Video },
   { label: 'My Website', href: '/dashboard/website', icon: Globe },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings },

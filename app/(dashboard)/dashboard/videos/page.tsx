@@ -15,14 +15,17 @@ import {
   X,
   FileText,
   ChevronRight,
+  Wand2,
+  PenLine,
 } from 'lucide-react'
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 type Stage =
-  | 'idle'           // show script picker
-  | 'uploading'      // blob upload in progress
-  | 'enhancing'      // calling enhance API
-  | 'polling'        // waiting on Replicate
+  | 'script'      // writing / generating script
+  | 'upload'      // ready to drop file
+  | 'uploading'   // blob upload in progress
+  | 'enhancing'   // calling enhance API
+  | 'polling'     // waiting on Replicate
   | 'done'
   | 'error'
 
@@ -34,32 +37,12 @@ interface VideoRecord {
   createdAt: number
 }
 
-/* ─── Script templates ────────────────────────────────────────────────────── */
+/* ─── Script templates (used when no idea is passed) ─────────────────────── */
 const SCRIPT_TEMPLATES = [
-  {
-    id: 'promo',
-    label: 'Business promo',
-    icon: '🏪',
-    placeholder: "e.g. We make the best tacos in Austin — fresh ingredients, made to order, open late. Come try us at 4th & Lamar.",
-  },
-  {
-    id: 'behindscenes',
-    label: 'Behind the scenes',
-    icon: '🎬',
-    placeholder: "e.g. A day in our kitchen — from prep at 6am to the last order. This is what goes into every dish we serve.",
-  },
-  {
-    id: 'testimonial',
-    label: 'Customer story',
-    icon: '⭐',
-    placeholder: "e.g. Sarah's been coming here every Friday for two years. Here's what she says about us.",
-  },
-  {
-    id: 'custom',
-    label: 'Write my own',
-    icon: '✍️',
-    placeholder: "Write your own script or talking points here...",
-  },
+  { id: 'promo',       label: 'Business promo',    icon: '🏪', placeholder: "e.g. We make the best tacos in Austin — fresh ingredients, made to order, open late. Come try us at 4th & Lamar." },
+  { id: 'behindscenes',label: 'Behind the scenes', icon: '🎬', placeholder: "e.g. A day in our kitchen — from prep at 6am to the last order. This is what goes into every dish we serve." },
+  { id: 'testimonial', label: 'Customer story',    icon: '⭐', placeholder: "e.g. Sarah's been coming here every Friday for two years. Here's what she says about us." },
+  { id: 'custom',      label: 'Write my own',      icon: '✍️', placeholder: "Write your own script or talking points here..." },
 ]
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
@@ -73,18 +56,12 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
     <div className="flex flex-col gap-2">
       <div className="flex justify-between items-center">
         <span style={{ fontSize: 13, color: '#A1A1AA' }}>{label}</span>
-        <span style={{ fontSize: 13, color: '#6366f1', fontVariantNumeric: 'tabular-nums' }}>
-          {Math.round(value)}%
-        </span>
+        <span style={{ fontSize: 13, color: '#6366f1', fontVariantNumeric: 'tabular-nums' }}>{Math.round(value)}%</span>
       </div>
       <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: '#18181C' }}>
         <div
           className="h-full rounded-full transition-all duration-300"
-          style={{
-            width: `${value}%`,
-            background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)',
-            boxShadow: '0 0 8px rgba(99,102,241,0.5)',
-          }}
+          style={{ width: `${value}%`, background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)', boxShadow: '0 0 8px rgba(99,102,241,0.5)' }}
         />
       </div>
     </div>
@@ -93,13 +70,62 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
 
 const POLL_INTERVAL = 4000
 
-/* ─── Inner component ─────────────────────────────────────────────────────── */
+/* ─── Step indicator ──────────────────────────────────────────────────────── */
+function StepDot({ n, active, done }: { n: number | string; active: boolean; done: boolean }) {
+  return (
+    <div
+      className="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold flex-shrink-0"
+      style={{
+        background: done ? 'rgba(74,222,128,0.08)' : active ? 'rgba(99,102,241,0.15)' : '#18181C',
+        border: done ? '0.5px solid rgba(74,222,128,0.3)' : active ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.07)',
+        color: done ? '#4ADE80' : active ? '#818cf8' : '#3f3f46',
+      }}
+    >
+      {done ? '✓' : n}
+    </div>
+  )
+}
+
+function StepLabel({ text, active, done }: { text: string; active: boolean; done: boolean }) {
+  return (
+    <span style={{ fontSize: active ? 14 : 13, fontWeight: active ? 500 : 400, color: active ? '#FAFAFA' : done ? '#52525B' : '#3f3f46' }}>
+      {text}
+    </span>
+  )
+}
+
+function StepBar({ stage }: { stage: Stage }) {
+  const s1done = stage !== 'script'
+  const s1active = stage === 'script'
+  const s2done = stage === 'uploading' || stage === 'enhancing' || stage === 'polling' || stage === 'done'
+  const s2active = stage === 'upload'
+  const s3active = stage === 'uploading' || stage === 'enhancing' || stage === 'polling' || stage === 'done'
+
+  return (
+    <div className="flex items-center gap-3">
+      <StepDot n={1} active={s1active} done={s1done} />
+      <StepLabel text="Script" active={s1active} done={s1done} />
+      <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+      <StepDot n={2} active={s2active} done={s2done} />
+      <StepLabel text="Upload video" active={s2active} done={s2done} />
+      <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+      <StepDot n={3} active={s3active} done={false} />
+      <StepLabel text="AI enhance" active={s3active} done={false} />
+    </div>
+  )
+}
+
+/* ─── Main inner component (needs searchParams → Suspense wrapper) ────────── */
 function VideosInner() {
   const searchParams = useSearchParams()
+  const ideaHook = searchParams.get('idea') ?? ''
+  const ideaFormat = searchParams.get('format') ?? ''
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
+  const streamingRef = useRef(false)
 
-  const [stage, setStage] = useState<Stage>('idle')
+  const [stage, setStage] = useState<Stage>('script')
   const [uploadProgress, setUploadProgress] = useState(0)
   const [pollProgress, setPollProgress] = useState(0)
   const [errorMsg, setErrorMsg] = useState('')
@@ -110,14 +136,19 @@ function VideosInner() {
   const [videos, setVideos] = useState<VideoRecord[]>([])
 
   // Script state
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('promo')
   const [scriptText, setScriptText] = useState('')
-  const [scriptConfirmed, setScriptConfirmed] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationDone, setGenerationDone] = useState(false)
+  // when no idea: template picker
+  const [selectedTemplate, setSelectedTemplate] = useState('promo')
+  // toggle: AI-generated vs write own (only relevant when idea is present)
+  const [writeOwn, setWriteOwn] = useState(false)
 
+  const hasIdea = ideaHook.length > 0
   const currentTemplate = SCRIPT_TEMPLATES.find(t => t.id === selectedTemplate)!
-  const canConfirmScript = scriptText.trim().length > 10
+  const canProceed = scriptText.trim().length > 10
 
-  // Load saved videos
+  /* ── Load saved videos ───────────────────────────────────────────────────── */
   useEffect(() => {
     try {
       const saved = localStorage.getItem('bl_videos_v3')
@@ -125,12 +156,46 @@ function VideosInner() {
     } catch {}
   }, [])
 
-  // Auto-trigger file picker if ?upload=1
+  /* ── Auto-generate script when idea is present ───────────────────────────── */
   useEffect(() => {
-    if (searchParams.get('upload') === '1' && scriptConfirmed) {
-      fileInputRef.current?.click()
+    if (!hasIdea || writeOwn || streamingRef.current) return
+
+    const generate = async () => {
+      streamingRef.current = true
+      setIsGenerating(true)
+      setGenerationDone(false)
+      setScriptText('')
+
+      try {
+        const res = await fetch('/api/video/script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idea: ideaHook, format: ideaFormat }),
+        })
+        if (!res.ok || !res.body) return
+
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let text = ''
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          text += decoder.decode(value, { stream: true })
+          setScriptText(text)
+        }
+        setGenerationDone(true)
+      } catch {
+        // silently fail — user can type manually
+      } finally {
+        streamingRef.current = false
+        setIsGenerating(false)
+      }
     }
-  }, [searchParams, scriptConfirmed])
+
+    generate()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasIdea, writeOwn])
 
   /* ── Poll Replicate ──────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -175,7 +240,7 @@ function VideosInner() {
     return () => { cancelled = true }
   }, [stage, predictionId, pendingFile, scriptText])
 
-  /* ── Upload & enhance ─────────────────────────────────────────────────────── */
+  /* ── Upload & enhance ────────────────────────────────────────────────────── */
   const startEnhancement = useCallback(async (file: File) => {
     setUploadProgress(0)
     setPollProgress(0)
@@ -183,14 +248,12 @@ function VideosInner() {
     setStage('uploading')
 
     try {
-      // Upload directly to Vercel Blob (browser → Blob, bypasses 4.5MB API limit)
       const blob = await upload(file.name, file, {
         access: 'public',
         handleUploadUrl: '/api/video/upload',
         onUploadProgress: ({ percentage }) => setUploadProgress(percentage),
       })
 
-      // Send blob URL + script to enhance API (tiny JSON payload)
       setStage('enhancing')
       const res = await fetch('/api/video/enhance', {
         method: 'POST',
@@ -203,13 +266,12 @@ function VideosInner() {
       setPredictionId(data.id)
       setStage('polling')
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err)
-      setErrorMsg(msg)
+      setErrorMsg(err instanceof Error ? err.message : String(err))
       setStage('error')
     }
   }, [scriptText])
 
-  /* ── File handlers ─────────────────────────────────────────────────────────── */
+  /* ── File handlers ───────────────────────────────────────────────────────── */
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('video/')) {
       setErrorMsg('Please upload a video file (MP4, MOV, etc.)')
@@ -234,26 +296,29 @@ function VideosInner() {
   }
 
   const reset = () => {
-    setStage('idle')
+    setStage('script')
     setUploadProgress(0)
     setPollProgress(0)
     setErrorMsg('')
     setPredictionId('')
     setEnhancedUrl('')
     setPendingFile(null)
-    setScriptConfirmed(false)
     setScriptText('')
+    setGenerationDone(false)
+    setWriteOwn(false)
     setSelectedTemplate('promo')
+    streamingRef.current = false
   }
 
   const isProcessing = stage === 'uploading' || stage === 'enhancing' || stage === 'polling'
 
+  /* ── Render ──────────────────────────────────────────────────────────────── */
   return (
     <div className="flex flex-col h-full">
       <TopBar />
 
       <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-4xl mx-auto flex flex-col gap-6">
+        <div className="max-w-3xl mx-auto flex flex-col gap-6">
 
           {/* Header */}
           <div className="flex items-center justify-between gap-4">
@@ -261,137 +326,184 @@ function VideosInner() {
               <h1 className="text-[20px] font-medium text-[#FAFAFA]">My Videos</h1>
               <p className="text-[14px] text-[#71717A] mt-0.5">
                 {videos.length === 0
-                  ? 'Write your script, upload your footage, get a polished video'
+                  ? 'Pick a script, upload your footage, get a polished AI-enhanced video'
                   : `${videos.length} video${videos.length !== 1 ? 's' : ''} created`}
               </p>
             </div>
-            {(stage === 'idle' && scriptConfirmed) && (
-              <Button variant="ghost" size="sm" onClick={reset}>← Change script</Button>
+            {stage !== 'script' && stage !== 'done' && (
+              <Button variant="ghost" size="sm" onClick={reset}>← Start over</Button>
             )}
           </div>
 
           <input ref={fileInputRef} type="file" accept="video/*" className="hidden" onChange={onFileChange} />
 
-          {/* ── STEP 1: Script ── */}
-          {stage === 'idle' && !scriptConfirmed && (
-            <div className="flex flex-col gap-5">
-              {/* Step indicator */}
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold"
-                  style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)' }}
-                >1</div>
-                <span className="text-[14px] font-medium text-[#FAFAFA]">Write your script</span>
-                <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                <div
-                  className="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold"
-                  style={{ background: '#18181C', color: '#3f3f46', border: '0.5px solid rgba(255,255,255,0.07)' }}
-                >2</div>
-                <span className="text-[13px] text-[#3f3f46]">Upload video</span>
-              </div>
+          {/* ── Step bar ── */}
+          {!isProcessing && stage !== 'done' && stage !== 'error' && (
+            <StepBar stage={stage} />
+          )}
 
-              <div
-                className="flex flex-col gap-5 p-6 rounded-2xl"
-                style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}
-              >
-                <div>
-                  <p className="text-[15px] font-semibold text-[#FAFAFA] mb-1">What type of video is this?</p>
-                  <p className="text-[13px] text-[#52525B]">Pick a template or write your own script below</p>
-                </div>
+          {/* ══════════════════════════════════════════════════════════════════
+              STEP 1 — SCRIPT
+          ══════════════════════════════════════════════════════════════════ */}
+          {stage === 'script' && (
+            <div
+              className="flex flex-col gap-5 p-6 rounded-2xl"
+              style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}
+            >
+              {hasIdea ? (
+                /* ── Idea-driven flow ── */
+                <>
+                  {/* Idea callout */}
+                  <div
+                    className="flex items-start gap-3 p-4 rounded-xl"
+                    style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.2)' }}
+                  >
+                    <Sparkles className="w-4 h-4 text-[#6366f1] flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-[#6366f1] mb-1">Content Idea</p>
+                      <p className="text-[14px] text-[#E4E4E7] leading-relaxed">{ideaHook}</p>
+                    </div>
+                  </div>
 
-                {/* Template pills */}
-                <div className="flex flex-wrap gap-2">
-                  {SCRIPT_TEMPLATES.map(t => (
+                  {/* Toggle: AI script vs write own */}
+                  <div className="flex items-center gap-2">
                     <button
-                      key={t.id}
-                      onClick={() => { setSelectedTemplate(t.id); setScriptText('') }}
+                      onClick={() => setWriteOwn(false)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150"
                       style={{
-                        background: selectedTemplate === t.id ? 'rgba(99,102,241,0.12)' : '#18181C',
-                        border: selectedTemplate === t.id ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.07)',
-                        color: selectedTemplate === t.id ? '#a5b4fc' : '#71717A',
+                        background: !writeOwn ? 'rgba(99,102,241,0.12)' : '#18181C',
+                        border: !writeOwn ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.07)',
+                        color: !writeOwn ? '#a5b4fc' : '#71717A',
                       }}
                     >
-                      <span>{t.icon}</span>
-                      {t.label}
+                      <Wand2 className="w-3.5 h-3.5" />
+                      AI-generated
                     </button>
-                  ))}
-                </div>
-
-                {/* Script textarea */}
-                <div className="flex flex-col gap-2">
-                  <label style={{ fontSize: 13, color: '#A1A1AA', fontWeight: 500 }}>
-                    {selectedTemplate === 'custom' ? 'Your script' : 'Customize the script'}
-                  </label>
-                  <textarea
-                    rows={5}
-                    value={scriptText}
-                    onChange={e => setScriptText(e.target.value)}
-                    placeholder={currentTemplate.placeholder}
-                    className="w-full rounded-xl px-4 py-3 text-[14px] text-[#FAFAFA] resize-none outline-none"
-                    style={{
-                      background: 'rgba(24,24,28,0.7)',
-                      border: '0.5px solid rgba(255,255,255,0.1)',
-                      lineHeight: 1.6,
-                    }}
-                    onFocus={e => {
-                      e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'
-                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)'
-                    }}
-                    onBlur={e => {
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }}
-                  />
-                  <div className="flex justify-between items-center">
-                    <p style={{ fontSize: 12, color: '#3f3f46' }}>
-                      This script will be used to guide your video content
-                    </p>
-                    <span style={{ fontSize: 12, color: '#52525B', fontVariantNumeric: 'tabular-nums' }}>
-                      {scriptText.length} chars
-                    </span>
+                    <button
+                      onClick={() => { setWriteOwn(true); setScriptText('') }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150"
+                      style={{
+                        background: writeOwn ? 'rgba(99,102,241,0.12)' : '#18181C',
+                        border: writeOwn ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.07)',
+                        color: writeOwn ? '#a5b4fc' : '#71717A',
+                      }}
+                    >
+                      <PenLine className="w-3.5 h-3.5" />
+                      Write my own
+                    </button>
                   </div>
-                </div>
 
-                <Button
-                  variant="primary"
-                  size="sm"
-                  disabled={!canConfirmScript}
-                  onClick={() => setScriptConfirmed(true)}
-                  className="gap-1.5 self-start"
-                >
-                  Continue to upload
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Button>
-              </div>
+                  {/* Script area */}
+                  <div className="flex flex-col gap-2">
+                    <label style={{ fontSize: 13, color: '#A1A1AA', fontWeight: 500 }}>
+                      {isGenerating ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Sparkles className="w-3 h-3 text-[#6366f1] animate-pulse" />
+                          Generating script…
+                        </span>
+                      ) : generationDone && !writeOwn ? (
+                        'AI-generated script — edit freely'
+                      ) : (
+                        'Your script'
+                      )}
+                    </label>
+                    <textarea
+                      rows={6}
+                      value={scriptText}
+                      onChange={e => setScriptText(e.target.value)}
+                      placeholder={writeOwn ? "Write your talking points or full script here…" : "Generating…"}
+                      readOnly={isGenerating && !writeOwn}
+                      className="w-full rounded-xl px-4 py-3 text-[14px] text-[#FAFAFA] resize-none outline-none"
+                      style={{
+                        background: 'rgba(24,24,28,0.7)',
+                        border: '0.5px solid rgba(255,255,255,0.1)',
+                        lineHeight: 1.65,
+                        color: isGenerating ? '#818cf8' : '#FAFAFA',
+                        transition: 'color 0.3s',
+                      }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)' }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.boxShadow = 'none' }}
+                    />
+                    <div className="flex items-center justify-between">
+                      <p style={{ fontSize: 12, color: '#3f3f46' }}>This script guides your video content</p>
+                      <span style={{ fontSize: 12, color: '#52525B', fontVariantNumeric: 'tabular-nums' }}>{scriptText.length} chars</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* ── Manual flow (no idea) ── */
+                <>
+                  <div>
+                    <p className="text-[15px] font-semibold text-[#FAFAFA] mb-1">What type of video is this?</p>
+                    <p className="text-[13px] text-[#52525B]">Pick a template or write your own script</p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {SCRIPT_TEMPLATES.map(t => (
+                      <button
+                        key={t.id}
+                        onClick={() => { setSelectedTemplate(t.id); setScriptText('') }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150"
+                        style={{
+                          background: selectedTemplate === t.id ? 'rgba(99,102,241,0.12)' : '#18181C',
+                          border: selectedTemplate === t.id ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.07)',
+                          color: selectedTemplate === t.id ? '#a5b4fc' : '#71717A',
+                        }}
+                      >
+                        <span>{t.icon}</span>
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label style={{ fontSize: 13, color: '#A1A1AA', fontWeight: 500 }}>Your script</label>
+                    <textarea
+                      rows={5}
+                      value={scriptText}
+                      onChange={e => setScriptText(e.target.value)}
+                      placeholder={currentTemplate.placeholder}
+                      className="w-full rounded-xl px-4 py-3 text-[14px] text-[#FAFAFA] resize-none outline-none"
+                      style={{ background: 'rgba(24,24,28,0.7)', border: '0.5px solid rgba(255,255,255,0.1)', lineHeight: 1.6 }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)' }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.boxShadow = 'none' }}
+                    />
+                    <div className="flex justify-between items-center">
+                      <p style={{ fontSize: 12, color: '#3f3f46' }}>This script guides your video content</p>
+                      <span style={{ fontSize: 12, color: '#52525B', fontVariantNumeric: 'tabular-nums' }}>{scriptText.length} chars</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={!canProceed || isGenerating}
+                onClick={() => setStage('upload')}
+                className="gap-1.5 self-start"
+              >
+                {isGenerating ? 'Generating script…' : 'Continue to upload'}
+                {!isGenerating && <ChevronRight className="w-3.5 h-3.5" />}
+              </Button>
             </div>
           )}
 
-          {/* ── STEP 2: Upload drop zone ── */}
-          {stage === 'idle' && scriptConfirmed && (
+          {/* ══════════════════════════════════════════════════════════════════
+              STEP 2 — UPLOAD DROP ZONE
+          ══════════════════════════════════════════════════════════════════ */}
+          {stage === 'upload' && (
             <div className="flex flex-col gap-5">
-              {/* Step indicator */}
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold"
-                  style={{ background: '#18181C', color: '#4ADE80', border: '0.5px solid rgba(74,222,128,0.3)' }}
-                >✓</div>
-                <span className="text-[13px] text-[#52525B]">Script ready</span>
-                <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                <div
-                  className="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold"
-                  style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)' }}
-                >2</div>
-                <span className="text-[14px] font-medium text-[#FAFAFA]">Upload your footage</span>
-              </div>
-
               {/* Script preview */}
               <div
-                className="flex items-start gap-3 p-4 rounded-xl"
+                className="flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-colors duration-150"
                 style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}
+                onClick={() => setStage('script')}
+                title="Click to edit script"
               >
                 <FileText className="w-4 h-4 text-[#6366f1] flex-shrink-0 mt-0.5" />
-                <p className="text-[13px] text-[#A1A1AA] leading-relaxed line-clamp-2">{scriptText}</p>
+                <p className="text-[13px] text-[#A1A1AA] leading-relaxed flex-1 line-clamp-2">{scriptText}</p>
+                <span style={{ fontSize: 11, color: '#52525B', whiteSpace: 'nowrap' }}>Edit ↩</span>
               </div>
 
               {/* Drop zone */}
@@ -409,10 +521,7 @@ function VideosInner() {
               >
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                  style={{
-                    background: dragging ? 'rgba(99,102,241,0.12)' : '#18181C',
-                    border: dragging ? '0.5px solid rgba(99,102,241,0.3)' : '0.5px solid rgba(255,255,255,0.08)',
-                  }}
+                  style={{ background: dragging ? 'rgba(99,102,241,0.12)' : '#18181C', border: dragging ? '0.5px solid rgba(99,102,241,0.3)' : '0.5px solid rgba(255,255,255,0.08)' }}
                 >
                   {dragging ? <Upload className="w-7 h-7 text-[#6366f1]" /> : <Video className="w-7 h-7 text-[#3f3f46]" />}
                 </div>
@@ -421,17 +530,12 @@ function VideosInner() {
                   <p className="text-[16px] font-semibold text-[#FAFAFA] mb-1">
                     {dragging ? 'Drop your video' : 'Upload your footage'}
                   </p>
-                  <p className="text-[13px] text-[#71717A]">
-                    MP4, MOV, AVI — drag & drop or click to browse
-                  </p>
+                  <p className="text-[13px] text-[#71717A]">MP4, MOV, AVI — drag & drop or click to browse</p>
                 </div>
 
                 <button
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-semibold text-white"
-                  style={{
-                    background: 'linear-gradient(135deg, #6366f1 0%, #5558e8 100%)',
-                    boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.25)',
-                  }}
+                  style={{ background: 'linear-gradient(135deg, #6366f1 0%, #5558e8 100%)', boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.25)' }}
                   onClick={e => { e.stopPropagation(); fileInputRef.current?.click() }}
                 >
                   <Upload className="w-4 h-4" />
@@ -441,17 +545,13 @@ function VideosInner() {
             </div>
           )}
 
-          {/* ── Processing ── */}
+          {/* ══════════════════════════════════════════════════════════════════
+              PROCESSING
+          ══════════════════════════════════════════════════════════════════ */}
           {isProcessing && pendingFile && (
-            <div
-              className="flex flex-col gap-6 p-8 rounded-2xl"
-              style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}
-            >
+            <div className="flex flex-col gap-6 p-8 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}
-                >
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
                   <Sparkles className="w-6 h-6 text-[#6366f1] animate-pulse" />
                 </div>
                 <div>
@@ -463,24 +563,23 @@ function VideosInner() {
               <div className="flex flex-col gap-4">
                 <ProgressBar value={uploadProgress} label={stage === 'uploading' ? 'Uploading to storage…' : 'Upload complete ✓'} />
                 {(stage === 'enhancing' || stage === 'polling') && (
-                  <ProgressBar value={stage === 'enhancing' ? 5 : pollProgress} label="AI Enhancement (Real-ESRGAN 4×)" />
+                  <ProgressBar value={stage === 'enhancing' ? 5 : pollProgress} label="AI Enhancement — Real-ESRGAN 4×" />
                 )}
               </div>
 
               <p className="text-[13px] text-[#52525B] text-center">
                 {stage === 'uploading' && 'Uploading your video…'}
                 {stage === 'enhancing' && 'Starting AI enhancement…'}
-                {stage === 'polling' && 'Enhancing with AI — this takes a few minutes…'}
+                {stage === 'polling' && 'Enhancing video quality — this takes a few minutes…'}
               </p>
             </div>
           )}
 
-          {/* ── Error ── */}
+          {/* ══════════════════════════════════════════════════════════════════
+              ERROR
+          ══════════════════════════════════════════════════════════════════ */}
           {stage === 'error' && (
-            <div
-              className="flex flex-col gap-4 p-6 rounded-2xl"
-              style={{ background: 'rgba(239,68,68,0.05)', border: '0.5px solid rgba(239,68,68,0.2)' }}
-            >
+            <div className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: 'rgba(239,68,68,0.05)', border: '0.5px solid rgba(239,68,68,0.2)' }}>
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
@@ -491,23 +590,22 @@ function VideosInner() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => { setStage('idle'); setErrorMsg('') }} className="self-start">
+              <Button variant="ghost" size="sm" onClick={() => { setStage('upload'); setErrorMsg('') }} className="self-start">
                 Try again
               </Button>
             </div>
           )}
 
-          {/* ── Done / result ── */}
+          {/* ══════════════════════════════════════════════════════════════════
+              DONE — before/after
+          ══════════════════════════════════════════════════════════════════ */}
           {stage === 'done' && enhancedUrl && (
-            <div
-              className="flex flex-col gap-6 p-6 rounded-2xl"
-              style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}
-            >
+            <div className="flex flex-col gap-6 p-6 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-400" />
                 <div className="flex-1">
                   <p className="text-[15px] font-medium text-[#FAFAFA]">{pendingFile?.name} — enhanced</p>
-                  <p className="text-[12px] text-[#52525B] mt-0.5">Real-ESRGAN 4× AI upscaling</p>
+                  <p className="text-[12px] text-[#52525B] mt-0.5">Real-ESRGAN 4× AI upscaling complete</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <a
@@ -527,13 +625,13 @@ function VideosInner() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <p className="text-[11px] font-medium uppercase tracking-widest text-[#52525B]">Before</p>
+                  <p className="text-[11px] font-medium uppercase tracking-widest text-[#52525B]">Original</p>
                   <video controls className="w-full rounded-xl" style={{ border: '0.5px solid rgba(255,255,255,0.08)' }}>
                     <source src={enhancedUrl} />
                   </video>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <p className="text-[11px] font-medium uppercase tracking-widest text-[#6366f1]">After — AI Enhanced</p>
+                  <p className="text-[11px] font-medium uppercase tracking-widest text-[#6366f1]">AI Enhanced 4×</p>
                   <video src={enhancedUrl} controls className="w-full rounded-xl"
                     style={{ border: '0.5px solid rgba(99,102,241,0.25)', boxShadow: '0 0 20px rgba(99,102,241,0.1)' }} />
                 </div>
@@ -542,21 +640,16 @@ function VideosInner() {
           )}
 
           {/* ── Video library ── */}
-          {videos.length > 0 && stage === 'idle' && (
+          {videos.length > 0 && (stage === 'script' || stage === 'upload') && (
             <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-[15px] font-medium text-[#FAFAFA]">Previous videos</h2>
-              </div>
+              <h2 className="text-[15px] font-medium text-[#FAFAFA]">Previous videos</h2>
               {videos.map((v) => (
                 <div
                   key={v.id}
                   className="flex items-center gap-4 p-4 rounded-[12px]"
                   style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}
                 >
-                  <div
-                    className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}
-                  >
+                  <div className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
                     <CheckCircle2 className="w-5 h-5 text-[#6366f1]" />
                   </div>
                   <div className="flex-1 min-w-0">

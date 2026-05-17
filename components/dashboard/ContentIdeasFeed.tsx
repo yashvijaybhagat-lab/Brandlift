@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useRouter } from 'next/navigation'
 import { RefreshCw, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Badge } from '@/components/ui/Badge'
@@ -205,6 +206,7 @@ function ContentIdeaCard({
   style?: React.CSSProperties
   onSelect?: (idea: ContentIdea) => void
 }) {
+  const router = useRouter()
   const trend = TREND_CONFIG[idea.trend]
   const [hovered, setHovered] = React.useState(false)
   const [selected, setSelected] = React.useState(false)
@@ -332,6 +334,9 @@ function ContentIdeaCard({
             onClick={() => {
               setSelected(true)
               onSelect?.(idea)
+              router.push(
+                `/dashboard/videos?idea=${encodeURIComponent(idea.hook)}&format=${idea.format}`
+              )
             }}
           >
             {selected ? '✓ Selected' : 'Use this idea'}

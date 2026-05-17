@@ -1,19 +1,17 @@
 'use client'
 
 import * as React from 'react'
-import Link from 'next/link'
-import { TrendingUp, TrendingDown, ArrowRight, Video, Lightbulb, Eye, BarChart2 } from 'lucide-react'
+import { TrendingUp, Eye, Video, Lightbulb, BarChart2 } from 'lucide-react'
 import { TopBar } from '@/components/dashboard/TopBar'
-import { ContentIdeasFeed, ContentIdea } from '@/components/dashboard/ContentIdeasFeed'
-import { Badge } from '@/components/ui/Badge'
+import { ContentIdeasFeed } from '@/components/dashboard/ContentIdeasFeed'
 
-/* ─── Mini sparkline ──────────────────────────────────────────────────────── */
+/* ─── Sparkline ───────────────────────────────────────────────────────────── */
 function Sparkline({ data, color = '#6366f1' }: { data: number[]; color?: string }) {
   const max = Math.max(...data)
   const min = Math.min(...data)
   const range = max - min || 1
-  const w = 80
-  const h = 28
+  const w = 72
+  const h = 24
   const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`)
   const area = `M${pts[0]} ${pts.slice(1).map(p => `L${p}`).join(' ')} L${w},${h} L0,${h} Z`
   const line = `M${pts[0]} ${pts.slice(1).map(p => `L${p}`).join(' ')}`
@@ -21,7 +19,7 @@ function Sparkline({ data, color = '#6366f1' }: { data: number[]; color?: string
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden style={{ overflow: 'visible' }}>
       <defs>
         <linearGradient id={`sg-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
@@ -31,24 +29,10 @@ function Sparkline({ data, color = '#6366f1' }: { data: number[]; color?: string
   )
 }
 
-/* ─── Stat formats ────────────────────────────────────────────────────────── */
-type StatFormat = 'number' | 'compact' | 'percent'
-
-function formatStatValue(value: number, format: StatFormat): string {
-  if (format === 'compact') {
-    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-    if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
-    return value.toString()
-  }
-  if (format === 'percent') return `${value}%`
-  return value.toLocaleString()
-}
-
-/* ─── Stats data ──────────────────────────────────────────────────────────── */
+/* ─── Stat card ───────────────────────────────────────────────────────────── */
 interface Stat {
   label: string
-  value: number
-  format: StatFormat
+  value: string
   delta: string
   deltaPositive: boolean
   period: string
@@ -60,55 +44,48 @@ interface Stat {
 const STATS: Stat[] = [
   {
     label: 'Predicted Monthly Reach',
-    value: 8400,
-    format: 'compact',
+    value: '8.4K',
     delta: 'projected',
     deltaPositive: true,
     period: 'after first video',
     icon: Eye,
-    sparkData: [0, 0, 0, 0, 1, 2, 4, 6, 8],
+    sparkData: [0, 0, 0, 1, 2, 4, 6, 8],
     color: '#6366f1',
   },
   {
     label: 'Videos Published',
-    value: 0,
-    format: 'number',
-    delta: 'post first',
+    value: '0',
+    delta: 'publish first',
     deltaPositive: true,
     period: 'to unlock stats',
     icon: Video,
-    sparkData: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    sparkData: [0, 0, 0, 0, 0, 0, 0, 0],
     color: '#8b5cf6',
   },
   {
     label: 'Ideas Saved',
-    value: 0,
-    format: 'number',
-    delta: 'save ideas',
+    value: '0',
+    delta: 'use an idea',
     deltaPositive: true,
     period: 'from the feed below',
     icon: Lightbulb,
-    sparkData: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    sparkData: [0, 0, 0, 0, 0, 0, 0, 0],
     color: '#06b6d4',
   },
   {
     label: 'Predicted Engagement',
-    value: 4.8,
-    format: 'percent',
+    value: '4.8%',
     delta: 'estimated',
     deltaPositive: true,
     period: 'for your industry',
     icon: BarChart2,
-    sparkData: [0, 0, 0, 1, 2, 3, 4, 4, 5],
+    sparkData: [0, 0, 1, 2, 3, 4, 4, 5],
     color: '#4ADE80',
   },
 ]
 
-/* ─── Stat card ───────────────────────────────────────────────────────────── */
 function StatCard({ stat }: { stat: Stat }) {
   const Icon = stat.icon
-  const displayValue = formatStatValue(stat.value, stat.format)
-  const TrendIcon = stat.deltaPositive ? TrendingUp : TrendingDown
   const [hovered, setHovered] = React.useState(false)
 
   return (
@@ -123,14 +100,12 @@ function StatCard({ stat }: { stat: Stat }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Subtle color tint on hover */}
       <div
         className="absolute top-0 left-0 right-0 h-px transition-opacity duration-200"
         style={{ background: `linear-gradient(90deg, transparent, ${stat.color}60, transparent)`, opacity: hovered ? 1 : 0 }}
         aria-hidden
       />
 
-      {/* Label + icon */}
       <div className="flex items-center justify-between">
         <p style={{ fontSize: 11, fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
           {stat.label}
@@ -146,26 +121,15 @@ function StatCard({ stat }: { stat: Stat }) {
         </div>
       </div>
 
-      {/* Value + sparkline row */}
       <div className="flex items-end justify-between gap-2">
-        <span
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 26,
-            fontWeight: 700,
-            color: '#FAFAFA',
-            letterSpacing: '-0.05em',
-            lineHeight: 1,
-          }}
-        >
-          {displayValue}
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: '#FAFAFA', letterSpacing: '-0.05em', lineHeight: 1 }}>
+          {stat.value}
         </span>
         <div className="flex-shrink-0 mb-0.5">
           <Sparkline data={stat.sparkData} color={stat.color} />
         </div>
       </div>
 
-      {/* Delta */}
       <div className="flex items-center gap-2">
         <span
           className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-semibold"
@@ -174,7 +138,7 @@ function StatCard({ stat }: { stat: Stat }) {
             background: stat.deltaPositive ? 'rgba(74,222,128,0.08)' : 'rgba(248,113,113,0.08)',
           }}
         >
-          <TrendIcon className="w-2.5 h-2.5" />
+          <TrendingUp className="w-2.5 h-2.5" />
           {stat.delta}
         </span>
         <span style={{ fontSize: 11, color: '#3f3f46' }}>{stat.period}</span>
@@ -183,196 +147,39 @@ function StatCard({ stat }: { stat: Stat }) {
   )
 }
 
-/* ─── Helpers ─────────────────────────────────────────────────────────────── */
-function parseReachLow(reach: string): number {
-  const low = reach.split('–')[0].trim()
-  if (low.endsWith('K')) return Math.round(parseFloat(low) * 1000)
-  return Math.round(parseFloat(low))
-}
-function parseReachHigh(reach: string): number {
-  const parts = reach.split('–')
-  const high = parts[parts.length - 1].trim()
-  if (high.endsWith('K')) return Math.round(parseFloat(high) * 1000)
-  return Math.round(parseFloat(high))
-}
-
-/* ─── Quick Stats section ─────────────────────────────────────────────────── */
-function QuickStats({ selectedIdea }: { selectedIdea: ContentIdea | null }) {
-  const stats = React.useMemo((): Stat[] => {
-    if (!selectedIdea) return STATS
-    const lo = parseReachLow(selectedIdea.reach)
-    const hi = parseReachHigh(selectedIdea.reach)
-    const mid = Math.round((lo + hi) / 2)
-    const engEst = selectedIdea.trend === 'trending' ? 5.8 : selectedIdea.trend === 'rising' ? 4.6 : 3.2
-    const sparkReach = [0, 0, 0, Math.round(lo * 0.2), Math.round(lo * 0.5), lo, Math.round(lo * 1.3), Math.round(mid * 0.8), mid]
-    const sparkEng = [0, 0, 0, 1.2, 2.1, 3.0, engEst * 0.7, engEst * 0.9, engEst]
-    return [
-      { ...STATS[0], label: 'Predicted Reach', value: mid, format: 'compact', delta: `${selectedIdea.reach}`, period: 'estimated range', sparkData: sparkReach },
-      { ...STATS[1] },
-      { ...STATS[2] },
-      { ...STATS[3], value: engEst, format: 'percent', delta: selectedIdea.trend === 'trending' ? 'high potential' : selectedIdea.trend === 'rising' ? 'growing niche' : 'steady performer', period: 'for this format', sparkData: sparkEng },
-    ]
-  }, [selectedIdea])
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>
-          {selectedIdea ? 'Idea Forecast' : 'Predicted Performance'}
-        </h2>
-        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '0.5px solid rgba(99,102,241,0.2)' }}>Beta</span>
-      </div>
-      {selectedIdea && (
-        <p style={{ fontSize: 11, color: '#52525B', lineHeight: 1.5, fontStyle: 'italic' }}>
-          &ldquo;{selectedIdea.hook.slice(0, 60)}…&rdquo;
-        </p>
-      )}
-      <div className="flex flex-col gap-2">
-        {stats.map((stat) => (
-          <StatCard key={stat.label} stat={stat} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ─── Recent Videos ───────────────────────────────────────────────────────── */
-interface VideoRow {
-  id: string
-  filename: string
-  date: string
-  status: 'published' | 'draft' | 'processing'
-  views?: string
-}
-
-const RECENT_VIDEOS: VideoRow[] = []
-
-const STATUS_CONFIG: Record<VideoRow['status'], { label: string; variant: 'success' | 'default' | 'warning' }> = {
-  published: { label: 'Live', variant: 'success' },
-  draft: { label: 'Draft', variant: 'default' },
-  processing: { label: 'Processing', variant: 'warning' },
-}
-
-function RecentVideos() {
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Recent Videos</h2>
-        <Link
-          href="/dashboard/videos"
-          className="flex items-center gap-0.5 text-[11px] font-medium transition-colors duration-150"
-          style={{ color: '#52525B' }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#818cf8')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#52525B')}
-        >
-          View all
-          <ArrowRight className="w-3 h-3 ml-0.5" />
-        </Link>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {RECENT_VIDEOS.length === 0 && (
-          <div
-            className="flex flex-col items-center justify-center text-center py-8 rounded-xl"
-            style={{ border: '0.5px dashed rgba(255,255,255,0.08)', background: 'rgba(17,17,19,0.5)' }}
-          >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-              style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)' }}
-            >
-              <Video className="w-4 h-4" style={{ color: '#3f3f46' }} />
-            </div>
-            <p style={{ fontSize: 12, fontWeight: 500, color: '#52525B', marginBottom: 4 }}>No videos yet</p>
-            <p style={{ fontSize: 11, color: '#3f3f46', maxWidth: '18ch', lineHeight: 1.5 }}>Upload your first video to get started</p>
-            <Link
-              href="/dashboard/videos"
-              className="mt-3 text-[11px] font-medium transition-colors duration-150"
-              style={{ color: '#6366f1' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#a5b4fc')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#6366f1')}
-            >
-              Upload now →
-            </Link>
-          </div>
-        )}
-        {RECENT_VIDEOS.map((video) => {
-          const st = STATUS_CONFIG[video.status]
-          return (
-            <div
-              key={video.id}
-              className="group flex items-center gap-3 p-3 rounded-xl transition-all duration-150"
-              style={{
-                background: '#111113',
-                border: '0.5px solid rgba(255,255,255,0.06)',
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLDivElement
-                el.style.background = '#141416'
-                el.style.borderColor = 'rgba(255,255,255,0.09)'
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLDivElement
-                el.style.background = '#111113'
-                el.style.borderColor = 'rgba(255,255,255,0.06)'
-              }}
-            >
-              {/* Thumbnail */}
-              <div
-                className="flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center"
-                style={{ width: 48, height: 32, background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}
-                aria-hidden
-              >
-                <Video className="w-3.5 h-3.5" style={{ color: '#3f3f46' }} />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <p style={{ fontSize: 12, fontWeight: 500, color: '#FAFAFA', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {video.filename}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <p style={{ fontSize: 11, color: '#52525B' }}>{video.date}</p>
-                  {video.views && (
-                    <>
-                      <span style={{ fontSize: 11, color: '#3f3f46' }}>·</span>
-                      <p style={{ fontSize: 11, color: '#52525B', fontFamily: 'var(--font-mono)' }}>{video.views} views</p>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <Badge variant={st.variant}>{st.label}</Badge>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 /* ─── Page ────────────────────────────────────────────────────────────────── */
 export default function DashboardPage() {
-  const [selectedIdea, setSelectedIdea] = React.useState<ContentIdea | null>(null)
-
   return (
     <div className="flex flex-col h-full">
       <TopBar />
-      <div className="flex-1 flex gap-0 min-h-0">
-        {/* Main */}
-        <div className="flex-1 overflow-auto p-6 min-w-0">
-          <ContentIdeasFeed
-            limit={6}
-            showFilters={false}
-            gridClass="grid-cols-1 sm:grid-cols-2"
-            onSelectIdea={setSelectedIdea}
-          />
-        </div>
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-5xl mx-auto px-6 py-6 flex flex-col gap-8">
 
-        {/* Right sidebar */}
-        <aside className="hidden lg:flex flex-col gap-6 w-[296px] flex-shrink-0 overflow-auto p-5 border-l border-white/[0.05]">
-          <QuickStats selectedIdea={selectedIdea} />
+          {/* Analytics section */}
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>
+                  Predicted Performance
+                </h2>
+                <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>
+                  Estimates based on your business profile and industry benchmarks
+                </p>
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '0.5px solid rgba(99,102,241,0.2)' }}>Beta</span>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {STATS.map(stat => <StatCard key={stat.label} stat={stat} />)}
+            </div>
+          </section>
+
+          {/* Divider */}
           <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
-          <RecentVideos />
-        </aside>
+
+          {/* Content ideas */}
+          <ContentIdeasFeed showFilters gridClass="grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" />
+
+        </div>
       </div>
     </div>
   )
