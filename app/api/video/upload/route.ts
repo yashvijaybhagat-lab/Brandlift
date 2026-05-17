@@ -1,39 +1,37 @@
-import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
 import { NextRequest, NextResponse } from 'next/server'
+import { generateClientTokenFromReadWriteToken } from '@vercel/blob/client'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(request: NextRequest): Promise<Response> {
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url)
+  const filename = url.searchParams.get('filename') ?? 'video.mp4'
+  const ext = filename.includes('.') ? filename.split('.').pop()! : 'mp4'
+  const pathname = `videos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return NextResponse.json({ error: 'Blob storage not configured' }, { status: 503 })
+  }
+
   try {
-    const body = (await request.json()) as HandleUploadBody
-
-    const jsonResponse = await handleUpload({
-      body,
-      request,
-      onBeforeGenerateToken: async (_pathname) => ({
-        allowedContentTypes: [
-          'video/mp4',
-          'video/quicktime',
-          'video/mov',
-          'video/avi',
-          'video/webm',
-          'video/x-msvideo',
-          'video/x-matroska',
-        ],
-        maximumSizeInBytes: 500 * 1024 * 1024, // 500 MB
-        addRandomSuffix: true,
-      }),
-      onUploadCompleted: async ({ blob }) => {
-        console.log('[video/upload] upload complete:', blob.url)
-      },
+    const clientToken = await generateClientTokenFromReadWriteToken({
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+      pathname,
+      allowedContentTypes: [
+        'video/mp4',
+        'video/quicktime',
+        'video/mov',
+        'video/avi',
+        'video/webm',
+        'video/x-msvideo',
+        'video/x-matroska',
+      ],
+      maximumSizeInBytes: 500 * 1024 * 1024,
+      addRandomSuffix: false,
     })
-
-    return NextResponse.json(jsonResponse)
-  } catch (error) {
-    console.error('[video/upload] error:', error)
-    return NextResponse.json(
-      { error: (error as Error).message ?? 'Upload token generation failed' },
-      { status: 400 },
-    )
+    return NextResponse.json({ clientToken, pathname })
+  } catch (err) {
+    console.error('[video/upload] token error:', err)
+    return NextResponse.json({ error: 'Failed to generate upload token' }, { status: 500 })
   }
 }

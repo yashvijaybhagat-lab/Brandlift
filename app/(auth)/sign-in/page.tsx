@@ -146,39 +146,28 @@ function LeftPanel() {
           >
             BrandLift
           </span>
-          <p style={{ fontSize: 13, color: '#52525B', textAlign: 'center', maxWidth: 200, lineHeight: 1.5 }}>
-            Your digital presence, on autopilot
-          </p>
         </div>
       </motion.div>
 
-      {/* Bottom editorial text */}
+      {/* Bottom feature list */}
       <div className="relative z-10 p-10">
-        <p
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 700,
-            fontSize: 'clamp(18px, 2.5vw, 26px)',
-            letterSpacing: '-0.03em',
-            color: '#FAFAFA',
-            lineHeight: 1.2,
-            opacity: 0.9,
-          }}
-        >
-          &ldquo;We went from zero content<br />to 142K monthly views in<br />
-          <span style={{ color: '#818cf8' }}>under 60 days.&rdquo;</span>
+        <p style={{ fontSize: 11, fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>
+          Everything you need
         </p>
-        <div className="flex items-center gap-3 mt-4">
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
-          >
-            M
-          </div>
-          <div>
-            <p style={{ fontSize: 13, color: '#A1A1AA', fontWeight: 500 }}>Marcus Reid</p>
-            <p style={{ fontSize: 11, color: '#52525B' }}>Reid&apos;s Auto Detailing, Austin TX</p>
-          </div>
+        <div className="flex flex-col gap-3">
+          {[
+            'AI scripts that actually sound like you',
+            'Content ideas tailored to your business',
+            'Video upload & cloud storage',
+            'Best posting times for your platform',
+          ].map((f) => (
+            <div key={f} className="flex items-center gap-2.5">
+              <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.15)', border: '0.5px solid rgba(99,102,241,0.3)' }}>
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3 5.5L6.5 2.5" stroke="#818cf8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <span style={{ fontSize: 13, color: '#71717A' }}>{f}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

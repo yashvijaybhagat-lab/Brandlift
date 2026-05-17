@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import { Providers } from './providers'
 import './globals.css'
 
@@ -75,6 +76,7 @@ export default function RootLayout({
           {children}
         </Providers>
         <div id="toast-root" aria-live="polite" aria-atomic="false" className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none" />
+        <Analytics />
       </body>
     </html>
   )

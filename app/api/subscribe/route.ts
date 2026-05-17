@@ -12,7 +12,13 @@ export async function POST(req: NextRequest) {
 
   const supabase = getServerSupabase()
 
-  const { error } = await supabase
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  if (!supabaseUrl.startsWith('http') || supabaseUrl.includes('your_supabase')) {
+    return NextResponse.json({ ok: true }) // Supabase not configured, silently succeed
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from('subscribers')
     .upsert({ email: email.toLowerCase().trim() }, { onConflict: 'email' })
 

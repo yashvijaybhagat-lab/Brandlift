@@ -201,29 +201,34 @@ function ContentIdeaCard({
   idea,
   style,
   onSelect,
+  isSelected,
 }: {
   idea: ContentIdea
   style?: React.CSSProperties
   onSelect?: (idea: ContentIdea) => void
+  isSelected?: boolean
 }) {
   const router = useRouter()
   const trend = TREND_CONFIG[idea.trend]
   const [hovered, setHovered] = React.useState(false)
-  const [selected, setSelected] = React.useState(false)
+  const selected = isSelected ?? false
 
   return (
     <article
+      onClick={() => onSelect?.(idea)}
       style={{
         ...style,
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
-        boxShadow: hovered
+        boxShadow: selected
+          ? '0 0 0 1.5px rgba(99,102,241,0.5), 0 12px 36px rgba(0,0,0,0.45)'
+          : hovered
           ? '0 0 0 1px rgba(99,102,241,0.15), 0 12px 36px rgba(0,0,0,0.45)'
           : '0 0 0 0.5px rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.2)',
         transition: 'transform 180ms cubic-bezier(0.23,1,0.32,1), box-shadow 180ms cubic-bezier(0.23,1,0.32,1), background 180ms ease',
-        background: hovered ? '#141416' : '#111113',
+        background: selected ? '#13131a' : hovered ? '#141416' : '#111113',
         borderRadius: 14,
         overflow: 'hidden',
-        cursor: 'default',
+        cursor: 'pointer',
         position: 'relative',
       }}
       onMouseEnter={() => setHovered(true)}
@@ -327,20 +332,16 @@ function ContentIdeaCard({
 
           <button
             className="inline-flex items-center gap-1 text-[12px] font-medium rounded-md transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60"
-            style={{
-              color: selected ? '#4ADE80' : hovered ? '#818cf8' : '#52525B',
-            }}
-            aria-label={`Use idea: ${idea.hook.slice(0, 50)}…`}
-            onClick={() => {
-              setSelected(true)
+            style={{ color: selected ? '#818cf8' : hovered ? '#818cf8' : '#52525B' }}
+            aria-label={`Create video for: ${idea.hook.slice(0, 50)}…`}
+            onClick={(e) => {
+              e.stopPropagation()
               onSelect?.(idea)
-              router.push(
-                `/dashboard/videos?idea=${encodeURIComponent(idea.hook)}&format=${idea.format}`
-              )
+              router.push(`/dashboard/videos?idea=${encodeURIComponent(idea.hook)}&format=${idea.format}`)
             }}
           >
-            {selected ? '✓ Selected' : 'Use this idea'}
-            {!selected && <ArrowRight className="w-3 h-3" />}
+            {selected ? 'Create video' : 'Use this idea'}
+            <ArrowRight className="w-3 h-3" />
           </button>
         </div>
       </div>
@@ -413,6 +414,7 @@ export function ContentIdeasFeed({
   const [refreshing, setRefreshing] = React.useState(false)
   const [visible, setVisible] = React.useState(true)
   const [rotating, setRotating] = React.useState(false)
+  const [selectedIdeaId, setSelectedIdeaId] = React.useState<string | null>(null)
 
   // Filter ideas
   const filtered = React.useMemo(() => {
@@ -563,7 +565,11 @@ export function ContentIdeasFeed({
           <ContentIdeaCard
             key={`${idea.id}-${seed}`}
             idea={idea}
-            onSelect={onSelectIdea}
+            isSelected={selectedIdeaId === idea.id}
+            onSelect={(selected) => {
+              setSelectedIdeaId(selected.id)
+              onSelectIdea?.(selected)
+            }}
             style={{
               opacity: 0,
               animation: visible
