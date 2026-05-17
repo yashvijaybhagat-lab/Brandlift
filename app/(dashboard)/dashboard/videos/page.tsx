@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { upload } from '@vercel/blob/client'
 import { TopBar } from '@/components/dashboard/TopBar'
 import { Button } from '@/components/ui/Button'
@@ -21,11 +22,11 @@ import {
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 type Stage =
-  | 'script'      // writing / generating script
-  | 'upload'      // ready to drop file
-  | 'uploading'   // blob upload in progress
-  | 'enhancing'   // calling enhance API
-  | 'polling'     // waiting on Replicate
+  | 'script'
+  | 'upload'
+  | 'uploading'
+  | 'enhancing'
+  | 'polling'
   | 'done'
   | 'error'
 
@@ -33,11 +34,12 @@ interface VideoRecord {
   id: string
   name: string
   script: string
+  originalUrl: string
   enhancedUrl: string
   createdAt: number
 }
 
-/* ─── Script templates (used when no idea is passed) ─────────────────────── */
+/* ─── Script templates ────────────────────────────────────────────────────── */
 const SCRIPT_TEMPLATES = [
   { id: 'promo',       label: 'Business promo',    icon: '🏪', placeholder: "e.g. We make the best tacos in Austin — fresh ingredients, made to order, open late. Come try us at 4th & Lamar." },
   { id: 'behindscenes',label: 'Behind the scenes', icon: '🎬', placeholder: "e.g. A day in our kitchen — from prep at 6am to the last order. This is what goes into every dish we serve." },
@@ -45,7 +47,6 @@ const SCRIPT_TEMPLATES = [
   { id: 'custom',      label: 'Write my own',      icon: '✍️', placeholder: "Write your own script or talking points here..." },
 ]
 
-/* ─── Helpers ─────────────────────────────────────────────────────────────── */
 function formatBytes(bytes: number) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
@@ -70,7 +71,6 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
 
 const POLL_INTERVAL = 4000
 
-/* ─── Step indicator ──────────────────────────────────────────────────────── */
 function StepDot({ n, active, done }: { n: number | string; active: boolean; done: boolean }) {
   return (
     <div
@@ -100,7 +100,6 @@ function StepBar({ stage }: { stage: Stage }) {
   const s2done = stage === 'uploading' || stage === 'enhancing' || stage === 'polling' || stage === 'done'
   const s2active = stage === 'upload'
   const s3active = stage === 'uploading' || stage === 'enhancing' || stage === 'polling' || stage === 'done'
-
   return (
     <div className="flex items-center gap-3">
       <StepDot n={1} active={s1active} done={s1done} />
@@ -115,9 +114,10 @@ function StepBar({ stage }: { stage: Stage }) {
   )
 }
 
-/* ─── Main inner component (needs searchParams → Suspense wrapper) ────────── */
+/* ─── Main inner component ────────────────────────────────────────────────── */
 function VideosInner() {
   const searchParams = useSearchParams()
+  const { data: session } = useSession()
   const ideaHook = searchParams.get('idea') ?? ''
   const ideaFormat = searchParams.get('format') ?? ''
 
@@ -131,33 +131,76 @@ function VideosInner() {
   const [errorMsg, setErrorMsg] = useState('')
   const [predictionId, setPredictionId] = useState('')
   const [enhancedUrl, setEnhancedUrl] = useState('')
+  const [originalUrl, setOriginalUrl] = useState('')
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
   const [videos, setVideos] = useState<VideoRecord[]>([])
+  const [videosLoaded, setVideosLoaded] = useState(false)
 
   // Script state
   const [scriptText, setScriptText] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationDone, setGenerationDone] = useState(false)
   const [scriptGenError, setScriptGenError] = useState(false)
-  // when no idea: template picker
   const [selectedTemplate, setSelectedTemplate] = useState('promo')
-  // toggle: AI-generated vs write own (only relevant when idea is present)
   const [writeOwn, setWriteOwn] = useState(false)
 
   const hasIdea = ideaHook.length > 0
   const currentTemplate = SCRIPT_TEMPLATES.find(t => t.id === selectedTemplate)!
   const canProceed = !isGenerating
 
-  /* ── Load saved videos ───────────────────────────────────────────────────── */
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('bl_videos_v3')
-      if (saved) setVideos(JSON.parse(saved))
-    } catch {}
-  }, [])
+  /* ── Persist videos to server and localStorage ───────────────────────────── */
+  const saveVideos = useCallback(async (next: VideoRecord[]) => {
+    try { localStorage.setItem('bl_videos_v3', JSON.stringify(next)) } catch {}
+    if (session?.user?.email) {
+      try {
+        await fetch('/api/user/videos', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ videos: next }),
+        })
+      } catch {}
+    }
+  }, [session?.user?.email])
 
-  /* ── Auto-generate script when idea is present ───────────────────────────── */
+  /* ── Load videos: server first (if logged in), fallback to localStorage ──── */
+  useEffect(() => {
+    if (videosLoaded) return
+    const loadVideos = async () => {
+      if (session?.user?.email) {
+        try {
+          const res = await fetch('/api/user/videos')
+          const data = await res.json()
+          if (Array.isArray(data.videos) && data.videos.length > 0) {
+            setVideos(data.videos)
+            setVideosLoaded(true)
+            return
+          }
+        } catch {}
+      }
+      // Fallback to localStorage
+      try {
+        const saved = localStorage.getItem('bl_videos_v3')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          setVideos(parsed)
+          // Sync localStorage data to server if just logged in
+          if (session?.user?.email && parsed.length > 0) {
+            fetch('/api/user/videos', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ videos: parsed }),
+            }).catch(() => {})
+          }
+        }
+      } catch {}
+      setVideosLoaded(true)
+    }
+    // Wait for session to load before deciding
+    if (session !== undefined) loadVideos()
+  }, [session, videosLoaded])
+
+  /* ── Auto-generate script ────────────────────────────────────────────────── */
   useEffect(() => {
     if (!hasIdea || writeOwn || streamingRef.current) return
 
@@ -173,12 +216,15 @@ function VideosInner() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ idea: ideaHook, format: ideaFormat }),
         })
-        if (!res.ok || !res.body) return
+        if (!res.ok || !res.body) {
+          setScriptGenError(true)
+          setWriteOwn(true)
+          return
+        }
 
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
         let text = ''
-
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
@@ -211,24 +257,18 @@ function VideosInner() {
         if (cancelled) return
 
         if (data.status === 'succeeded' && data.output) {
-          const outputUrl = Array.isArray(data.output) ? data.output[0] : data.output
-          setEnhancedUrl(outputUrl)
+          const url = Array.isArray(data.output) ? data.output[0] : data.output
+          setEnhancedUrl(url)
           setStage('done')
-          const record: VideoRecord = {
-            id: predictionId,
-            name: pendingFile?.name ?? 'video.mp4',
-            script: scriptText,
-            enhancedUrl: outputUrl,
-            createdAt: Date.now(),
-          }
+          // Update saved video with enhanced URL
           setVideos(prev => {
-            const next = [record, ...prev]
-            try { localStorage.setItem('bl_videos_v3', JSON.stringify(next)) } catch {}
+            const next = prev.map(v => v.id === predictionId ? { ...v, enhancedUrl: url } : v)
+            saveVideos(next)
             return next
           })
         } else if (data.status === 'failed' || data.error) {
-          setErrorMsg(data.error ?? 'Enhancement failed on Replicate.')
-          setStage('error')
+          // Enhancement failed but video is already saved — just show original
+          setStage('done')
         } else {
           setPollProgress(p => Math.min(p + 3, 92))
           setTimeout(tick, POLL_INTERVAL)
@@ -240,38 +280,73 @@ function VideosInner() {
 
     tick()
     return () => { cancelled = true }
-  }, [stage, predictionId, pendingFile, scriptText])
+  }, [stage, predictionId, saveVideos])
 
   /* ── Upload & enhance ────────────────────────────────────────────────────── */
-  const startEnhancement = useCallback(async (file: File) => {
+  const startUpload = useCallback(async (file: File) => {
     setUploadProgress(0)
     setPollProgress(0)
     setErrorMsg('')
     setStage('uploading')
 
+    let blobUrl = ''
     try {
       const blob = await upload(file.name, file, {
         access: 'public',
         handleUploadUrl: '/api/video/upload',
         onUploadProgress: ({ percentage }) => setUploadProgress(percentage),
       })
+      blobUrl = blob.url
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Upload failed — check your connection and try again.')
+      setStage('error')
+      return
+    }
 
+    // Video is uploaded — save it immediately with the original URL
+    setOriginalUrl(blobUrl)
+    setEnhancedUrl(blobUrl)
+    const tempId = Date.now().toString()
+    const record: VideoRecord = {
+      id: tempId,
+      name: file.name,
+      script: scriptText,
+      originalUrl: blobUrl,
+      enhancedUrl: blobUrl,
+      createdAt: Date.now(),
+    }
+    setVideos(prev => {
+      const next = [record, ...prev]
+      saveVideos(next)
+      return next
+    })
+
+    // Try AI enhancement — optional, failure still shows the original video
+    try {
       setStage('enhancing')
       const res = await fetch('/api/video/enhance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoUrl: blob.url, script: scriptText }),
+        body: JSON.stringify({ videoUrl: blobUrl, script: scriptText }),
       })
       const data = await res.json()
-      if (!res.ok || data.error) throw new Error(data.error ?? 'Failed to start enhancement')
-
-      setPredictionId(data.id)
-      setStage('polling')
-    } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : String(err))
-      setStage('error')
+      if (res.ok && data.id) {
+        setPredictionId(data.id)
+        // Update saved record id to match prediction id
+        setVideos(prev => {
+          const next = prev.map(v => v.id === tempId ? { ...v, id: data.id } : v)
+          saveVideos(next)
+          return next
+        })
+        setStage('polling')
+      } else {
+        // Enhancement not available — show original as complete
+        setStage('done')
+      }
+    } catch {
+      setStage('done')
     }
-  }, [scriptText])
+  }, [scriptText, saveVideos])
 
   /* ── File handlers ───────────────────────────────────────────────────────── */
   const handleFile = useCallback((file: File) => {
@@ -281,8 +356,8 @@ function VideosInner() {
       return
     }
     setPendingFile(file)
-    startEnhancement(file)
-  }, [startEnhancement])
+    startUpload(file)
+  }, [startUpload])
 
   const onDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragging(true) }
   const onDragLeave = () => setDragging(false)
@@ -304,6 +379,7 @@ function VideosInner() {
     setErrorMsg('')
     setPredictionId('')
     setEnhancedUrl('')
+    setOriginalUrl('')
     setPendingFile(null)
     setScriptText('')
     setGenerationDone(false)
@@ -314,12 +390,12 @@ function VideosInner() {
   }
 
   const isProcessing = stage === 'uploading' || stage === 'enhancing' || stage === 'polling'
+  const displayUrl = enhancedUrl || originalUrl
 
   /* ── Render ──────────────────────────────────────────────────────────────── */
   return (
     <div className="flex flex-col h-full">
       <TopBar />
-
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-3xl mx-auto flex flex-col gap-6">
 
@@ -340,27 +416,16 @@ function VideosInner() {
 
           <input ref={fileInputRef} type="file" accept="video/*" className="hidden" onChange={onFileChange} />
 
-          {/* ── Step bar ── */}
           {!isProcessing && stage !== 'done' && stage !== 'error' && (
             <StepBar stage={stage} />
           )}
 
-          {/* ══════════════════════════════════════════════════════════════════
-              STEP 1 — SCRIPT
-          ══════════════════════════════════════════════════════════════════ */}
+          {/* ── STEP 1: SCRIPT ── */}
           {stage === 'script' && (
-            <div
-              className="flex flex-col gap-5 p-6 rounded-2xl"
-              style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}
-            >
+            <div className="flex flex-col gap-5 p-6 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
               {hasIdea ? (
-                /* ── Idea-driven flow ── */
                 <>
-                  {/* Idea callout */}
-                  <div
-                    className="flex items-start gap-3 p-4 rounded-xl"
-                    style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.2)' }}
-                  >
+                  <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
                     <Sparkles className="w-4 h-4 text-[#6366f1] flex-shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-[11px] font-semibold uppercase tracking-widest text-[#6366f1] mb-1">Content Idea</p>
@@ -368,7 +433,6 @@ function VideosInner() {
                     </div>
                   </div>
 
-                  {/* Generation error notice */}
                   {scriptGenError && (
                     <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.06)', border: '0.5px solid rgba(239,68,68,0.2)' }}>
                       <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
@@ -376,7 +440,6 @@ function VideosInner() {
                     </div>
                   )}
 
-                  {/* Toggle: AI script vs write own */}
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => { setWriteOwn(false); setScriptGenError(false); streamingRef.current = false }}
@@ -404,7 +467,6 @@ function VideosInner() {
                     </button>
                   </div>
 
-                  {/* Script area */}
                   <div className="flex flex-col gap-2">
                     <label style={{ fontSize: 13, color: '#A1A1AA', fontWeight: 500 }}>
                       {isGenerating ? (
@@ -412,11 +474,7 @@ function VideosInner() {
                           <Sparkles className="w-3 h-3 text-[#6366f1] animate-pulse" />
                           Generating script…
                         </span>
-                      ) : generationDone && !writeOwn ? (
-                        'AI-generated script — edit freely'
-                      ) : (
-                        'Your script'
-                      )}
+                      ) : generationDone && !writeOwn ? 'AI-generated script — edit freely' : 'Your script'}
                     </label>
                     <textarea
                       rows={6}
@@ -442,13 +500,11 @@ function VideosInner() {
                   </div>
                 </>
               ) : (
-                /* ── Manual flow (no idea) ── */
                 <>
                   <div>
                     <p className="text-[15px] font-semibold text-[#FAFAFA] mb-1">What type of video is this?</p>
                     <p className="text-[13px] text-[#52525B]">Pick a template or write your own script</p>
                   </div>
-
                   <div className="flex flex-wrap gap-2">
                     {SCRIPT_TEMPLATES.map(t => (
                       <button
@@ -466,7 +522,6 @@ function VideosInner() {
                       </button>
                     ))}
                   </div>
-
                   <div className="flex flex-col gap-2">
                     <label style={{ fontSize: 13, color: '#A1A1AA', fontWeight: 500 }}>Your script</label>
                     <textarea
@@ -500,24 +555,21 @@ function VideosInner() {
             </div>
           )}
 
-          {/* ══════════════════════════════════════════════════════════════════
-              STEP 2 — UPLOAD DROP ZONE
-          ══════════════════════════════════════════════════════════════════ */}
+          {/* ── STEP 2: UPLOAD DROP ZONE ── */}
           {stage === 'upload' && (
             <div className="flex flex-col gap-5">
-              {/* Script preview */}
               <div
-                className="flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-colors duration-150"
+                className="flex items-start gap-3 p-4 rounded-xl cursor-pointer"
                 style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}
                 onClick={() => setStage('script')}
-                title="Click to edit script"
               >
                 <FileText className="w-4 h-4 text-[#6366f1] flex-shrink-0 mt-0.5" />
-                <p className="text-[13px] text-[#A1A1AA] leading-relaxed flex-1 line-clamp-2">{scriptText}</p>
+                <p className="text-[13px] text-[#A1A1AA] leading-relaxed flex-1 line-clamp-2">
+                  {scriptText || <span className="text-[#3f3f46] italic">No script — uploading without one</span>}
+                </p>
                 <span style={{ fontSize: 11, color: '#52525B', whiteSpace: 'nowrap' }}>Edit ↩</span>
               </div>
 
-              {/* Drop zone */}
               <div
                 ref={dropRef}
                 onDragOver={onDragOver}
@@ -536,14 +588,12 @@ function VideosInner() {
                 >
                   {dragging ? <Upload className="w-7 h-7 text-[#6366f1]" /> : <Video className="w-7 h-7 text-[#3f3f46]" />}
                 </div>
-
                 <div>
                   <p className="text-[16px] font-semibold text-[#FAFAFA] mb-1">
                     {dragging ? 'Drop your video' : 'Upload your footage'}
                   </p>
                   <p className="text-[13px] text-[#71717A]">MP4, MOV, AVI — drag & drop or click to browse</p>
                 </div>
-
                 <button
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-semibold text-white"
                   style={{ background: 'linear-gradient(135deg, #6366f1 0%, #5558e8 100%)', boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.25)' }}
@@ -556,9 +606,7 @@ function VideosInner() {
             </div>
           )}
 
-          {/* ══════════════════════════════════════════════════════════════════
-              PROCESSING
-          ══════════════════════════════════════════════════════════════════ */}
+          {/* ── PROCESSING ── */}
           {isProcessing && pendingFile && (
             <div className="flex flex-col gap-6 p-8 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-4">
@@ -570,14 +618,12 @@ function VideosInner() {
                   <p className="text-[12px] text-[#52525B] mt-0.5">{formatBytes(pendingFile.size)}</p>
                 </div>
               </div>
-
               <div className="flex flex-col gap-4">
                 <ProgressBar value={uploadProgress} label={stage === 'uploading' ? 'Uploading to storage…' : 'Upload complete ✓'} />
                 {(stage === 'enhancing' || stage === 'polling') && (
                   <ProgressBar value={stage === 'enhancing' ? 5 : pollProgress} label="AI Enhancement — Real-ESRGAN 4×" />
                 )}
               </div>
-
               <p className="text-[13px] text-[#52525B] text-center">
                 {stage === 'uploading' && 'Uploading your video…'}
                 {stage === 'enhancing' && 'Starting AI enhancement…'}
@@ -586,15 +632,13 @@ function VideosInner() {
             </div>
           )}
 
-          {/* ══════════════════════════════════════════════════════════════════
-              ERROR
-          ══════════════════════════════════════════════════════════════════ */}
+          {/* ── ERROR ── */}
           {stage === 'error' && (
             <div className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: 'rgba(239,68,68,0.05)', border: '0.5px solid rgba(239,68,68,0.2)' }}>
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-[14px] font-medium text-red-300">Something went wrong</p>
+                  <p className="text-[14px] font-medium text-red-300">Upload failed</p>
                   <p className="text-[13px] text-red-400/70 mt-1 leading-relaxed">{errorMsg}</p>
                 </div>
                 <button onClick={reset} className="text-red-400/50 hover:text-red-300 transition-colors">
@@ -607,20 +651,20 @@ function VideosInner() {
             </div>
           )}
 
-          {/* ══════════════════════════════════════════════════════════════════
-              DONE — before/after
-          ══════════════════════════════════════════════════════════════════ */}
-          {stage === 'done' && enhancedUrl && (
+          {/* ── DONE ── */}
+          {stage === 'done' && displayUrl && (
             <div className="flex flex-col gap-6 p-6 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-400" />
                 <div className="flex-1">
-                  <p className="text-[15px] font-medium text-[#FAFAFA]">{pendingFile?.name} — enhanced</p>
-                  <p className="text-[12px] text-[#52525B] mt-0.5">Real-ESRGAN 4× AI upscaling complete</p>
+                  <p className="text-[15px] font-medium text-[#FAFAFA]">{pendingFile?.name} — saved</p>
+                  <p className="text-[12px] text-[#52525B] mt-0.5">
+                    {enhancedUrl && enhancedUrl !== originalUrl ? 'AI enhanced 4× with Real-ESRGAN' : 'Uploaded and ready'}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <a
-                    href={enhancedUrl}
+                    href={displayUrl}
                     download
                     target="_blank"
                     rel="noopener noreferrer"
@@ -634,19 +678,8 @@ function VideosInner() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2">
-                  <p className="text-[11px] font-medium uppercase tracking-widest text-[#52525B]">Original</p>
-                  <video controls className="w-full rounded-xl" style={{ border: '0.5px solid rgba(255,255,255,0.08)' }}>
-                    <source src={enhancedUrl} />
-                  </video>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <p className="text-[11px] font-medium uppercase tracking-widest text-[#6366f1]">AI Enhanced 4×</p>
-                  <video src={enhancedUrl} controls className="w-full rounded-xl"
-                    style={{ border: '0.5px solid rgba(99,102,241,0.25)', boxShadow: '0 0 20px rgba(99,102,241,0.1)' }} />
-                </div>
-              </div>
+              <video src={displayUrl} controls className="w-full rounded-xl"
+                style={{ border: '0.5px solid rgba(99,102,241,0.25)', boxShadow: '0 0 20px rgba(99,102,241,0.1)' }} />
             </div>
           )}
 
@@ -665,10 +698,10 @@ function VideosInner() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[14px] font-medium text-[#FAFAFA] truncate">{v.name}</p>
-                    <p className="text-[12px] text-[#52525B] mt-0.5 truncate">{v.script}</p>
+                    <p className="text-[12px] text-[#52525B] mt-0.5 truncate">{v.script || 'No script'}</p>
                   </div>
                   <a
-                    href={v.enhancedUrl}
+                    href={v.enhancedUrl || v.originalUrl}
                     download
                     target="_blank"
                     rel="noopener noreferrer"
