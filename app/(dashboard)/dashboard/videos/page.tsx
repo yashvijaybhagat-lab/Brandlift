@@ -204,18 +204,19 @@ function VideosInner() {
     setTimeout(() => { setActiveTab(tab); setTabVisible(true) }, 120)
   }, [])
 
-  /* ── Music playback ──────────────────────────────────────────────────────────── */
-  useEffect(() => {
+  /* ── Music playback (triggered directly on user click, not useEffect) ──────── */
+  const playMusic = useCallback((moodId: string) => {
+    setSelectedMusic(moodId)
     const audio = audioRef.current
     if (!audio) return
-    const mood = MUSIC_MOODS.find(m => m.id === selectedMusic)
-    if (!mood?.url) { audio.pause(); audio.src = ''; return }
+    const mood = MUSIC_MOODS.find(m => m.id === moodId)
+    audio.pause()
+    if (!mood?.url) { audio.src = ''; return }
     audio.src = mood.url
     audio.volume = 0.35
     audio.loop = true
     audio.play().catch(() => {})
-    return () => { audio.pause() }
-  }, [selectedMusic])
+  }, [])
 
   /* ── Transcribe from audio ───────────────────────────────────────────────────── */
   const transcribeFromAudio = useCallback(async () => {
@@ -229,19 +230,39 @@ function VideosInner() {
         body: JSON.stringify({ videoUrl: displayUrl }),
       })
       const data = await res.json()
+      if (res.status === 429 || data.fallback) {
+        // Rate limited — fall back to script-based captions
+        const scriptCaps = buildCaptions(scriptText)
+        if (scriptCaps.length > 0) {
+          setCaptions(scriptCaps)
+          setCaptionsEnabled(true)
+          setTranscribeError('Audio transcription rate-limited — using script-based captions instead')
+        } else {
+          setTranscribeError('Rate limited and no script available. Add a script to generate captions.')
+        }
+        return
+      }
       if (!res.ok) throw new Error(data.error ?? 'Transcription failed')
       if (data.segments?.length > 0) {
         setCaptions(data.segments)
         setCaptionsEnabled(true)
       } else {
-        setTranscribeError('No speech detected in the video')
+        setTranscribeError('No speech detected — try adding a script instead')
       }
     } catch (err) {
-      setTranscribeError(err instanceof Error ? err.message : 'Transcription failed')
+      // Any failure — fall back to script captions silently
+      const scriptCaps = buildCaptions(scriptText)
+      if (scriptCaps.length > 0) {
+        setCaptions(scriptCaps)
+        setCaptionsEnabled(true)
+        setTranscribeError('Using script-based captions (audio transcription unavailable)')
+      } else {
+        setTranscribeError(err instanceof Error ? err.message : 'Transcription failed')
+      }
     } finally {
       setTranscribing(false)
     }
-  }, [displayUrl])
+  }, [displayUrl, scriptText])
 
   /* ── Caption crossfade ───────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -379,7 +400,7 @@ function VideosInner() {
     setTrimStart(0); setTrimEnd(100); setVideoDuration(0); setActiveTab('captions')
     setTranscribing(false); setTranscribeError(''); setTabVisible(true)
     setDisplayedCaption(''); setCaptionOpacity(0)
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
   }
 
   const isProcessing = stage === 'uploading'
@@ -737,7 +758,7 @@ function VideosInner() {
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {MUSIC_MOODS.map(m => (
-                          <button key={m.id} onClick={() => setSelectedMusic(m.id)}
+                          <button key={m.id} onClick={() => playMusic(m.id)}
                             className="flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-150"
                             style={{ background: selectedMusic === m.id ? 'rgba(99,102,241,0.1)' : '#18181C', border: selectedMusic === m.id ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.06)' }}>
                             <span className="text-2xl">{m.icon}</span>
