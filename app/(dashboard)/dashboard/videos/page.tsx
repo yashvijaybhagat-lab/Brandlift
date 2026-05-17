@@ -23,22 +23,52 @@ interface VideoRecord {
 }
 interface Caption { text: string; start: number; end: number }
 
-/* ─── Constants ─────────────────────────────────────────────────────────────── */
-const COLOR_GRADES: Record<GradeKey, string> = {
-  original:  'none',
-  vivid:     'saturate(1.5) contrast(1.08) brightness(1.02)',
-  cinematic: 'contrast(1.18) brightness(0.88) saturate(0.8)',
-  warm:      'sepia(0.25) saturate(1.35) brightness(1.05)',
-  cool:      'brightness(0.95) saturate(0.85) hue-rotate(15deg)',
-  bw:        'grayscale(1) contrast(1.1)',
+/* ─── Color grades ───────────────────────────────────────────────────────────── */
+interface GradeLook {
+  filter: string
+  color?: { bg: string; blend: string; opacity: number }
+  vignette?: number
+}
+
+const GRADES: Record<GradeKey, GradeLook> = {
+  original: {
+    filter: 'none',
+  },
+  vivid: {
+    filter: 'saturate(1.7) contrast(1.1) brightness(1.03)',
+    vignette: 0.2,
+  },
+  cinematic: {
+    // Classic teal-shadows / orange-highlights Hollywood look
+    filter: 'contrast(1.22) brightness(0.76) saturate(0.58)',
+    color: { bg: 'linear-gradient(135deg, rgb(0,55,75) 0%, rgb(90,30,0) 100%)', blend: 'color', opacity: 0.22 },
+    vignette: 0.65,
+  },
+  warm: {
+    // Golden hour — lifted highlights, crushed cool shadows
+    filter: 'brightness(1.07) contrast(1.08) saturate(1.35)',
+    color: { bg: 'linear-gradient(180deg, rgb(255,190,70) 0%, rgb(210,80,10) 100%)', blend: 'soft-light', opacity: 0.28 },
+    vignette: 0.3,
+  },
+  cool: {
+    // Midnight blue — desaturated + cold push
+    filter: 'brightness(0.82) contrast(1.2) saturate(0.6)',
+    color: { bg: 'linear-gradient(180deg, rgb(20,70,200) 0%, rgb(0,25,90) 100%)', blend: 'color', opacity: 0.28 },
+    vignette: 0.5,
+  },
+  bw: {
+    // High-contrast silver gelatin film look
+    filter: 'grayscale(1) contrast(1.28) brightness(0.84)',
+    vignette: 0.55,
+  },
 }
 
 const GRADE_META: { key: GradeKey; label: string; bg: string }[] = [
-  { key: 'original',  label: 'Original',  bg: 'linear-gradient(135deg,#555 0%,#888 100%)' },
+  { key: 'original',  label: 'Original',  bg: 'linear-gradient(135deg,#444 0%,#999 100%)' },
   { key: 'vivid',     label: 'Vivid',     bg: 'linear-gradient(135deg,#f97316 0%,#ec4899 100%)' },
-  { key: 'cinematic', label: 'Cinematic', bg: 'linear-gradient(135deg,#1e293b 0%,#475569 100%)' },
-  { key: 'warm',      label: 'Warm',      bg: 'linear-gradient(135deg,#b45309 0%,#f59e0b 100%)' },
-  { key: 'cool',      label: 'Cool',      bg: 'linear-gradient(135deg,#1d4ed8 0%,#06b6d4 100%)' },
+  { key: 'cinematic', label: 'Cinematic', bg: 'linear-gradient(135deg,rgb(0,55,75) 0%,rgb(90,30,0) 100%)' },
+  { key: 'warm',      label: 'Warm',      bg: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)' },
+  { key: 'cool',      label: 'Cool',      bg: 'linear-gradient(135deg,rgb(20,70,200) 0%,rgb(0,25,90) 100%)' },
   { key: 'bw',        label: 'B&W',       bg: 'linear-gradient(135deg,#111 0%,#ccc 100%)' },
 ]
 
@@ -600,10 +630,26 @@ function VideosInner() {
                   src={displayUrl}
                   controls
                   className="w-full block"
-                  style={{ filter: colorGrade !== 'original' ? COLOR_GRADES[colorGrade] : undefined }}
+                  style={{ filter: GRADES[colorGrade].filter !== 'none' ? GRADES[colorGrade].filter : undefined, display: 'block' }}
                   onTimeUpdate={handleTimeUpdate}
                   onLoadedMetadata={() => { if (videoRef.current) setVideoDuration(videoRef.current.duration) }}
                 />
+                {/* Color overlay — teal/orange split, warm push, cool push, etc. */}
+                {GRADES[colorGrade].color && (
+                  <div className="absolute inset-0 pointer-events-none" style={{
+                    background: GRADES[colorGrade].color!.bg,
+                    mixBlendMode: GRADES[colorGrade].color!.blend as React.CSSProperties['mixBlendMode'],
+                    opacity: GRADES[colorGrade].color!.opacity,
+                  }} />
+                )}
+                {/* Vignette — dark edges for cinematic depth */}
+                {(GRADES[colorGrade].vignette ?? 0) > 0 && (
+                  <div className="absolute inset-0 pointer-events-none" style={{
+                    background: 'radial-gradient(ellipse at 50% 50%, transparent 38%, rgba(0,0,0,0.9) 100%)',
+                    mixBlendMode: 'multiply',
+                    opacity: GRADES[colorGrade].vignette,
+                  }} />
+                )}
                 {/* Hook text — top of video */}
                 {showHook && hookText && (
                   <div className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none" style={{ padding: '12px 16px 0' }}>
