@@ -139,6 +139,7 @@ function VideosInner() {
   const [scriptText, setScriptText] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationDone, setGenerationDone] = useState(false)
+  const [scriptGenError, setScriptGenError] = useState(false)
   // when no idea: template picker
   const [selectedTemplate, setSelectedTemplate] = useState('promo')
   // toggle: AI-generated vs write own (only relevant when idea is present)
@@ -146,7 +147,7 @@ function VideosInner() {
 
   const hasIdea = ideaHook.length > 0
   const currentTemplate = SCRIPT_TEMPLATES.find(t => t.id === selectedTemplate)!
-  const canProceed = scriptText.trim().length > 10
+  const canProceed = !isGenerating
 
   /* ── Load saved videos ───────────────────────────────────────────────────── */
   useEffect(() => {
@@ -186,7 +187,8 @@ function VideosInner() {
         }
         setGenerationDone(true)
       } catch {
-        // silently fail — user can type manually
+        setScriptGenError(true)
+        setWriteOwn(true)
       } finally {
         streamingRef.current = false
         setIsGenerating(false)
@@ -306,6 +308,7 @@ function VideosInner() {
     setScriptText('')
     setGenerationDone(false)
     setWriteOwn(false)
+    setScriptGenError(false)
     setSelectedTemplate('promo')
     streamingRef.current = false
   }
@@ -365,10 +368,18 @@ function VideosInner() {
                     </div>
                   </div>
 
+                  {/* Generation error notice */}
+                  {scriptGenError && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.06)', border: '0.5px solid rgba(239,68,68,0.2)' }}>
+                      <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                      <p className="text-[12px] text-red-400">AI generation failed — write your script below or try again.</p>
+                    </div>
+                  )}
+
                   {/* Toggle: AI script vs write own */}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setWriteOwn(false)}
+                      onClick={() => { setWriteOwn(false); setScriptGenError(false); streamingRef.current = false }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150"
                       style={{
                         background: !writeOwn ? 'rgba(99,102,241,0.12)' : '#18181C',
@@ -380,7 +391,7 @@ function VideosInner() {
                       AI-generated
                     </button>
                     <button
-                      onClick={() => { setWriteOwn(true); setScriptText('') }}
+                      onClick={() => { setWriteOwn(true); setScriptText(''); setScriptGenError(false) }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150"
                       style={{
                         background: writeOwn ? 'rgba(99,102,241,0.12)' : '#18181C',
@@ -479,7 +490,7 @@ function VideosInner() {
               <Button
                 variant="primary"
                 size="sm"
-                disabled={!canProceed || isGenerating}
+                disabled={!canProceed}
                 onClick={() => setStage('upload')}
                 className="gap-1.5 self-start"
               >
