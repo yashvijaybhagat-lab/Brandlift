@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { upload } from '@vercel/blob/client'
 import { TopBar } from '@/components/dashboard/TopBar'
 import { Button } from '@/components/ui/Button'
 import {
@@ -84,7 +85,6 @@ function VideosInner() {
   const searchParams = useSearchParams()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
-  const xhrRef = useRef<XMLHttpRequest | null>(null)
 
   const [stage, setStage] = useState<Stage>('idle')
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -166,45 +166,31 @@ function VideosInner() {
     setErrorMsg('')
     setStage('uploading')
 
-    const formData = new FormData()
-    formData.append('video', file)
-    formData.append('style', style)
+    try {
+      // 1. Upload directly to Vercel Blob (bypasses 4.5MB API route limit)
+      const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/video/upload',
+        onUploadProgress: ({ percentage }) => setUploadProgress(percentage),
+      })
+      setOriginalUrl(blob.url)
 
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest()
-      xhrRef.current = xhr
+      // 2. Send just the URL to the enhance API (tiny JSON payload, no size issue)
+      setStage('enhancing')
+      const res = await fetch('/api/video/enhance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl: blob.url, style }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error ?? 'Failed to start enhancement')
 
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) setUploadProgress((e.loaded / e.total) * 100)
-      }
-
-      xhr.onload = async () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const data = JSON.parse(xhr.responseText)
-            if (data.error) { reject(new Error(data.error)); return }
-            if (data.originalUrl) setOriginalUrl(data.originalUrl)
-            setPredictionId(data.id)
-            setStage('polling')
-            resolve()
-          } catch { reject(new Error('Invalid response')) }
-        } else {
-          try {
-            const err = JSON.parse(xhr.responseText)
-            reject(new Error(err.error ?? 'Upload failed'))
-          } catch {
-            reject(new Error(`Upload failed (${xhr.status})`))
-          }
-        }
-      }
-
-      xhr.onerror = () => reject(new Error('Network error — check your connection'))
-      xhr.open('POST', '/api/video/enhance')
-      xhr.send(formData)
-    }).catch((err: Error) => {
-      setErrorMsg(err.message)
+      setPredictionId(data.id)
+      setStage('polling')
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : String(err))
       setStage('error')
-    })
+    }
   }, [])
 
   const pickStyle = useCallback((file: File) => {
@@ -240,7 +226,6 @@ function VideosInner() {
   }
 
   const reset = () => {
-    xhrRef.current?.abort()
     setStage('idle')
     setUploadProgress(0)
     setPollProgress(0)
