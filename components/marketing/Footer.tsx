@@ -158,11 +158,11 @@ export default function Footer() {
             </div>
             <div className="text-xs" style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}>
               Made by{' '}
-              <a href="mailto:hello@brandlift.app" style={{ color: 'var(--color-text-muted)' }} className="hover:text-[#818cf8] transition-colors duration-150">
+              <a href="mailto:contact@brandlift.dev" style={{ color: 'var(--color-text-muted)' }} className="hover:text-[#818cf8] transition-colors duration-150">
                 Ansh Thakar
               </a>
               {' '}&amp;{' '}
-              <a href="mailto:hello@brandlift.app" style={{ color: 'var(--color-text-muted)' }} className="hover:text-[#818cf8] transition-colors duration-150">
+              <a href="mailto:contact@brandlift.dev" style={{ color: 'var(--color-text-muted)' }} className="hover:text-[#818cf8] transition-colors duration-150">
                 Yash Bhagat
               </a>
             </div>

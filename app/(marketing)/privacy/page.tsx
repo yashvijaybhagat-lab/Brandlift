@@ -28,7 +28,7 @@ const SECTIONS = [
   },
   {
     title: 'Your Rights',
-    body: `You have the right to access, correct, or delete your personal data at any time. You may also request a portable copy of your data or object to certain processing. To exercise these rights, contact us at hello@brandlift.app. We will respond within 30 days.`,
+    body: `You have the right to access, correct, or delete your personal data at any time. You may also request a portable copy of your data or object to certain processing. To exercise these rights, contact us at contact@brandlift.dev. We will respond within 30 days.`,
   },
   {
     title: 'Cookies',
@@ -114,8 +114,8 @@ export default function PrivacyPage() {
           </h3>
           <p style={{ fontSize: 14, color: '#71717A', lineHeight: 1.65 }}>
             Email us at{' '}
-            <a href="mailto:hello@brandlift.app" style={{ color: '#818cf8' }} className="hover:text-[#a5b4fc] transition-colors duration-150">
-              hello@brandlift.app
+            <a href="mailto:contact@brandlift.dev" style={{ color: '#818cf8' }} className="hover:text-[#a5b4fc] transition-colors duration-150">
+              contact@brandlift.dev
             </a>
             {' '}and we&apos;ll respond within 2 business days.
           </p>
