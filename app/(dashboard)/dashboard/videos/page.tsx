@@ -97,9 +97,9 @@ function StepLabel({ text, active, done }: { text: string; active: boolean; done
 function StepBar({ stage }: { stage: Stage }) {
   const s1done = stage !== 'script'
   const s1active = stage === 'script'
-  const s2done = stage === 'uploading' || stage === 'enhancing' || stage === 'polling' || stage === 'done'
+  const s2done = stage === 'uploading' || stage === 'done'
   const s2active = stage === 'upload'
-  const s3active = stage === 'uploading' || stage === 'enhancing' || stage === 'polling' || stage === 'done'
+  const s3active = stage === 'uploading' || stage === 'done'
   return (
     <div className="flex items-center gap-3">
       <StepDot n={1} active={s1active} done={s1done} />
@@ -127,9 +127,7 @@ function VideosInner() {
 
   const [stage, setStage] = useState<Stage>('script')
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [pollProgress, setPollProgress] = useState(0)
   const [errorMsg, setErrorMsg] = useState('')
-  const [predictionId, setPredictionId] = useState('')
   const [enhancedUrl, setEnhancedUrl] = useState('')
   const [originalUrl, setOriginalUrl] = useState('')
   const [pendingFile, setPendingFile] = useState<File | null>(null)
@@ -245,47 +243,45 @@ function VideosInner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasIdea, writeOwn])
 
-  /* ── Poll Replicate ──────────────────────────────────────────────────────── */
-  useEffect(() => {
-    if (stage !== 'polling' || !predictionId) return
-    let cancelled = false
+  /* ── Background enhancement (fire-and-forget after upload completes) ─────── */
+  const runEnhancementInBackground = useCallback(async (videoUrl: string, recordId: string) => {
+    try {
+      const res = await fetch('/api/video/enhance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl }),
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      if (!data.id) return
 
-    const tick = async () => {
-      try {
-        const res = await fetch(`/api/video/status/${predictionId}`)
-        const data = await res.json()
-        if (cancelled) return
-
-        if (data.status === 'succeeded' && data.output) {
-          const url = Array.isArray(data.output) ? data.output[0] : data.output
-          setEnhancedUrl(url)
-          setStage('done')
-          // Update saved video with enhanced URL
-          setVideos(prev => {
-            const next = prev.map(v => v.id === predictionId ? { ...v, enhancedUrl: url } : v)
-            saveVideos(next)
-            return next
-          })
-        } else if (data.status === 'failed' || data.error) {
-          // Enhancement failed but video is already saved — just show original
-          setStage('done')
-        } else {
-          setPollProgress(p => Math.min(p + 3, 92))
-          setTimeout(tick, POLL_INTERVAL)
-        }
-      } catch {
-        if (!cancelled) setTimeout(tick, POLL_INTERVAL)
+      // Poll until done (background, no UI stage changes)
+      let attempts = 0
+      const poll = async (): Promise<void> => {
+        if (attempts++ > 60) return
+        try {
+          const r = await fetch(`/api/video/status/${data.id}`)
+          const d = await r.json()
+          if (d.status === 'succeeded' && d.output) {
+            const enhancedUrl = Array.isArray(d.output) ? d.output[0] : d.output
+            setVideos(prev => {
+              const next = prev.map(v => v.id === recordId ? { ...v, enhancedUrl } : v)
+              saveVideos(next)
+              return next
+            })
+          } else if (d.status !== 'failed') {
+            await new Promise(r => setTimeout(r, POLL_INTERVAL))
+            return poll()
+          }
+        } catch { /* ignore */ }
       }
-    }
+      await poll()
+    } catch { /* ignore */ }
+  }, [saveVideos])
 
-    tick()
-    return () => { cancelled = true }
-  }, [stage, predictionId, saveVideos])
-
-  /* ── Upload & enhance ────────────────────────────────────────────────────── */
+  /* ── Upload ──────────────────────────────────────────────────────────────── */
   const startUpload = useCallback(async (file: File) => {
     setUploadProgress(0)
-    setPollProgress(0)
     setErrorMsg('')
     setStage('uploading')
 
@@ -303,50 +299,28 @@ function VideosInner() {
       return
     }
 
-    // Video is uploaded — save it immediately with the original URL
-    setOriginalUrl(blobUrl)
-    setEnhancedUrl(blobUrl)
-    const tempId = Date.now().toString()
+    // Upload done — save record immediately and show done state
+    const recordId = Date.now().toString()
     const record: VideoRecord = {
-      id: tempId,
+      id: recordId,
       name: file.name,
       script: scriptText,
       originalUrl: blobUrl,
       enhancedUrl: blobUrl,
       createdAt: Date.now(),
     }
+    setOriginalUrl(blobUrl)
+    setEnhancedUrl(blobUrl)
     setVideos(prev => {
       const next = [record, ...prev]
       saveVideos(next)
       return next
     })
+    setStage('done')
 
-    // Try AI enhancement — optional, failure still shows the original video
-    try {
-      setStage('enhancing')
-      const res = await fetch('/api/video/enhance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoUrl: blobUrl, script: scriptText }),
-      })
-      const data = await res.json()
-      if (res.ok && data.id) {
-        setPredictionId(data.id)
-        // Update saved record id to match prediction id
-        setVideos(prev => {
-          const next = prev.map(v => v.id === tempId ? { ...v, id: data.id } : v)
-          saveVideos(next)
-          return next
-        })
-        setStage('polling')
-      } else {
-        // Enhancement not available — show original as complete
-        setStage('done')
-      }
-    } catch {
-      setStage('done')
-    }
-  }, [scriptText, saveVideos])
+    // Enhancement runs silently in background — doesn't block the UI
+    runEnhancementInBackground(blobUrl, recordId)
+  }, [scriptText, saveVideos, runEnhancementInBackground])
 
   /* ── File handlers ───────────────────────────────────────────────────────── */
   const handleFile = useCallback((file: File) => {
@@ -375,9 +349,7 @@ function VideosInner() {
   const reset = () => {
     setStage('script')
     setUploadProgress(0)
-    setPollProgress(0)
     setErrorMsg('')
-    setPredictionId('')
     setEnhancedUrl('')
     setOriginalUrl('')
     setPendingFile(null)
@@ -389,7 +361,7 @@ function VideosInner() {
     streamingRef.current = false
   }
 
-  const isProcessing = stage === 'uploading' || stage === 'enhancing' || stage === 'polling'
+  const isProcessing = stage === 'uploading'
   const displayUrl = enhancedUrl || originalUrl
 
   /* ── Render ──────────────────────────────────────────────────────────────── */
@@ -619,16 +591,9 @@ function VideosInner() {
                 </div>
               </div>
               <div className="flex flex-col gap-4">
-                <ProgressBar value={uploadProgress} label={stage === 'uploading' ? 'Uploading to storage…' : 'Upload complete ✓'} />
-                {(stage === 'enhancing' || stage === 'polling') && (
-                  <ProgressBar value={stage === 'enhancing' ? 5 : pollProgress} label="AI Enhancement — Real-ESRGAN 4×" />
-                )}
+                <ProgressBar value={uploadProgress} label="Uploading to storage…" />
               </div>
-              <p className="text-[13px] text-[#52525B] text-center">
-                {stage === 'uploading' && 'Uploading your video…'}
-                {stage === 'enhancing' && 'Starting AI enhancement…'}
-                {stage === 'polling' && 'Enhancing video quality — this takes a few minutes…'}
-              </p>
+              <p className="text-[13px] text-[#52525B] text-center">Uploading your video…</p>
             </div>
           )}
 
