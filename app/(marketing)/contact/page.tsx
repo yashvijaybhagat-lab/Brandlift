@@ -218,8 +218,8 @@ export default function ContactPage() {
                   </svg>
                 ),
                 label: 'Email',
-                value: 'hello@brandlift.app',
-                href: 'mailto:hello@brandlift.app',
+                value: 'contact@brandlift.dev',
+                href: 'mailto:contact@brandlift.dev',
               },
               {
                 icon: (

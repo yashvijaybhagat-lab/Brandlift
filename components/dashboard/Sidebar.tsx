@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import {
   LayoutDashboard,
-  Lightbulb,
   Video,
   Globe,
   Settings,
@@ -39,8 +38,7 @@ interface SidebarProps {
 // ─────────────────────────────────────────────
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Content Ideas', href: '/dashboard/ideas', icon: Lightbulb },
+  { label: 'Home', href: '/dashboard', icon: LayoutDashboard },
   { label: 'My Videos', href: '/dashboard/videos', icon: Video },
   { label: 'My Website', href: '/dashboard/website', icon: Globe },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings },
@@ -239,42 +237,6 @@ export function Sidebar({
 
         {/* ── Bottom section ── */}
         <div className="flex flex-col gap-3 px-2 pb-4 pt-3 border-t border-white/[0.06] flex-shrink-0">
-          {/* Upgrade card — only visible when expanded */}
-          <div
-            style={{
-              opacity: collapsed ? 0 : 1,
-              maxHeight: collapsed ? 0 : 120,
-              overflow: 'hidden',
-              transition:
-                'opacity 200ms cubic-bezier(0.23,1,0.32,1), max-height 220ms cubic-bezier(0.23,1,0.32,1)',
-              pointerEvents: collapsed ? 'none' : 'auto',
-            }}
-          >
-            <div
-              className="rounded-xl p-3.5"
-              style={{
-                background: 'linear-gradient(135deg, rgba(99,102,241,0.07) 0%, rgba(139,92,246,0.07) 100%)',
-                border: '0.5px solid rgba(99,102,241,0.2)',
-              }}
-            >
-              <div className="flex items-center gap-2 mb-1.5">
-                <Zap className="w-3 h-3 flex-shrink-0" style={{ color: '#818cf8' }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: '#818cf8', letterSpacing: '-0.01em' }}>Upgrade to Pro</span>
-              </div>
-              <p style={{ fontSize: 11, color: '#52525B', lineHeight: 1.5, marginBottom: 10 }}>
-                Unlimited videos, AI captions, and priority support.
-              </p>
-              <Button
-                variant="primary"
-                size="sm"
-                fullWidth
-                className="text-[11px] h-7 rounded-lg"
-              >
-                Upgrade
-              </Button>
-            </div>
-          </div>
-
           {/* User row */}
           <NavTooltip label={userEmail} collapsed={collapsed}>
             <div className="flex items-center gap-2.5 px-1 py-1 rounded-[8px] hover:bg-[#18181C] transition-colors duration-160 cursor-pointer">

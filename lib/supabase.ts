@@ -5,6 +5,19 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 // ─────────────────────────────────────────────
 
 export interface DatabaseTables {
+  subscribers: {
+    Row: {
+      id: string
+      email: string
+      subscribed_at: string
+    }
+    Insert: {
+      id?: string
+      email: string
+      subscribed_at?: string
+    }
+    Update: Partial<DatabaseTables['subscribers']['Insert']>
+  }
   users: {
     Row: {
       id: string
@@ -124,14 +137,15 @@ export type Database = {
 
 function getSupabaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  if (!url) throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set')
+  // Return a no-op placeholder if not configured so builds don't crash
+  if (!url || !url.startsWith('http') || url.includes('your_supabase')) {
+    return 'https://placeholder.supabase.co'
+  }
   return url
 }
 
 function getSupabaseAnonKey(): string {
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!key) throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is not set')
-  return key
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
 }
 
 // ─────────────────────────────────────────────

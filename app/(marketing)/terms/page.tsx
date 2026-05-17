@@ -12,7 +12,7 @@ const SECTIONS = [
   },
   {
     title: 'Your Account',
-    body: `You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. You must be at least 18 years old to create an account. Notify us immediately at hello@brandlift.app if you suspect unauthorised access.`,
+    body: `You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. You must be at least 18 years old to create an account. Notify us immediately at contact@brandlift.dev if you suspect unauthorised access.`,
   },
   {
     title: 'Acceptable Use',
@@ -125,8 +125,8 @@ export default function TermsPage() {
           </h3>
           <p style={{ fontSize: 14, color: '#71717A', lineHeight: 1.65 }}>
             Email us at{' '}
-            <a href="mailto:hello@brandlift.app" style={{ color: '#818cf8' }} className="hover:text-[#a5b4fc] transition-colors duration-150">
-              hello@brandlift.app
+            <a href="mailto:contact@brandlift.dev" style={{ color: '#818cf8' }} className="hover:text-[#a5b4fc] transition-colors duration-150">
+              contact@brandlift.dev
             </a>
             {' '}and we&apos;ll get back to you within 2 business days.
           </p>
