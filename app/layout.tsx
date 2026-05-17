@@ -69,13 +69,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <Providers>
-      <html lang="en" className={inter.variable}>
-        <body className="font-sans antialiased bg-brand-bg text-brand-text min-h-screen">
+    <html lang="en" className={inter.variable}>
+      <body className="font-sans antialiased bg-brand-bg text-brand-text min-h-screen">
+        <Providers>
           {children}
-          <div id="toast-root" aria-live="polite" aria-atomic="false" className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none" />
-        </body>
-      </html>
-    </Providers>
+        </Providers>
+        <div id="toast-root" aria-live="polite" aria-atomic="false" className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none" />
+      </body>
+    </html>
   )
 }

@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/Button'
 
 export interface StepBasicsData {
   businessName: string
+  email: string
+  address: string
   description: string
   audience: string
   location: string
@@ -36,8 +38,22 @@ const SUB_QUESTIONS: SubQuestion[] = [
   {
     id: 'businessName',
     question: "What's your business called?",
-    placeholder: 'e.g. Maria\'s Bakehouse',
+    placeholder: "e.g. Maria's Bakehouse",
     type: 'input',
+  },
+  {
+    id: 'email',
+    question: "What's your business email?",
+    placeholder: 'e.g. hello@mariabakehouse.com',
+    type: 'input',
+    hint: "We'll send your content ideas and reports here",
+  },
+  {
+    id: 'address',
+    question: "What's your business address?",
+    placeholder: 'e.g. 123 Main St, Austin, TX 78701',
+    type: 'input',
+    hint: 'Used to tailor local content for your area',
   },
   {
     id: 'description',
@@ -53,12 +69,6 @@ const SUB_QUESTIONS: SubQuestion[] = [
     placeholder: 'Families in the neighborhood, young professionals...',
     type: 'input',
   },
-  {
-    id: 'location',
-    question: 'What city or area do you serve?',
-    placeholder: 'e.g. Austin, TX — East Side',
-    type: 'input',
-  },
 ]
 
 // ─────────────────────────────────────────────
@@ -69,6 +79,8 @@ export default function StepBasics({ onComplete }: StepBasicsProps) {
   const [currentQ, setCurrentQ] = useState(0)
   const [values, setValues] = useState<StepBasicsData>({
     businessName: '',
+    email: '',
+    address: '',
     description: '',
     audience: '',
     location: '',

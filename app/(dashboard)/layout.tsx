@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useSession } from 'next-auth/react'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 
 const STORAGE_KEY = 'brandlift:sidebar-collapsed'
@@ -20,23 +21,25 @@ export default function DashboardLayout({
     }
   })
 
+  const { data: session } = useSession()
+
   const handleCollapsedChange = React.useCallback((next: boolean) => {
     setCollapsed(next)
     try {
       localStorage.setItem(STORAGE_KEY, String(next))
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, [])
+
+  const userEmail = session?.user?.email ?? 'hello@yourbusiness.com'
+  const businessName = session?.user?.name ?? 'Your Business'
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0A0A0B]">
-      {/* GPU-accelerated sidebar — width transitions only */}
       <Sidebar
         collapsed={collapsed}
         onCollapsedChange={handleCollapsedChange}
-        businessName="Your Business"
-        userEmail="hello@yourbusiness.com"
+        businessName={businessName}
+        userEmail={userEmail}
       />
 
       {/* Main content area */}

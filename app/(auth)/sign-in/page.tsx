@@ -405,13 +405,13 @@ export default function SignInPage() {
           >
             Don&apos;t have an account?{' '}
             <Link
-              href="/onboard"
+              href="/sign-up"
               className="transition-colors duration-150"
               style={{ color: '#818cf8' }}
               onMouseEnter={(e) => (e.currentTarget.style.color = '#a5b4fc')}
               onMouseLeave={(e) => (e.currentTarget.style.color = '#818cf8')}
             >
-              Get started free →
+              Sign up free →
             </Link>
           </motion.p>
         </div>
