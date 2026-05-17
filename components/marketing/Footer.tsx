@@ -152,21 +152,6 @@ export default function Footer() {
             </ul>
           </nav>
 
-          <div className="flex flex-col items-center sm:items-end gap-1">
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              © 2026 BrandLift
-            </div>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}>
-              Made by{' '}
-              <a href="mailto:hello@brandlift.app" style={{ color: 'var(--color-text-muted)' }} className="hover:text-[#818cf8] transition-colors duration-150">
-                Ansh Thakar
-              </a>
-              {' '}&amp;{' '}
-              <a href="mailto:hello@brandlift.app" style={{ color: 'var(--color-text-muted)' }} className="hover:text-[#818cf8] transition-colors duration-150">
-                Yash Bhagat
-              </a>
-            </div>
-          </div>
         </div>
       </div>
     </footer>
