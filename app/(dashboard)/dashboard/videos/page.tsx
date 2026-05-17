@@ -7,21 +7,47 @@ import { put } from '@vercel/blob/client'
 import { TopBar } from '@/components/dashboard/TopBar'
 import { Button } from '@/components/ui/Button'
 import {
-  Upload, Video, CheckCircle2, AlertCircle, Download, Sparkles, X,
-  FileText, ChevronRight, Wand2, PenLine, Music, Type, Scissors,
-  Palette, MessageSquare,
+  Upload, Video, CheckCircle2, AlertCircle, Sparkles, X,
+  ChevronRight, Wand2, PenLine, Music, Type, Scissors,
+  Palette, MessageSquare, Layers, GitMerge, Plus, Trash2,
+  ChevronUp, ChevronDown, Film,
 } from 'lucide-react'
+import { exportVideo, downloadBlob, type TransitionType, type ExportQuality } from '@/lib/videoExport'
 
 /* ─── Types ─────────────────────────────────────────────────────────────────── */
 type Stage = 'script' | 'upload' | 'uploading' | 'done' | 'error'
-type StudioTab = 'captions' | 'music' | 'grade' | 'text' | 'trim'
-type GradeKey = 'original' | 'vivid' | 'cinematic' | 'warm' | 'cool' | 'bw'
+type StudioTab = 'captions' | 'music' | 'grade' | 'text' | 'clips' | 'transition'
+type GradeKey = 'original' | 'vivid' | 'cinematic' | 'warm' | 'cool' | 'bw' | 'custom'
 
 interface VideoRecord {
   id: string; name: string; script: string
   originalUrl: string; enhancedUrl: string; createdAt: number
 }
 interface Caption { text: string; start: number; end: number }
+
+interface Clip {
+  id: string
+  name: string
+  url: string        // Vercel Blob public URL
+  trimStart: number  // 0–100
+  trimEnd: number    // 0–100
+  duration: number   // seconds (filled on loadedmetadata)
+}
+
+interface CustomColor {
+  exposure: number      // -100 to 100
+  contrast: number      // -100 to 100
+  saturation: number    // -100 to 100
+  temperature: number   // -100 (cool) to 100 (warm)
+  sharpness: number     // 0 to 100
+  highlights: number    // -100 to 100
+  shadows: number       // -100 to 100
+}
+
+const DEFAULT_CUSTOM_COLOR: CustomColor = {
+  exposure: 0, contrast: 0, saturation: 0, temperature: 0,
+  sharpness: 0, highlights: 0, shadows: 0,
+}
 
 /* ─── Color grades ───────────────────────────────────────────────────────────── */
 interface GradeLook {
@@ -31,36 +57,25 @@ interface GradeLook {
 }
 
 const GRADES: Record<GradeKey, GradeLook> = {
-  original: {
-    filter: 'none',
-  },
-  vivid: {
-    filter: 'saturate(1.7) contrast(1.1) brightness(1.03)',
-    vignette: 0.2,
-  },
+  original:  { filter: 'none' },
+  vivid:     { filter: 'saturate(1.7) contrast(1.1) brightness(1.03)', vignette: 0.2 },
   cinematic: {
-    // Classic teal-shadows / orange-highlights Hollywood look
     filter: 'contrast(1.22) brightness(0.76) saturate(0.58)',
     color: { bg: 'linear-gradient(135deg, rgb(0,55,75) 0%, rgb(90,30,0) 100%)', blend: 'color', opacity: 0.22 },
     vignette: 0.65,
   },
   warm: {
-    // Golden hour — lifted highlights, crushed cool shadows
     filter: 'brightness(1.07) contrast(1.08) saturate(1.35)',
     color: { bg: 'linear-gradient(180deg, rgb(255,190,70) 0%, rgb(210,80,10) 100%)', blend: 'soft-light', opacity: 0.28 },
     vignette: 0.3,
   },
   cool: {
-    // Midnight blue — desaturated + cold push
     filter: 'brightness(0.82) contrast(1.2) saturate(0.6)',
     color: { bg: 'linear-gradient(180deg, rgb(20,70,200) 0%, rgb(0,25,90) 100%)', blend: 'color', opacity: 0.28 },
     vignette: 0.5,
   },
-  bw: {
-    // High-contrast silver gelatin film look
-    filter: 'grayscale(1) contrast(1.28) brightness(0.84)',
-    vignette: 0.55,
-  },
+  bw:     { filter: 'grayscale(1) contrast(1.28) brightness(0.84)', vignette: 0.55 },
+  custom: { filter: 'none' },  // dynamic — see buildCustomFilter()
 }
 
 const GRADE_META: { key: GradeKey; label: string; bg: string }[] = [
@@ -70,7 +85,23 @@ const GRADE_META: { key: GradeKey; label: string; bg: string }[] = [
   { key: 'warm',      label: 'Warm',      bg: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)' },
   { key: 'cool',      label: 'Cool',      bg: 'linear-gradient(135deg,rgb(20,70,200) 0%,rgb(0,25,90) 100%)' },
   { key: 'bw',        label: 'B&W',       bg: 'linear-gradient(135deg,#111 0%,#ccc 100%)' },
+  { key: 'custom',    label: 'Custom',    bg: 'linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)' },
 ]
+
+function buildCustomFilter(c: CustomColor): string {
+  const brightness = 1 + (c.exposure  / 200)
+  const contrast   = 1 + (c.contrast  / 200)
+  const saturate   = Math.max(0, 1 + (c.saturation / 100))
+  const parts = [
+    `brightness(${brightness.toFixed(2)})`,
+    `contrast(${contrast.toFixed(2)})`,
+    `saturate(${saturate.toFixed(2)})`,
+  ]
+  if (c.temperature > 0) parts.push(`sepia(${(c.temperature / 400).toFixed(3)})`)
+  else if (c.temperature < 0) parts.push(`hue-rotate(${(c.temperature / 5).toFixed(1)}deg)`)
+  if (c.sharpness > 0) parts.push(`contrast(${(1 + c.sharpness / 250).toFixed(3)})`)
+  return parts.join(' ')
+}
 
 const MUSIC_MOODS = [
   { id: 'none',      label: 'No music',  icon: '🔇', desc: 'Keep it clean',          url: null },
@@ -82,18 +113,22 @@ const MUSIC_MOODS = [
 ]
 
 const SCRIPT_TEMPLATES = [
-  { id: 'promo',        label: 'Business promo',    icon: '🏪', placeholder: 'e.g. We make the best tacos in Austin — fresh ingredients, made to order, open late. Come try us at 4th & Lamar.' },
-  { id: 'behindscenes', label: 'Behind the scenes', icon: '🎬', placeholder: 'e.g. A day in our kitchen — from prep at 6am to the last order. This is what goes into every dish we serve.' },
+  { id: 'promo',        label: 'Business promo',    icon: '🏪', placeholder: 'e.g. We make the best tacos in Austin — fresh ingredients, made to order, open late.' },
+  { id: 'behindscenes', label: 'Behind the scenes', icon: '🎬', placeholder: 'e.g. A day in our kitchen — from prep at 6am to the last order.' },
   { id: 'testimonial',  label: 'Customer story',    icon: '⭐', placeholder: "e.g. Sarah's been coming here every Friday for two years. Here's what she says about us." },
   { id: 'custom',       label: 'Write my own',      icon: '✍️', placeholder: 'Write your own script or talking points here...' },
+]
+
+const TRANSITION_OPTIONS: { id: TransitionType; label: string; icon: string; desc: string }[] = [
+  { id: 'none',    label: 'Cut',     icon: '✂️', desc: 'Hard cut between clips' },
+  { id: 'fade',    label: 'Fade',    icon: '⚫', desc: 'Fade to black between clips' },
+  { id: 'dissolve',label: 'Dissolve',icon: '🌊', desc: 'Cross-dissolve between clips' },
 ]
 
 const POLL_INTERVAL = 4000
 
 /* ─── Helpers ───────────────────────────────────────────────────────────────── */
-function formatBytes(b: number) {
-  return b < 1048576 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1048576).toFixed(1)} MB`
-}
+function fmtSec(s: number) { return s < 60 ? `${s.toFixed(1)}s` : `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}` }
 
 function buildCaptions(script: string): Caption[] {
   if (!script.trim()) return []
@@ -159,64 +194,95 @@ function StepBar({ stage }: { stage: Stage }) {
   )
 }
 
+/* ─── Slider ─────────────────────────────────────────────────────────────────── */
+function ColorSlider({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <span style={{ fontSize: 12, color: '#A1A1AA' }}>{label}</span>
+        <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: value === 0 ? '#52525B' : '#818cf8' }}>{value > 0 ? '+' : ''}{value}</span>
+      </div>
+      <input type="range" min={min} max={max} value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        className="w-full" style={{ accentColor: '#6366f1', height: 4 }} />
+    </div>
+  )
+}
+
 /* ─── Main ───────────────────────────────────────────────────────────────────── */
 function VideosInner() {
   const searchParams = useSearchParams()
   const { data: session } = useSession()
-  const ideaHook = searchParams.get('idea') ?? ''
+  const ideaHook   = searchParams.get('idea')   ?? ''
   const ideaFormat = searchParams.get('format') ?? ''
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const dropRef = useRef<HTMLDivElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const audioRef = useRef<HTMLAudioElement>(null)
-  const streamingRef = useRef(false)
+  const fileInputRef    = useRef<HTMLInputElement>(null)
+  const addClipInputRef = useRef<HTMLInputElement>(null)
+  const dropRef         = useRef<HTMLDivElement>(null)
+  const videoRef        = useRef<HTMLVideoElement>(null)
+  const audioRef        = useRef<HTMLAudioElement>(null)
+  const streamingRef    = useRef(false)
 
-  // Core
-  const [stage, setStage] = useState<Stage>('script')
+  // Core flow
+  const [stage, setStage]                 = useState<Stage>('script')
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [errorMsg, setErrorMsg] = useState('')
-  const [enhancedUrl, setEnhancedUrl] = useState('')
-  const [originalUrl, setOriginalUrl] = useState('')
-  const [pendingFile, setPendingFile] = useState<File | null>(null)
-  const [dragging, setDragging] = useState(false)
-  const [videos, setVideos] = useState<VideoRecord[]>([])
-  const [videosLoaded, setVideosLoaded] = useState(false)
+  const [errorMsg, setErrorMsg]           = useState('')
+  const [dragging, setDragging]           = useState(false)
+  const [videos, setVideos]               = useState<VideoRecord[]>([])
+  const [videosLoaded, setVideosLoaded]   = useState(false)
+
+  // Multi-clip state
+  const [clips, setClips]                 = useState<Clip[]>([])
+  const [activeClipId, setActiveClipId]   = useState<string | null>(null)
+  const [addingClip, setAddingClip]       = useState(false)
+  const [addClipProgress, setAddClipProgress] = useState(0)
 
   // Script
-  const [scriptText, setScriptText] = useState('')
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generationDone, setGenerationDone] = useState(false)
-  const [scriptGenError, setScriptGenError] = useState(false)
+  const [scriptText, setScriptText]           = useState('')
+  const [isGenerating, setIsGenerating]       = useState(false)
+  const [generationDone, setGenerationDone]   = useState(false)
+  const [scriptGenError, setScriptGenError]   = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState('promo')
-  const [writeOwn, setWriteOwn] = useState(false)
+  const [writeOwn, setWriteOwn]               = useState(false)
 
-  // Enhancement studio
-  const [activeTab, setActiveTab] = useState<StudioTab>('captions')
-  const [colorGrade, setColorGrade] = useState<GradeKey>('original')
-  const [hookText, setHookText] = useState('')
-  const [ctaText, setCtaText] = useState('')
-  const [showHook, setShowHook] = useState(false)
-  const [showCta, setShowCta] = useState(false)
-  const [selectedMusic, setSelectedMusic] = useState('none')
-  const [captions, setCaptions] = useState<Caption[]>([])
+  // Studio
+  const [activeTab, setActiveTab]             = useState<StudioTab>('captions')
+  const [colorGrade, setColorGrade]           = useState<GradeKey>('original')
+  const [customColor, setCustomColor]         = useState<CustomColor>(DEFAULT_CUSTOM_COLOR)
+  const [hookText, setHookText]               = useState('')
+  const [ctaText, setCtaText]                 = useState('')
+  const [showHook, setShowHook]               = useState(false)
+  const [showCta, setShowCta]                 = useState(false)
+  const [selectedMusic, setSelectedMusic]     = useState('none')
+  const [captions, setCaptions]               = useState<Caption[]>([])
   const [captionsEnabled, setCaptionsEnabled] = useState(false)
-  const [currentCaption, setCurrentCaption] = useState('')
+  const [currentCaption, setCurrentCaption]   = useState('')
   const [displayedCaption, setDisplayedCaption] = useState('')
-  const [captionOpacity, setCaptionOpacity] = useState(0)
-  const [transcribing, setTranscribing] = useState(false)
+  const [captionOpacity, setCaptionOpacity]   = useState(0)
+  const [transcribing, setTranscribing]       = useState(false)
   const [transcribeError, setTranscribeError] = useState('')
-  const [trimStart, setTrimStart] = useState(0)
-  const [trimEnd, setTrimEnd] = useState(100)
-  const [videoDuration, setVideoDuration] = useState(0)
-  const [tabVisible, setTabVisible] = useState(true)
+  const [transition, setTransition]           = useState<TransitionType>('fade')
+  const [transitionDuration, setTransitionDuration] = useState(0.6)
+  const [tabVisible, setTabVisible]           = useState(true)
 
+  // Export
+  const [exportQuality, setExportQuality]     = useState<ExportQuality>('1080p')
+  const [exporting, setExporting]             = useState(false)
+  const [exportProgress, setExportProgress]   = useState(0)
+  const [exportLabel, setExportLabel]         = useState('')
+
+  const activeClip = clips.find(c => c.id === activeClipId) ?? clips[0] ?? null
+  const displayUrl = activeClip?.url ?? ''
   const hasIdea = ideaHook.length > 0
   const currentTemplate = SCRIPT_TEMPLATES.find(t => t.id === selectedTemplate)!
-  const canProceed = !isGenerating
-  const displayUrl = enhancedUrl || originalUrl
 
-  // Generate captions + prefill text overlays when done
+  /* ── Computed color filter for preview ─────────────────────────────────────── */
+  const previewFilter = colorGrade === 'custom'
+    ? buildCustomFilter(customColor)
+    : GRADES[colorGrade].filter !== 'none' ? GRADES[colorGrade].filter : undefined
+  const previewGrade  = GRADES[colorGrade]
+
+  /* ── Generate captions on done ─────────────────────────────────────────────── */
   useEffect(() => {
     if (stage !== 'done' || !scriptText) return
     setCaptions(buildCaptions(scriptText))
@@ -234,64 +300,47 @@ function VideosInner() {
     setTimeout(() => { setActiveTab(tab); setTabVisible(true) }, 120)
   }, [])
 
-  /* ── Music playback (triggered directly on user click, not useEffect) ──────── */
+  /* ── Music playback ─────────────────────────────────────────────────────────── */
   const playMusic = useCallback((moodId: string) => {
     setSelectedMusic(moodId)
     const audio = audioRef.current
     if (!audio) return
     const mood = MUSIC_MOODS.find(m => m.id === moodId)
     audio.pause()
-    if (!mood?.url) { audio.src = ''; return }
-    audio.src = mood.url
-    audio.volume = 0.35
+    if (!mood?.url) { audio.src = ''; audio.load(); return }
+    audio.volume = 0.45
     audio.loop = true
-    audio.play().catch(() => {})
+    audio.crossOrigin = 'anonymous'
+    audio.src = mood.url
+    audio.load()
+    const p = audio.play()
+    if (p) p.catch((e: Error) => { if (e.name !== 'AbortError') console.warn('[music]', e.name, e.message) })
   }, [])
 
-  /* ── Transcribe from audio ───────────────────────────────────────────────────── */
+  /* ── Transcribe ─────────────────────────────────────────────────────────────── */
   const transcribeFromAudio = useCallback(async () => {
     if (!displayUrl) return
-    setTranscribing(true)
-    setTranscribeError('')
+    setTranscribing(true); setTranscribeError('')
     try {
       const res = await fetch('/api/video/transcribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ videoUrl: displayUrl }),
       })
       const data = await res.json()
       if (res.status === 429 || data.fallback) {
-        // Rate limited — fall back to script-based captions
-        const scriptCaps = buildCaptions(scriptText)
-        if (scriptCaps.length > 0) {
-          setCaptions(scriptCaps)
-          setCaptionsEnabled(true)
-          setTranscribeError('Audio transcription rate-limited — using script-based captions instead')
-        } else {
-          setTranscribeError('Rate limited and no script available. Add a script to generate captions.')
-        }
+        const sc = buildCaptions(scriptText)
+        if (sc.length) { setCaptions(sc); setCaptionsEnabled(true) }
+        else setTranscribeError('Rate limited. Add a script to generate captions.')
         return
       }
       if (!res.ok) throw new Error(data.error ?? 'Transcription failed')
-      if (data.segments?.length > 0) {
-        setCaptions(data.segments)
-        setCaptionsEnabled(true)
-      } else {
-        setTranscribeError('No speech detected — try adding a script instead')
-      }
-    } catch (err) {
-      // Any failure — fall back to script captions silently
-      const scriptCaps = buildCaptions(scriptText)
-      if (scriptCaps.length > 0) {
-        setCaptions(scriptCaps)
-        setCaptionsEnabled(true)
-        setTranscribeError('Using script-based captions (audio transcription unavailable)')
-      } else {
-        setTranscribeError(err instanceof Error ? err.message : 'Transcription failed')
-      }
-    } finally {
-      setTranscribing(false)
-    }
+      if (data.segments?.length > 0) { setCaptions(data.segments); setCaptionsEnabled(true) }
+      else setTranscribeError('No speech detected — add a script to generate captions.')
+    } catch {
+      const sc = buildCaptions(scriptText)
+      if (sc.length) { setCaptions(sc); setCaptionsEnabled(true) }
+      else setTranscribeError('Transcription failed. Add a script to generate captions.')
+    } finally { setTranscribing(false) }
   }, [displayUrl, scriptText])
 
   /* ── Caption crossfade ───────────────────────────────────────────────────────── */
@@ -308,21 +357,21 @@ function VideosInner() {
     }
   }, [currentCaption, displayedCaption])
 
-  /* ── Video timeupdate (trim + captions) ────────────────────────────────────── */
+  /* ── Video timeupdate ──────────────────────────────────────────────────────── */
   const handleTimeUpdate = useCallback(() => {
     const video = videoRef.current
-    if (!video) return
+    if (!video || !activeClip) return
     const dur = video.duration
     if (!dur || isNaN(dur)) return
-    const endT = (trimEnd / 100) * dur
-    if (video.currentTime >= endT) { video.pause(); video.currentTime = (trimStart / 100) * dur }
+    const endT = (activeClip.trimEnd / 100) * dur
+    if (video.currentTime >= endT) { video.pause(); video.currentTime = (activeClip.trimStart / 100) * dur }
     if (captionsEnabled) {
       const t = video.currentTime
       setCurrentCaption(captions.find(c => t >= c.start && t < c.end)?.text ?? '')
     }
-  }, [trimStart, trimEnd, captionsEnabled, captions])
+  }, [activeClip, captionsEnabled, captions])
 
-  /* ── Persist ────────────────────────────────────────────────────────────────── */
+  /* ── Persist video library ──────────────────────────────────────────────────── */
   const saveVideos = useCallback(async (next: VideoRecord[]) => {
     try { localStorage.setItem('bl_videos_v3', JSON.stringify(next)) } catch {}
     if (session?.user?.email) {
@@ -371,21 +420,20 @@ function VideosInner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasIdea, writeOwn])
 
-  /* ── Background enhancement ─────────────────────────────────────────────────── */
-  const runEnhancementInBackground = useCallback(async (videoUrl: string, recordId: string) => {
+  /* ── Enhancement in background ──────────────────────────────────────────────── */
+  const runEnhancementInBackground = useCallback(async (blobUrl: string, recordId: string) => {
     try {
-      const res = await fetch('/api/video/enhance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ videoUrl }) })
+      const res = await fetch('/api/video/enhance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ videoUrl: blobUrl }) })
       if (!res.ok) return
-      const data = await res.json(); if (!data.id) return
-      let attempts = 0
+      const data = await res.json()
+      if (!data.id) return
       const poll = async (): Promise<void> => {
-        if (attempts++ > 60) return
         try {
           const r = await fetch(`/api/video/status/${data.id}`); const d = await r.json()
           if (d.status === 'succeeded' && d.output) {
             const enhanced = Array.isArray(d.output) ? d.output[0] : d.output
             setVideos(prev => { const next = prev.map(v => v.id === recordId ? { ...v, enhancedUrl: enhanced } : v); saveVideos(next); return next })
-            setEnhancedUrl(enhanced)
+            setClips(prev => prev.map(c => c.id === recordId ? { ...c, url: enhanced } : c))
           } else if (d.status !== 'failed') { await new Promise(r => setTimeout(r, POLL_INTERVAL)); return poll() }
         } catch {}
       }
@@ -393,47 +441,138 @@ function VideosInner() {
     } catch {}
   }, [saveVideos])
 
-  /* ── Upload ──────────────────────────────────────────────────────────────────── */
-  const startUpload = useCallback(async (file: File) => {
-    setUploadProgress(0); setErrorMsg(''); setStage('uploading')
+  /* ── Upload first clip ───────────────────────────────────────────────────────── */
+  const uploadClip = useCallback(async (file: File): Promise<Clip | null> => {
     let blobUrl = ''
     try {
       const tokenRes = await fetch(`/api/video/upload?filename=${encodeURIComponent(file.name)}`)
       if (!tokenRes.ok) { const e = await tokenRes.json().catch(() => ({})); throw new Error(e.error ?? `Token request failed (${tokenRes.status})`) }
       const { clientToken, pathname } = await tokenRes.json()
-      const blob = await put(pathname, file, { access: 'public', token: clientToken, onUploadProgress: ({ percentage }) => setUploadProgress(percentage) })
+      const blob = await put(pathname, file, {
+        access: 'public', token: clientToken,
+        onUploadProgress: ({ percentage }) => setUploadProgress(percentage),
+      })
       blobUrl = blob.url
-    } catch (err: unknown) { setErrorMsg(err instanceof Error ? err.message : 'Upload failed — check your connection and try again.'); setStage('error'); return }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Upload failed — check your connection and try again.')
+      setStage('error')
+      return null
+    }
+    return { id: Date.now().toString(), name: file.name, url: blobUrl, trimStart: 0, trimEnd: 100, duration: 0 }
+  }, [])
 
-    const recordId = Date.now().toString()
-    const record: VideoRecord = { id: recordId, name: file.name, script: scriptText, originalUrl: blobUrl, enhancedUrl: blobUrl, createdAt: Date.now() }
-    setOriginalUrl(blobUrl); setEnhancedUrl(blobUrl)
+  const startUpload = useCallback(async (file: File) => {
+    setUploadProgress(0); setErrorMsg(''); setStage('uploading')
+    const clip = await uploadClip(file)
+    if (!clip) return
+
+    const record: VideoRecord = { id: clip.id, name: file.name, script: scriptText, originalUrl: clip.url, enhancedUrl: clip.url, createdAt: Date.now() }
+    setClips([clip])
+    setActiveClipId(clip.id)
     setVideos(prev => { const next = [record, ...prev]; saveVideos(next); return next })
     setStage('done')
-    runEnhancementInBackground(blobUrl, recordId)
-  }, [scriptText, saveVideos, runEnhancementInBackground])
+    runEnhancementInBackground(clip.url, clip.id)
+  }, [uploadClip, scriptText, saveVideos, runEnhancementInBackground])
+
+  /* ── Add additional clip ─────────────────────────────────────────────────────── */
+  const addClip = useCallback(async (file: File) => {
+    if (!file.type.startsWith('video/')) return
+    setAddingClip(true); setAddClipProgress(0)
+    let blobUrl = ''
+    try {
+      const tokenRes = await fetch(`/api/video/upload?filename=${encodeURIComponent(file.name)}`)
+      const { clientToken, pathname } = await tokenRes.json()
+      const blob = await put(pathname, file, {
+        access: 'public', token: clientToken,
+        onUploadProgress: ({ percentage }) => setAddClipProgress(percentage),
+      })
+      blobUrl = blob.url
+    } catch { setAddingClip(false); return }
+    const newClip: Clip = { id: Date.now().toString(), name: file.name, url: blobUrl, trimStart: 0, trimEnd: 100, duration: 0 }
+    setClips(prev => [...prev, newClip])
+    setActiveClipId(newClip.id)
+    setAddingClip(false)
+  }, [])
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('video/')) { setErrorMsg('Please upload a video file (MP4, MOV, etc.)'); setStage('error'); return }
-    setPendingFile(file); startUpload(file)
+    startUpload(file)
   }, [startUpload])
 
   const onDrop = (e: React.DragEvent) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }
+  const onAddClipChange = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) addClip(f); e.target.value = '' }
 
-  const reset = () => {
-    setStage('script'); setUploadProgress(0); setErrorMsg(''); setEnhancedUrl(''); setOriginalUrl('')
-    setPendingFile(null); setScriptText(''); setGenerationDone(false); setWriteOwn(false)
-    setScriptGenError(false); setSelectedTemplate('promo'); streamingRef.current = false
-    setColorGrade('original'); setHookText(''); setCtaText(''); setShowHook(false); setShowCta(false)
-    setSelectedMusic('none'); setCaptions([]); setCaptionsEnabled(false); setCurrentCaption('')
-    setTrimStart(0); setTrimEnd(100); setVideoDuration(0); setActiveTab('captions')
-    setTranscribing(false); setTranscribeError(''); setTabVisible(true)
-    setDisplayedCaption(''); setCaptionOpacity(0)
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
+  /* ── Clip management ─────────────────────────────────────────────────────────── */
+  const updateClipTrim = (id: string, field: 'trimStart' | 'trimEnd', value: number) => {
+    setClips(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c))
   }
 
-  const isProcessing = stage === 'uploading'
+  const removeClip = (id: string) => {
+    setClips(prev => {
+      const next = prev.filter(c => c.id !== id)
+      if (activeClipId === id) setActiveClipId(next[0]?.id ?? null)
+      if (next.length === 0) reset()
+      return next
+    })
+  }
+
+  const moveClip = (id: string, dir: -1 | 1) => {
+    setClips(prev => {
+      const idx = prev.findIndex(c => c.id === id)
+      if (idx < 0) return prev
+      const next = [...prev]
+      const swapIdx = idx + dir
+      if (swapIdx < 0 || swapIdx >= next.length) return prev
+      ;[next[idx], next[swapIdx]] = [next[swapIdx], next[idx]]
+      return next
+    })
+  }
+
+  /* ── Real export ─────────────────────────────────────────────────────────────── */
+  const handleExport = useCallback(async () => {
+    if (clips.length === 0 || exporting) return
+    setExporting(true); setExportProgress(0); setExportLabel('Preparing…')
+
+    const grade = GRADES[colorGrade]
+    const musicUrl = MUSIC_MOODS.find(m => m.id === selectedMusic)?.url ?? null
+
+    try {
+      const blob = await exportVideo({
+        clips: clips.map(c => ({ url: c.url, trimStart: c.trimStart, trimEnd: c.trimEnd })),
+        colorFilter:     colorGrade === 'custom' ? buildCustomFilter(customColor) : grade.filter,
+        colorOverlay:    colorGrade === 'custom' ? undefined : grade.color,
+        vignetteOpacity: colorGrade === 'custom' ? 0 : grade.vignette,
+        captionsEnabled,
+        captions,
+        showHook,  hookText,
+        showCta,   ctaText,
+        musicUrl,  musicVolume: 0.4,
+        transition,
+        transitionDuration,
+        quality: exportQuality,
+        onProgress: (pct, label) => { setExportProgress(pct); setExportLabel(label) },
+      })
+      downloadBlob(blob, `brandlift-${Date.now()}.webm`)
+    } catch (err) {
+      console.error('[export]', err)
+      alert('Export failed — try a shorter clip or reload the page.')
+    } finally {
+      setExporting(false); setExportProgress(0); setExportLabel('')
+    }
+  }, [clips, exporting, colorGrade, customColor, selectedMusic, captionsEnabled, captions, showHook, hookText, showCta, ctaText, transition, transitionDuration, exportQuality])
+
+  const reset = () => {
+    setStage('script'); setUploadProgress(0); setErrorMsg(''); setClips([]); setActiveClipId(null)
+    setScriptText(''); setGenerationDone(false); setWriteOwn(false); setScriptGenError(false)
+    setSelectedTemplate('promo'); streamingRef.current = false
+    setColorGrade('original'); setCustomColor(DEFAULT_CUSTOM_COLOR)
+    setHookText(''); setCtaText(''); setShowHook(false); setShowCta(false)
+    setSelectedMusic('none'); setCaptions([]); setCaptionsEnabled(false); setCurrentCaption('')
+    setTransition('fade'); setActiveTab('captions'); setTranscribing(false); setTranscribeError('')
+    setDisplayedCaption(''); setCaptionOpacity(0); setExporting(false)
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
+  }
 
   /* ── Render ──────────────────────────────────────────────────────────────────── */
   return (
@@ -447,149 +586,123 @@ function VideosInner() {
             <div>
               <h1 className="text-[20px] font-medium text-[#FAFAFA]">My Videos</h1>
               <p className="text-[14px] text-[#71717A] mt-0.5">
-                {videos.length === 0 ? 'Pick a script, upload your footage, get a polished AI-enhanced video' : `${videos.length} video${videos.length !== 1 ? 's' : ''} created`}
+                {stage === 'done'
+                  ? `${clips.length} clip${clips.length !== 1 ? 's' : ''} — customize and export`
+                  : 'Write a script, upload your footage, export a polished video'}
               </p>
             </div>
             {stage !== 'script' && stage !== 'done' && <Button variant="ghost" size="sm" onClick={reset}>← Start over</Button>}
           </div>
 
-          <input ref={fileInputRef} type="file" accept="video/*" className="hidden" onChange={onFileChange} />
+          <input ref={fileInputRef}    type="file" accept="video/*" className="hidden" onChange={onFileChange} />
+          <input ref={addClipInputRef} type="file" accept="video/*" className="hidden" onChange={onAddClipChange} />
 
-          {!isProcessing && stage !== 'done' && stage !== 'error' && <StepBar stage={stage} />}
+          {stage !== 'uploading' && stage !== 'done' && stage !== 'error' && <StepBar stage={stage} />}
 
           {/* ── STEP 1: SCRIPT ─────────────────────────────────────────────────── */}
           {stage === 'script' && (
             <div className="flex flex-col gap-5 p-6 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
-              {hasIdea ? (
-                <>
-                  <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
-                    <Sparkles className="w-4 h-4 text-[#6366f1] flex-shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-widest text-[#6366f1] mb-1">Content Idea</p>
-                      <p className="text-[14px] text-[#E4E4E7] leading-relaxed">{ideaHook}</p>
-                    </div>
-                  </div>
-                  {scriptGenError && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.06)', border: '0.5px solid rgba(239,68,68,0.2)' }}>
-                      <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
-                      <p className="text-[12px] text-red-400">AI generation failed — write your script below or try again.</p>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    {[{ id: false, icon: Wand2, label: 'AI-generated' }, { id: true, icon: PenLine, label: 'Write my own' }].map(({ id, icon: Icon, label }) => (
-                      <button key={String(id)} onClick={() => { if (id) { setWriteOwn(true); setScriptText(''); setScriptGenError(false) } else { setWriteOwn(false); setScriptGenError(false); streamingRef.current = false } }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150"
-                        style={{ background: writeOwn === id ? 'rgba(99,102,241,0.12)' : '#18181C', border: writeOwn === id ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.07)', color: writeOwn === id ? '#a5b4fc' : '#71717A' }}>
-                        <Icon className="w-3.5 h-3.5" />{label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label style={{ fontSize: 13, color: '#A1A1AA', fontWeight: 500 }}>
-                      {isGenerating ? <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3 h-3 text-[#6366f1] animate-pulse" />Generating script…</span>
-                        : generationDone && !writeOwn ? 'AI-generated script — edit freely' : 'Your script'}
-                    </label>
-                    <textarea rows={6} value={scriptText} onChange={e => setScriptText(e.target.value)}
-                      placeholder={writeOwn ? 'Write your talking points or full script here…' : 'Generating…'}
-                      readOnly={isGenerating && !writeOwn}
-                      className="w-full rounded-xl px-4 py-3 text-[14px] resize-none outline-none"
-                      style={{ background: 'rgba(24,24,28,0.7)', border: '0.5px solid rgba(255,255,255,0.1)', lineHeight: 1.65, color: isGenerating ? '#818cf8' : '#FAFAFA', transition: 'color 0.3s' }}
-                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)' }}
-                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.boxShadow = 'none' }}
-                    />
-                    <div className="flex items-center justify-between">
-                      <p style={{ fontSize: 12, color: '#3f3f46' }}>This script guides your video content</p>
-                      <span style={{ fontSize: 12, color: '#52525B', fontVariantNumeric: 'tabular-nums' }}>{scriptText.length} chars</span>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
+              {hasIdea && !writeOwn && (
+                <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                  <Sparkles className="w-4 h-4 text-[#6366f1] flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-[15px] font-semibold text-[#FAFAFA] mb-1">What type of video is this?</p>
-                    <p className="text-[13px] text-[#52525B]">Pick a template or write your own script</p>
+                    <p className="text-[13px] font-medium text-[#818cf8]">AI Script</p>
+                    <p className="text-[13px] text-[#A1A1AA] mt-0.5 italic">&ldquo;{ideaHook}&rdquo;</p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                </div>
+              )}
+
+              {!writeOwn && !hasIdea && (
+                <div>
+                  <p className="text-[13px] font-medium text-[#A1A1AA] mb-3">Choose a template</p>
+                  <div className="grid grid-cols-2 gap-2">
                     {SCRIPT_TEMPLATES.map(t => (
-                      <button key={t.id} onClick={() => { setSelectedTemplate(t.id); setScriptText('') }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150"
-                        style={{ background: selectedTemplate === t.id ? 'rgba(99,102,241,0.12)' : '#18181C', border: selectedTemplate === t.id ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.07)', color: selectedTemplate === t.id ? '#a5b4fc' : '#71717A' }}>
-                        <span>{t.icon}</span>{t.label}
+                      <button key={t.id} onClick={() => setSelectedTemplate(t.id)}
+                        className="flex items-center gap-2 p-3 rounded-xl text-left transition-all duration-150"
+                        style={{ background: selectedTemplate === t.id ? 'rgba(99,102,241,0.1)' : '#18181C', border: selectedTemplate === t.id ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                        <span>{t.icon}</span>
+                        <span className="text-[13px] font-medium" style={{ color: selectedTemplate === t.id ? '#a5b4fc' : '#A1A1AA' }}>{t.label}</span>
                       </button>
                     ))}
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label style={{ fontSize: 13, color: '#A1A1AA', fontWeight: 500 }}>Your script</label>
-                    <textarea rows={5} value={scriptText} onChange={e => setScriptText(e.target.value)}
-                      placeholder={currentTemplate.placeholder}
-                      className="w-full rounded-xl px-4 py-3 text-[14px] text-[#FAFAFA] resize-none outline-none"
-                      style={{ background: 'rgba(24,24,28,0.7)', border: '0.5px solid rgba(255,255,255,0.1)', lineHeight: 1.6 }}
-                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)' }}
-                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.boxShadow = 'none' }}
-                    />
-                    <div className="flex justify-between items-center">
-                      <p style={{ fontSize: 12, color: '#3f3f46' }}>This script guides your video content</p>
-                      <span style={{ fontSize: 12, color: '#52525B', fontVariantNumeric: 'tabular-nums' }}>{scriptText.length} chars</span>
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
-              <Button variant="primary" size="sm" disabled={!canProceed} onClick={() => setStage('upload')} className="gap-1.5 self-start">
-                {isGenerating ? 'Generating script…' : 'Continue to upload'}
-                {!isGenerating && <ChevronRight className="w-3.5 h-3.5" />}
-              </Button>
+
+              {/* Script textarea */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[13px] font-medium text-[#A1A1AA]">
+                    {hasIdea ? 'Generated script' : 'Your script / talking points'}
+                  </label>
+                  {isGenerating && <span className="text-[12px] text-[#6366f1] flex items-center gap-1.5"><Sparkles className="w-3 h-3 animate-pulse" />Writing…</span>}
+                  {generationDone && <span className="text-[12px] text-[#4ADE80]">✓ Script ready</span>}
+                </div>
+                <textarea
+                  value={scriptText} onChange={e => setScriptText(e.target.value)}
+                  rows={6} placeholder={currentTemplate.placeholder}
+                  className="w-full px-3 py-2.5 rounded-[10px] text-[14px] resize-none leading-relaxed"
+                  style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', color: '#E4E4E7', outline: 'none' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                  onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }} />
+                {scriptGenError && <p className="text-[12px] text-red-400">Couldn&apos;t generate — write your own script above.</p>}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Button variant="primary" size="md" onClick={() => setStage('upload')}
+                  className="flex items-center gap-2">
+                  Continue to upload <ChevronRight className="w-4 h-4" />
+                </Button>
+                {!writeOwn && (
+                  <button onClick={() => setWriteOwn(true)} className="text-[13px] text-[#52525B] hover:text-[#A1A1AA] transition-colors flex items-center gap-1">
+                    <PenLine className="w-3 h-3" />Write my own
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
           {/* ── STEP 2: UPLOAD ─────────────────────────────────────────────────── */}
           {stage === 'upload' && (
-            <div className="flex flex-col gap-5">
-              <div className="flex items-start gap-3 p-4 rounded-xl cursor-pointer" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }} onClick={() => setStage('script')}>
-                <FileText className="w-4 h-4 text-[#6366f1] flex-shrink-0 mt-0.5" />
-                <p className="text-[13px] text-[#A1A1AA] leading-relaxed flex-1 line-clamp-2">{scriptText || <span className="text-[#3f3f46] italic">No script — uploading without one</span>}</p>
-                <span style={{ fontSize: 11, color: '#52525B', whiteSpace: 'nowrap' }}>Edit ↩</span>
+            <div
+              ref={dropRef}
+              onClick={() => fileInputRef.current?.click()}
+              onDrop={onDrop}
+              onDragOver={e => { e.preventDefault(); setDragging(true) }}
+              onDragLeave={() => setDragging(false)}
+              className="flex flex-col items-center justify-center gap-4 p-12 rounded-2xl cursor-pointer transition-all duration-200"
+              style={{ border: `1.5px dashed ${dragging ? 'rgba(99,102,241,0.6)' : 'rgba(255,255,255,0.1)'}`, background: dragging ? 'rgba(99,102,241,0.04)' : '#111113', minHeight: 240 }}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                <Upload className="w-6 h-6 text-[#6366f1]" />
               </div>
-              <div ref={dropRef} onDragOver={e => { e.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={onDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center justify-center text-center py-20 rounded-2xl gap-5 cursor-pointer transition-all duration-200"
-                style={{ border: dragging ? '1.5px dashed rgba(99,102,241,0.6)' : '0.5px dashed rgba(255,255,255,0.09)', background: dragging ? 'rgba(99,102,241,0.05)' : 'rgba(17,17,19,0.5)' }}>
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                  style={{ background: dragging ? 'rgba(99,102,241,0.12)' : '#18181C', border: dragging ? '0.5px solid rgba(99,102,241,0.3)' : '0.5px solid rgba(255,255,255,0.08)' }}>
-                  {dragging ? <Upload className="w-7 h-7 text-[#6366f1]" /> : <Video className="w-7 h-7 text-[#3f3f46]" />}
-                </div>
-                <div>
-                  <p className="text-[16px] font-semibold text-[#FAFAFA] mb-1">{dragging ? 'Drop your video' : 'Upload your footage'}</p>
-                  <p className="text-[13px] text-[#71717A]">MP4, MOV, AVI — drag & drop or click to browse</p>
-                </div>
-                <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-semibold text-white"
-                  style={{ background: 'linear-gradient(135deg,#6366f1 0%,#5558e8 100%)', boxShadow: '0 0 0 1px rgba(99,102,241,0.4),0 8px 24px rgba(99,102,241,0.25)' }}
-                  onClick={e => { e.stopPropagation(); fileInputRef.current?.click() }}>
-                  <Upload className="w-4 h-4" />Choose video
-                </button>
+              <div className="text-center">
+                <p className="text-[15px] font-medium text-[#FAFAFA]">Drop your video here</p>
+                <p className="text-[13px] text-[#52525B] mt-1">MP4, MOV, WebM — up to 500 MB</p>
               </div>
+              <Button variant="primary" size="sm" onClick={e => { e.stopPropagation(); fileInputRef.current?.click() }}>
+                Browse files
+              </Button>
             </div>
           )}
 
-          {/* ── PROCESSING ─────────────────────────────────────────────────────── */}
-          {isProcessing && pendingFile && (
-            <div className="flex flex-col gap-6 p-8 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
-                  <Sparkles className="w-6 h-6 text-[#6366f1] animate-pulse" />
+          {/* ── UPLOADING ─────────────────────────────────────────────────────── */}
+          {stage === 'uploading' && (
+            <div className="p-6 rounded-2xl flex flex-col gap-4" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.1)' }}>
+                  <Video className="w-5 h-5 text-[#6366f1]" />
                 </div>
-                <div>
-                  <p className="text-[15px] font-medium text-[#FAFAFA]">{pendingFile.name}</p>
-                  <p className="text-[12px] text-[#52525B] mt-0.5">{formatBytes(pendingFile.size)}</p>
+                <div className="flex-1">
+                  <p className="text-[14px] font-medium text-[#FAFAFA]">Uploading video…</p>
+                  <p className="text-[12px] text-[#52525B] mt-0.5">Hang tight — this only takes a moment</p>
                 </div>
               </div>
-              <ProgressBar value={uploadProgress} label="Uploading to storage…" />
-              <p className="text-[13px] text-[#52525B] text-center">Uploading your video…</p>
+              <ProgressBar value={uploadProgress} label="Upload progress" />
             </div>
           )}
 
-          {/* ── ERROR ──────────────────────────────────────────────────────────── */}
+          {/* ── ERROR ────────────────────────────────────────────────────────── */}
           {stage === 'error' && (
-            <div className="flex flex-col gap-4 p-6 rounded-2xl" style={{ background: 'rgba(239,68,68,0.05)', border: '0.5px solid rgba(239,68,68,0.2)' }}>
+            <div className="flex flex-col gap-3 p-5 rounded-2xl" style={{ background: 'rgba(239,68,68,0.05)', border: '0.5px solid rgba(239,68,68,0.2)' }}>
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
@@ -598,7 +711,7 @@ function VideosInner() {
                 </div>
                 <button onClick={reset} className="text-red-400/50 hover:text-red-300 transition-colors"><X className="w-4 h-4" /></button>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => { setStage('upload'); setErrorMsg('') }} className="self-start">Try again</Button>
+              <Button variant="ghost" size="sm" onClick={() => setStage('upload')} className="self-start">Try again</Button>
             </div>
           )}
 
@@ -607,21 +720,47 @@ function VideosInner() {
             <div className="flex flex-col gap-5">
 
               {/* Done header */}
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-[15px] font-medium text-[#FAFAFA]">{pendingFile?.name ?? 'Your video'} — ready</p>
-                  <p className="text-[12px] text-[#52525B] mt-0.5">Customize with the studio below, then export</p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2 flex-1">
+                  <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-[15px] font-medium text-[#FAFAFA]">
+                      {clips.length === 1 ? clips[0].name : `${clips.length} clips ready to merge`}
+                    </p>
+                    <p className="text-[12px] text-[#52525B] mt-0.5">Customize with the studio below, then export</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <a href={displayUrl} download target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white"
-                    style={{ background: 'rgba(99,102,241,0.15)', border: '0.5px solid rgba(99,102,241,0.3)' }}>
-                    <Download className="w-3.5 h-3.5" />Download
-                  </a>
+                  {/* Add clip button */}
+                  {addingClip ? (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
+                      <span className="text-[12px] text-[#818cf8]">Uploading… {Math.round(addClipProgress)}%</span>
+                    </div>
+                  ) : (
+                    <button onClick={() => addClipInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150"
+                      style={{ color: '#A1A1AA', border: '0.5px solid rgba(255,255,255,0.08)', background: '#111113' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.3)'; (e.currentTarget as HTMLButtonElement).style.color = '#818cf8' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA' }}>
+                      <Plus className="w-3.5 h-3.5" />Add clip
+                    </button>
+                  )}
                   <Button variant="ghost" size="sm" onClick={reset}>New video</Button>
                 </div>
               </div>
+
+              {/* Clip selector tabs (if multiple clips) */}
+              {clips.length > 1 && (
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  {clips.map((c, i) => (
+                    <button key={c.id} onClick={() => setActiveClipId(c.id)}
+                      className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150"
+                      style={{ background: activeClip?.id === c.id ? 'rgba(99,102,241,0.1)' : '#18181C', border: activeClip?.id === c.id ? '1px solid rgba(99,102,241,0.3)' : '0.5px solid rgba(255,255,255,0.06)', color: activeClip?.id === c.id ? '#a5b4fc' : '#71717A' }}>
+                      <Film className="w-3 h-3" />Clip {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Video player with live overlays */}
               <div className="relative w-full rounded-2xl overflow-hidden" style={{ border: '0.5px solid rgba(99,102,241,0.25)', boxShadow: '0 0 24px rgba(99,102,241,0.1)' }}>
@@ -630,109 +769,74 @@ function VideosInner() {
                   src={displayUrl}
                   controls
                   className="w-full block"
-                  style={{ filter: GRADES[colorGrade].filter !== 'none' ? GRADES[colorGrade].filter : undefined, display: 'block' }}
+                  style={{ filter: previewFilter, display: 'block' }}
                   onTimeUpdate={handleTimeUpdate}
-                  onLoadedMetadata={() => { if (videoRef.current) setVideoDuration(videoRef.current.duration) }}
+                  onLoadedMetadata={() => {
+                    if (!videoRef.current || !activeClip) return
+                    const dur = videoRef.current.duration
+                    setClips(prev => prev.map(c => c.id === activeClip.id ? { ...c, duration: dur } : c))
+                  }}
                 />
-                {/* Color overlay — teal/orange split, warm push, cool push, etc. */}
-                {GRADES[colorGrade].color && (
+                {/* Color overlay */}
+                {previewGrade.color && (
                   <div className="absolute inset-0 pointer-events-none" style={{
-                    background: GRADES[colorGrade].color!.bg,
-                    mixBlendMode: GRADES[colorGrade].color!.blend as React.CSSProperties['mixBlendMode'],
-                    opacity: GRADES[colorGrade].color!.opacity,
+                    background: previewGrade.color.bg,
+                    mixBlendMode: previewGrade.color.blend as React.CSSProperties['mixBlendMode'],
+                    opacity: previewGrade.color.opacity,
                   }} />
                 )}
-                {/* Vignette — dark edges for cinematic depth */}
-                {(GRADES[colorGrade].vignette ?? 0) > 0 && (
+                {/* Vignette */}
+                {(previewGrade.vignette ?? 0) > 0 && (
                   <div className="absolute inset-0 pointer-events-none" style={{
-                    background: 'radial-gradient(ellipse at 50% 50%, transparent 38%, rgba(0,0,0,0.9) 100%)',
+                    background: `radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(0,0,0,${previewGrade.vignette}) 100%)`,
                     mixBlendMode: 'multiply',
-                    opacity: GRADES[colorGrade].vignette,
                   }} />
                 )}
-                {/* Hook text — top of video */}
+                {/* Hook overlay */}
                 {showHook && hookText && (
-                  <div className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none" style={{ padding: '12px 16px 0' }}>
-                    <div style={{
-                      color: '#fff',
-                      fontSize: 15,
-                      fontWeight: 800,
-                      textAlign: 'center',
-                      lineHeight: 1.3,
-                      maxWidth: '88%',
-                      letterSpacing: '-0.01em',
-                      textShadow: '-1px -1px 3px #000,1px -1px 3px #000,-1px 1px 3px #000,1px 1px 3px #000,0 0 12px rgba(0,0,0,0.8)',
-                    }}>
+                  <div className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none" style={{ padding: '6% 10% 0' }}>
+                    <p style={{ textAlign: 'center', fontWeight: 700, fontSize: 'clamp(12px, 3.5vw, 20px)', color: '#FAFAFA', textShadow: '-1px -1px 3px #000, 1px -1px 3px #000, -1px 1px 3px #000, 1px 1px 3px #000', lineHeight: 1.35 }}>
                       {hookText}
-                    </div>
+                    </p>
                   </div>
                 )}
-
-                {/* Captions — centered, above controls */}
-                {captionsEnabled && (
-                  <div className="absolute left-0 right-0 flex justify-center items-center pointer-events-none"
-                    style={{ bottom: '13%', padding: '0 10%' }}>
-                    <p style={{
-                      color: '#fff',
-                      fontSize: 15,
-                      fontWeight: 700,
-                      textAlign: 'center',
-                      lineHeight: 1.45,
-                      letterSpacing: '0.01em',
-                      maxWidth: '100%',
-                      opacity: captionOpacity,
-                      transition: 'opacity 150ms ease',
-                      textShadow: '-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 10px rgba(0,0,0,0.95)',
-                      WebkitTextStroke: '0.3px rgba(0,0,0,0.5)',
-                    }}>
+                {/* Caption overlay */}
+                {captionsEnabled && displayedCaption && (
+                  <div className="absolute left-0 right-0 flex justify-center pointer-events-none" style={{ bottom: '13%', padding: '0 10%', opacity: captionOpacity, transition: 'opacity 0.1s ease' }}>
+                    <p style={{ textAlign: 'center', fontWeight: 600, fontSize: 'clamp(13px, 3vw, 18px)', color: '#FFFFFF', textShadow: '-2px -2px 4px #000, 2px -2px 4px #000, -2px 2px 4px #000, 2px 2px 4px #000, 0 0 8px rgba(0,0,0,0.8)', lineHeight: 1.4 }}>
                       {displayedCaption}
                     </p>
                   </div>
                 )}
-
-                {/* CTA — bottom bar */}
+                {/* CTA overlay */}
                 {showCta && ctaText && (
-                  <div className="absolute bottom-0 left-0 right-0 flex justify-center pointer-events-none" style={{ padding: '0 16px 10px' }}>
-                    <div style={{
-                      background: 'rgba(99,102,241,0.92)',
-                      backdropFilter: 'blur(6px)',
-                      borderRadius: 20,
-                      padding: '6px 18px',
-                      color: '#fff',
-                      fontSize: 13,
-                      fontWeight: 700,
-                      textAlign: 'center',
-                      maxWidth: '85%',
-                      boxShadow: '0 2px 12px rgba(99,102,241,0.4)',
-                    }}>
+                  <div className="absolute bottom-0 left-0 right-0 flex justify-center pointer-events-none" style={{ padding: '0 10% 5%' }}>
+                    <p style={{ textAlign: 'center', fontWeight: 600, fontSize: 'clamp(11px, 2.8vw, 16px)', color: '#a5b4fc', textShadow: '-1px -1px 3px #000, 1px -1px 3px #000, -1px 1px 3px #000, 1px 1px 3px #000' }}>
                       {ctaText}
-                    </div>
+                    </p>
                   </div>
                 )}
               </div>
 
-              {/* Hidden audio element for music preview */}
+              {/* Hidden audio element */}
               <audio ref={audioRef} />
 
               {/* Enhancement Studio panel */}
               <div className="rounded-2xl overflow-hidden" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
 
                 {/* Tab bar */}
-                <div className="flex" style={{ borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+                <div className="flex overflow-x-auto" style={{ borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
                   {([
-                    { id: 'captions' as StudioTab, label: 'Captions', Icon: Type },
-                    { id: 'music'    as StudioTab, label: 'Music',    Icon: Music },
-                    { id: 'grade'    as StudioTab, label: 'Color',    Icon: Palette },
-                    { id: 'text'     as StudioTab, label: 'Text',     Icon: MessageSquare },
-                    { id: 'trim'     as StudioTab, label: 'Trim',     Icon: Scissors },
+                    { id: 'captions'   as StudioTab, label: 'Captions',    Icon: Type },
+                    { id: 'music'      as StudioTab, label: 'Music',       Icon: Music },
+                    { id: 'grade'      as StudioTab, label: 'Color',       Icon: Palette },
+                    { id: 'text'       as StudioTab, label: 'Text',        Icon: MessageSquare },
+                    { id: 'clips'      as StudioTab, label: 'Clips',       Icon: Layers },
+                    { id: 'transition' as StudioTab, label: 'Transitions', Icon: GitMerge },
                   ] as const).map(({ id, label, Icon }) => (
                     <button key={id} onClick={() => switchTab(id)}
-                      className="flex-1 flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors duration-150"
-                      style={{
-                        color: activeTab === id ? '#818cf8' : '#52525B',
-                        background: activeTab === id ? 'rgba(99,102,241,0.06)' : 'transparent',
-                        borderBottom: activeTab === id ? '1.5px solid #6366f1' : '1.5px solid transparent',
-                      }}>
+                      className="flex-shrink-0 flex-1 flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors duration-150"
+                      style={{ color: activeTab === id ? '#818cf8' : '#52525B', background: activeTab === id ? 'rgba(99,102,241,0.06)' : 'transparent', borderBottom: activeTab === id ? '1.5px solid #6366f1' : '1.5px solid transparent', minWidth: 70 }}>
                       <Icon className="w-3.5 h-3.5" />{label}
                     </button>
                   ))}
@@ -747,38 +851,23 @@ function VideosInner() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-[14px] font-medium text-[#FAFAFA]">AI Captions</p>
-                          <p className="text-[12px] text-[#52525B] mt-0.5">Generated from your video's actual audio</p>
+                          <p className="text-[12px] text-[#52525B] mt-0.5">Generated from your video&apos;s actual audio</p>
                         </div>
                         <Toggle on={captionsEnabled} onToggle={() => setCaptionsEnabled(p => !p)} />
                       </div>
-
-                      {/* Generate from audio button */}
-                      <button
-                        onClick={transcribeFromAudio}
-                        disabled={transcribing}
+                      <button onClick={transcribeFromAudio} disabled={transcribing}
                         className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200"
-                        style={{
-                          background: transcribing ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.12)',
-                          border: '1px solid rgba(99,102,241,0.3)',
-                          color: transcribing ? '#52525B' : '#a5b4fc',
-                        }}
-                      >
-                        {transcribing ? (
-                          <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Transcribing audio… this takes ~30s</>
-                        ) : (
-                          <><Sparkles className="w-3.5 h-3.5" />Generate captions from audio</>
-                        )}
+                        style={{ background: transcribing ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: transcribing ? '#52525B' : '#a5b4fc' }}>
+                        {transcribing
+                          ? <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Transcribing… ~30s</>
+                          : <><Sparkles className="w-3.5 h-3.5" />Generate captions from audio</>
+                        }
                       </button>
-
-                      {transcribeError && (
-                        <p className="text-[12px] text-red-400 text-center">{transcribeError}</p>
-                      )}
-
+                      {transcribeError && <p className="text-[12px] text-red-400 text-center">{transcribeError}</p>}
                       {captions.length > 0 ? (
                         <div className="flex flex-col gap-1 max-h-44 overflow-y-auto pr-1">
                           {captions.map((c, i) => (
-                            <div key={i} className="flex items-start gap-3 px-3 py-2 rounded-lg"
-                              style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.05)' }}>
+                            <div key={i} className="flex items-start gap-3 px-3 py-2 rounded-lg" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.05)' }}>
                               <span className="text-[10px] font-mono text-[#52525B] mt-0.5 flex-shrink-0 w-10">
                                 {Math.floor(c.start / 60).toString().padStart(2, '0')}:{(c.start % 60).toFixed(0).padStart(2, '0')}
                               </span>
@@ -788,10 +877,10 @@ function VideosInner() {
                         </div>
                       ) : (
                         <div className="px-4 py-4 rounded-xl text-center" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.05)' }}>
-                          <p className="text-[12px] text-[#52525B]">Click the button above to transcribe the audio from your video</p>
+                          <p className="text-[12px] text-[#52525B]">Click the button above to transcribe audio from your video</p>
                         </div>
                       )}
-                      <p className="text-[11px] text-[#3f3f46]">Captions show live in the preview above while playing.</p>
+                      <p className="text-[11px] text-[#3f3f46]">Captions show live in the preview while playing.</p>
                     </div>
                   )}
 
@@ -800,7 +889,7 @@ function VideosInner() {
                     <div className="flex flex-col gap-4">
                       <div>
                         <p className="text-[14px] font-medium text-[#FAFAFA]">Background Music</p>
-                        <p className="text-[12px] text-[#52525B] mt-0.5">Pick a vibe — royalty-free, mixed on export</p>
+                        <p className="text-[12px] text-[#52525B] mt-0.5">Royalty-free — mixed into the exported video</p>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {MUSIC_MOODS.map(m => (
@@ -819,7 +908,9 @@ function VideosInner() {
                             <span className="block w-2 h-2 rounded-full bg-[#4ADE80]" />
                             <span className="absolute inset-0 w-2 h-2 rounded-full bg-[#4ADE80] animate-ping opacity-60" />
                           </span>
-                          <p className="text-[12px] text-[#818cf8]">Now previewing: <span className="font-semibold capitalize">{selectedMusic}</span> — playing in the background at 35% volume</p>
+                          <p className="text-[12px] text-[#818cf8]">
+                            Now previewing: <span className="font-semibold capitalize">{selectedMusic}</span> — mixed into export at 40% volume
+                          </p>
                         </div>
                       )}
                     </div>
@@ -830,19 +921,35 @@ function VideosInner() {
                     <div className="flex flex-col gap-4">
                       <div>
                         <p className="text-[14px] font-medium text-[#FAFAFA]">Color Grading</p>
-                        <p className="text-[12px] text-[#52525B] mt-0.5">Cinematic presets — applied live in the preview</p>
+                        <p className="text-[12px] text-[#52525B] mt-0.5">Presets or dial in a custom look</p>
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-4 gap-2">
                         {GRADE_META.map(({ key, label, bg }) => (
                           <button key={key} onClick={() => setColorGrade(key)}
                             className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl transition-all duration-150"
                             style={{ background: colorGrade === key ? 'rgba(99,102,241,0.1)' : '#18181C', border: colorGrade === key ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.06)' }}>
-                            <div className="w-full h-8 rounded-lg" style={{ background: bg }} />
+                            <div className="w-full h-7 rounded-lg" style={{ background: bg }} />
                             <span className="text-[11px] font-medium" style={{ color: colorGrade === key ? '#a5b4fc' : '#A1A1AA' }}>{label}</span>
                           </button>
                         ))}
                       </div>
-                      <p className="text-[11px] text-[#3f3f46]">Grade applied live in the preview above. Baked in on export.</p>
+
+                      {/* Custom color controls */}
+                      {colorGrade === 'custom' && (
+                        <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ background: '#0f0f11', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                          <p className="text-[12px] font-semibold text-[#818cf8] mb-1">Custom Color Controls</p>
+                          <ColorSlider label="Exposure"    value={customColor.exposure}    min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, exposure: v }))} />
+                          <ColorSlider label="Contrast"    value={customColor.contrast}    min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, contrast: v }))} />
+                          <ColorSlider label="Saturation"  value={customColor.saturation}  min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, saturation: v }))} />
+                          <ColorSlider label="Temperature" value={customColor.temperature} min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, temperature: v }))} />
+                          <ColorSlider label="Sharpness"   value={customColor.sharpness}   min={0}    max={100} onChange={v => setCustomColor(p => ({ ...p, sharpness: v }))} />
+                          <button onClick={() => setCustomColor(DEFAULT_CUSTOM_COLOR)}
+                            className="text-[11px] text-[#52525B] hover:text-[#A1A1AA] transition-colors mt-1">
+                            Reset to defaults
+                          </button>
+                        </div>
+                      )}
+                      <p className="text-[11px] text-[#3f3f46]">Applied live in preview. Baked into the exported video.</p>
                     </div>
                   )}
 
@@ -851,13 +958,12 @@ function VideosInner() {
                     <div className="flex flex-col gap-4">
                       <div>
                         <p className="text-[14px] font-medium text-[#FAFAFA]">Text Overlays</p>
-                        <p className="text-[12px] text-[#52525B] mt-0.5">Hook at the top, CTA at the bottom — toggle to preview</p>
+                        <p className="text-[12px] text-[#52525B] mt-0.5">Hook at the top, CTA at the bottom</p>
                       </div>
                       <div className="flex flex-col gap-3">
-                        {/* Hook */}
                         <div className="flex flex-col gap-2 p-4 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[12px] font-semibold text-[#A1A1AA]">Opening hook (top of video)</span>
+                            <span className="text-[12px] font-semibold text-[#A1A1AA]">Opening hook (top)</span>
                             <Toggle on={showHook} onToggle={() => setShowHook(p => !p)} />
                           </div>
                           <input type="text" value={hookText} onChange={e => setHookText(e.target.value)}
@@ -867,10 +973,9 @@ function VideosInner() {
                             onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
                             onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }} />
                         </div>
-                        {/* CTA */}
                         <div className="flex flex-col gap-2 p-4 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[12px] font-semibold text-[#A1A1AA]">Call to action (bottom of video)</span>
+                            <span className="text-[12px] font-semibold text-[#A1A1AA]">Call to action (bottom)</span>
                             <Toggle on={showCta} onToggle={() => setShowCta(p => !p)} />
                           </div>
                           <input type="text" value={ctaText} onChange={e => setCtaText(e.target.value)}
@@ -884,49 +989,129 @@ function VideosInner() {
                     </div>
                   )}
 
-                  {/* Trim */}
-                  {activeTab === 'trim' && (
+                  {/* Clips manager */}
+                  {activeTab === 'clips' && (
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[14px] font-medium text-[#FAFAFA]">Clip Manager</p>
+                          <p className="text-[12px] text-[#52525B] mt-0.5">Reorder, trim, or remove individual clips</p>
+                        </div>
+                        <button onClick={() => addClipInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium"
+                          style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc' }}>
+                          <Plus className="w-3.5 h-3.5" />Add clip
+                        </button>
+                      </div>
+
+                      {clips.map((c, i) => (
+                        <div key={c.id} className="flex flex-col gap-3 p-4 rounded-xl"
+                          style={{ background: activeClip?.id === c.id ? 'rgba(99,102,241,0.06)' : '#18181C', border: activeClip?.id === c.id ? '1px solid rgba(99,102,241,0.25)' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                          {/* Clip header */}
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.1)' }}>
+                              <Film className="w-4 h-4 text-[#6366f1]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-medium text-[#FAFAFA] truncate">{c.name}</p>
+                              {c.duration > 0 && (
+                                <p className="text-[11px] text-[#52525B]">
+                                  {fmtSec(c.duration * (c.trimEnd - c.trimStart) / 100)} selected · {fmtSec(c.duration)} total
+                                </p>
+                              )}
+                            </div>
+                            {/* Reorder + delete */}
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => setActiveClipId(c.id)}
+                                className="text-[11px] px-2 py-1 rounded transition-colors"
+                                style={{ color: activeClip?.id === c.id ? '#818cf8' : '#52525B', background: activeClip?.id === c.id ? 'rgba(99,102,241,0.08)' : 'transparent' }}>
+                                Preview
+                              </button>
+                              <button onClick={() => moveClip(c.id, -1)} disabled={i === 0} className="p-1 rounded transition-colors disabled:opacity-25" style={{ color: '#52525B' }} onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA'} onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#52525B'}>
+                                <ChevronUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button onClick={() => moveClip(c.id, 1)} disabled={i === clips.length - 1} className="p-1 rounded transition-colors disabled:opacity-25" style={{ color: '#52525B' }} onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA'} onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#52525B'}>
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              </button>
+                              <button onClick={() => removeClip(c.id)} className="p-1 rounded transition-colors" style={{ color: '#52525B' }} onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'} onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#52525B'}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Per-clip trim */}
+                          {c.duration > 0 && (
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] text-[#52525B]">Trim start</span>
+                                <span className="text-[11px] font-mono" style={{ color: '#818cf8' }}>{fmtSec((c.trimStart / 100) * c.duration)}</span>
+                              </div>
+                              <input type="range" min={0} max={c.trimEnd - 1} value={c.trimStart}
+                                onChange={e => updateClipTrim(c.id, 'trimStart', Number(e.target.value))}
+                                className="w-full" style={{ accentColor: '#6366f1' }} />
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] text-[#52525B]">Trim end</span>
+                                <span className="text-[11px] font-mono" style={{ color: '#818cf8' }}>{fmtSec((c.trimEnd / 100) * c.duration)}</span>
+                              </div>
+                              <input type="range" min={c.trimStart + 1} max={100} value={c.trimEnd}
+                                onChange={e => updateClipTrim(c.id, 'trimEnd', Number(e.target.value))}
+                                className="w-full" style={{ accentColor: '#6366f1' }} />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+
+                      {clips.length === 0 && (
+                        <p className="text-[13px] text-[#52525B] text-center py-4">No clips — add some above.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Transitions */}
+                  {activeTab === 'transition' && (
                     <div className="flex flex-col gap-4">
                       <div>
-                        <p className="text-[14px] font-medium text-[#FAFAFA]">Video Trim</p>
-                        <p className="text-[12px] text-[#52525B] mt-0.5">Set in and out points — enforced during playback and export</p>
+                        <p className="text-[14px] font-medium text-[#FAFAFA]">Transitions</p>
+                        <p className="text-[12px] text-[#52525B] mt-0.5">Applied between clips and at the start/end of the video</p>
                       </div>
-                      <div className="flex flex-col gap-4">
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[12px] text-[#A1A1AA]">Start</span>
-                            <span className="text-[12px] font-mono" style={{ color: '#818cf8' }}>
-                              {videoDuration ? `${((trimStart / 100) * videoDuration).toFixed(1)}s` : `${trimStart}%`}
-                            </span>
-                          </div>
-                          <input type="range" min={0} max={trimEnd - 1} value={trimStart}
-                            onChange={e => setTrimStart(Number(e.target.value))}
-                            className="w-full" style={{ accentColor: '#6366f1' }} />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[12px] text-[#A1A1AA]">End</span>
-                            <span className="text-[12px] font-mono" style={{ color: '#818cf8' }}>
-                              {videoDuration ? `${((trimEnd / 100) * videoDuration).toFixed(1)}s` : `${trimEnd}%`}
-                            </span>
-                          </div>
-                          <input type="range" min={trimStart + 1} max={100} value={trimEnd}
-                            onChange={e => setTrimEnd(Number(e.target.value))}
-                            className="w-full" style={{ accentColor: '#6366f1' }} />
-                        </div>
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.05)' }}>
-                          <span className="text-[12px] text-[#52525B]">Clip duration:</span>
-                          <span className="text-[12px] font-mono text-[#A1A1AA]">
-                            {videoDuration
-                              ? `${(((trimEnd - trimStart) / 100) * videoDuration).toFixed(1)}s`
-                              : `${trimEnd - trimStart}% of video`}
-                          </span>
-                          <button onClick={() => { setTrimStart(0); setTrimEnd(100) }}
-                            className="ml-auto text-[11px] text-[#52525B] hover:text-[#A1A1AA] transition-colors">
-                            Reset
+
+                      <div className="grid grid-cols-3 gap-2">
+                        {TRANSITION_OPTIONS.map(t => (
+                          <button key={t.id} onClick={() => setTransition(t.id)}
+                            className="flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-150"
+                            style={{ background: transition === t.id ? 'rgba(99,102,241,0.1)' : '#18181C', border: transition === t.id ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                            <span className="text-2xl">{t.icon}</span>
+                            <span className="text-[12px] font-semibold" style={{ color: transition === t.id ? '#a5b4fc' : '#A1A1AA' }}>{t.label}</span>
+                            <span className="text-[11px] text-center" style={{ color: '#52525B' }}>{t.desc}</span>
                           </button>
-                        </div>
+                        ))}
                       </div>
+
+                      {transition !== 'none' && (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[12px] text-[#A1A1AA]">Transition duration</span>
+                            <span className="text-[12px] font-mono" style={{ color: '#818cf8' }}>{transitionDuration.toFixed(1)}s</span>
+                          </div>
+                          <input type="range" min={20} max={150} value={Math.round(transitionDuration * 100)}
+                            onChange={e => setTransitionDuration(Number(e.target.value) / 100)}
+                            className="w-full" style={{ accentColor: '#6366f1' }} />
+                          <div className="flex justify-between text-[10px] text-[#3f3f46]">
+                            <span>0.2s</span><span>1.5s</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {clips.length > 1 && (
+                        <div className="px-3 py-3 rounded-lg" style={{ background: 'rgba(99,102,241,0.05)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                          <p className="text-[12px] text-[#818cf8]">
+                            {transition === 'none'
+                              ? `Hard cuts between ${clips.length} clips`
+                              : `${transition === 'fade' ? 'Fade to black' : 'Cross-dissolve'} between ${clips.length - 1} clip transition${clips.length > 2 ? 's' : ''}`
+                            }
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -934,23 +1119,51 @@ function VideosInner() {
               </div>
 
               {/* Export row */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <a href={displayUrl} download target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-semibold text-white"
-                  style={{ background: 'linear-gradient(135deg,#6366f1 0%,#5558e8 100%)', boxShadow: '0 0 0 1px rgba(99,102,241,0.4),0 8px 24px rgba(99,102,241,0.2)' }}>
-                  <Download className="w-4 h-4" />Export video
-                </a>
-                <p className="text-[12px] text-[#52525B]">Music, captions & color grade applied on export</p>
+              <div className="flex flex-col gap-3 p-4 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+                {exporting ? (
+                  <div className="flex flex-col gap-3">
+                    <ProgressBar value={exportProgress} label={exportLabel || 'Exporting…'} />
+                    <p className="text-[12px] text-[#52525B] text-center">
+                      Rendering {exportQuality} video with all effects applied — don&apos;t close this tab
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <button onClick={handleExport}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-semibold text-white transition-all duration-150"
+                      style={{ background: 'linear-gradient(135deg,#6366f1 0%,#5558e8 100%)', boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.2)' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.5), 0 12px 32px rgba(99,102,241,0.3)' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.2)' }}>
+                      <Sparkles className="w-4 h-4" />
+                      Export {clips.length > 1 ? `${clips.length} clips →` : 'video →'}
+                    </button>
+
+                    {/* Quality selector */}
+                    <div className="flex items-center gap-1 rounded-lg overflow-hidden" style={{ border: '0.5px solid rgba(255,255,255,0.08)' }}>
+                      {(['720p', '1080p'] as ExportQuality[]).map(q => (
+                        <button key={q} onClick={() => setExportQuality(q)}
+                          className="px-3 py-2 text-[12px] font-medium transition-colors duration-150"
+                          style={{ background: exportQuality === q ? 'rgba(99,102,241,0.12)' : '#18181C', color: exportQuality === q ? '#a5b4fc' : '#52525B' }}>
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+
+                    <p className="text-[12px] text-[#52525B]">
+                      {clips.length > 1 ? 'Merges all clips with transitions' : 'Effects & music baked in'}
+                    </p>
+                  </div>
+                )}
               </div>
 
             </div>
           )}
 
           {/* ── Video library ───────────────────────────────────────────────────── */}
-          {videos.length > 0 && (stage === 'script' || stage === 'upload') && (
+          {videos.length > 0 && stage === 'script' && (
             <div className="flex flex-col gap-3">
               <h2 className="text-[15px] font-medium text-[#FAFAFA]">Previous videos</h2>
-              {videos.map(v => (
+              {videos.slice(0, 5).map(v => (
                 <div key={v.id} className="flex items-center gap-4 p-4 rounded-[12px]" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}>
                   <div className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
                     <CheckCircle2 className="w-5 h-5 text-[#6366f1]" />
@@ -962,7 +1175,7 @@ function VideosInner() {
                   <a href={v.enhancedUrl || v.originalUrl} download target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-[#A1A1AA] hover:text-white transition-colors flex-shrink-0"
                     style={{ border: '0.5px solid rgba(255,255,255,0.08)' }}>
-                    <Download className="w-3.5 h-3.5" />Download
+                    Download
                   </a>
                 </div>
               ))}
