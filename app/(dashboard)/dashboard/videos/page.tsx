@@ -259,6 +259,11 @@ function VideosInner() {
   const [captionStyle, setCaptionStyle]       = useState<CaptionStyle>('bold')
   const [captionPos, setCaptionPos]           = useState<CaptionPos>('bottom')
   const [captionSize, setCaptionSize]         = useState(1.0)
+  const [editingCaption, setEditingCaption]   = useState<number | null>(null)
+  const [newCaptionText, setNewCaptionText]   = useState('')
+  const [newCaptionStart, setNewCaptionStart] = useState('')
+  const [newCaptionEnd, setNewCaptionEnd]     = useState('')
+  const [showAddCaption, setShowAddCaption]   = useState(false)
   const [currentCaption, setCurrentCaption]   = useState('')
   const [displayedCaption, setDisplayedCaption] = useState('')
   const [captionOpacity, setCaptionOpacity]   = useState(0)
@@ -563,6 +568,7 @@ function VideosInner() {
     setHookText(''); setCtaText(''); setShowHook(false); setShowCta(false)
     setSelectedMusic('none'); setCaptions([]); setCaptionsEnabled(false); setCurrentCaption('')
     setCaptionStyle('bold'); setCaptionPos('bottom'); setCaptionSize(1.0)
+    setEditingCaption(null); setShowAddCaption(false); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('')
     setTransition('fade'); setActiveTab('grade'); setTranscribing(false); setTranscribeError('')
     setDisplayedCaption(''); setCaptionOpacity(0); setExporting(false)
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
@@ -636,7 +642,16 @@ function VideosInner() {
                   style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', color: '#E4E4E7', outline: 'none' }}
                   onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }} />
-                {scriptGenError && <p style={{ fontSize: 12, color: '#f87171' }}>Couldn&apos;t generate — write your own script above.</p>}
+                {scriptGenError && (
+                  <div className="flex items-center gap-3">
+                    <p style={{ fontSize: 12, color: '#f87171' }}>Generation failed — write your own or</p>
+                    <button
+                      onClick={() => { setScriptGenError(false); setWriteOwn(false); streamingRef.current = false }}
+                      style={{ fontSize: 12, color: '#818cf8', textDecoration: 'underline', cursor: 'pointer' }}>
+                      retry
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
@@ -924,17 +939,30 @@ function VideosInner() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p style={{ fontSize: 14, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Captions</p>
-                          <p style={{ fontSize: 12, color: '#52525B', marginTop: 2 }}>Auto-generated from audio or script</p>
+                          <p style={{ fontSize: 12, color: '#52525B', marginTop: 2 }}>Auto-generate or add your own at any timestamp</p>
                         </div>
                         <Toggle on={captionsEnabled} onToggle={() => setCaptionsEnabled(p => !p)} />
                       </div>
 
-                      <button onClick={transcribeFromAudio} disabled={transcribing}
-                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200"
-                        style={{ background: transcribing ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: transcribing ? '#52525B' : '#a5b4fc' }}>
-                        {transcribing ? <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Transcribing… ~30s</> : <><Sparkles className="w-3.5 h-3.5" />Generate from audio</>}
-                      </button>
-                      {transcribeError && <p style={{ fontSize: 12, color: '#f87171', textAlign: 'center' }}>{transcribeError}</p>}
+                      {/* Generate buttons */}
+                      <div className="flex gap-2">
+                        <button onClick={transcribeFromAudio} disabled={transcribing}
+                          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200"
+                          style={{ background: transcribing ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: transcribing ? '#52525B' : '#a5b4fc' }}>
+                          {transcribing ? <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Transcribing…</> : <><Sparkles className="w-3.5 h-3.5" />From audio</>}
+                        </button>
+                        {scriptText.trim() && (
+                          <button
+                            onClick={() => { const sc = buildCaptions(scriptText); if (sc.length) { setCaptions(sc); setCaptionsEnabled(true) } }}
+                            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200"
+                            style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', color: '#71717A' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.14)' }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#71717A'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)' }}>
+                            From script
+                          </button>
+                        )}
+                      </div>
+                      {transcribeError && <p style={{ fontSize: 12, color: '#f87171' }}>{transcribeError}</p>}
 
                       {/* Caption style */}
                       <div className="flex flex-col gap-2">
@@ -990,23 +1018,107 @@ function VideosInner() {
                         </div>
                       </div>
 
-                      {/* Caption list */}
-                      {captions.length > 0 ? (
-                        <div className="flex flex-col gap-1 max-h-36 overflow-y-auto">
-                          {captions.map((c, i) => (
-                            <div key={i} className="flex items-start gap-3 px-3 py-2 rounded-lg" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.04)' }}>
-                              <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#3f3f46', flexShrink: 0, paddingTop: 1 }}>
-                                {Math.floor(c.start / 60).toString().padStart(2,'0')}:{(c.start % 60).toFixed(0).padStart(2,'0')}
-                              </span>
-                              <p style={{ fontSize: 12, color: '#71717A', lineHeight: 1.5 }}>{c.text}</p>
+                      {/* Caption list + manual editor */}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <p style={{ fontSize: 11, fontWeight: 700, color: '#52525B', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+                            Caption lines {captions.length > 0 && `· ${captions.length}`}
+                          </p>
+                          <button
+                            onClick={() => { setShowAddCaption(p => !p); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('') }}
+                            style={{ fontSize: 11, fontWeight: 600, color: '#6366f1', cursor: 'pointer' }}>
+                            {showAddCaption ? 'Cancel' : '+ Add'}
+                          </button>
+                        </div>
+
+                        {/* Add caption form */}
+                        {showAddCaption && (
+                          <div className="flex flex-col gap-2 p-3 rounded-xl" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                            <input
+                              value={newCaptionText} onChange={e => setNewCaptionText(e.target.value)}
+                              placeholder="Caption text…"
+                              className="w-full px-3 py-2 rounded-lg text-[13px] text-[#FAFAFA] outline-none"
+                              style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)' }} />
+                            <div className="flex gap-2 items-center">
+                              <input
+                                value={newCaptionStart} onChange={e => setNewCaptionStart(e.target.value)}
+                                placeholder="Start (s)"
+                                className="flex-1 px-3 py-2 rounded-lg text-[12px] text-[#FAFAFA] outline-none"
+                                style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', fontFamily: 'monospace' }} />
+                              <span style={{ fontSize: 12, color: '#3f3f46' }}>→</span>
+                              <input
+                                value={newCaptionEnd} onChange={e => setNewCaptionEnd(e.target.value)}
+                                placeholder="End (s)"
+                                className="flex-1 px-3 py-2 rounded-lg text-[12px] text-[#FAFAFA] outline-none"
+                                style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', fontFamily: 'monospace' }} />
+                              <button
+                                onClick={() => {
+                                  const start = parseFloat(newCaptionStart)
+                                  const end   = parseFloat(newCaptionEnd)
+                                  if (!newCaptionText.trim() || isNaN(start) || isNaN(end) || end <= start) return
+                                  setCaptions(prev => [...prev, { text: newCaptionText.trim(), start, end }].sort((a, b) => a.start - b.start))
+                                  setCaptionsEnabled(true)
+                                  setShowAddCaption(false); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('')
+                                }}
+                                className="px-3 py-2 rounded-lg text-[12px] font-semibold"
+                                style={{ background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.4)', flexShrink: 0 }}>
+                                Add
+                              </button>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="py-4 rounded-xl text-center" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.04)' }}>
-                          <p style={{ fontSize: 12, color: '#3f3f46' }}>No captions yet — click above to transcribe</p>
-                        </div>
-                      )}
+                            <p style={{ fontSize: 10, color: '#3f3f46' }}>Enter timestamps in seconds, e.g. 2.5 → 5.0</p>
+                          </div>
+                        )}
+
+                        {/* Caption rows */}
+                        {captions.length > 0 ? (
+                          <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
+                            {captions.map((c, i) => (
+                              <div key={i} className="group flex items-start gap-2 px-3 py-2 rounded-lg" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.04)' }}>
+                                <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#3f3f46', flexShrink: 0, paddingTop: 2, minWidth: 36 }}>
+                                  {c.start.toFixed(1)}s
+                                </span>
+                                {editingCaption === i ? (
+                                  <input
+                                    autoFocus
+                                    defaultValue={c.text}
+                                    className="flex-1 bg-transparent text-[12px] text-[#FAFAFA] outline-none border-b"
+                                    style={{ borderColor: 'rgba(99,102,241,0.4)' }}
+                                    onBlur={e => {
+                                      const txt = e.target.value.trim()
+                                      if (txt) setCaptions(prev => prev.map((cap, idx) => idx === i ? { ...cap, text: txt } : cap))
+                                      setEditingCaption(null)
+                                    }}
+                                    onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setEditingCaption(null) }} />
+                                ) : (
+                                  <p
+                                    onClick={() => setEditingCaption(i)}
+                                    style={{ fontSize: 12, color: '#71717A', lineHeight: 1.5, flex: 1, cursor: 'text' }}
+                                    title="Click to edit">
+                                    {c.text}
+                                  </p>
+                                )}
+                                <button
+                                  onClick={() => setCaptions(prev => prev.filter((_, idx) => idx !== i))}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5"
+                                  style={{ color: '#52525B', fontSize: 12 }}>
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="py-4 rounded-xl text-center" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.04)' }}>
+                            <p style={{ fontSize: 12, color: '#3f3f46' }}>No captions — generate from audio or add manually above</p>
+                          </div>
+                        )}
+                        {captions.length > 0 && (
+                          <button onClick={() => setCaptions([])} style={{ fontSize: 11, color: '#52525B', textAlign: 'right', cursor: 'pointer' }}
+                            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#f87171'}
+                            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#52525B'}>
+                            Clear all
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1231,7 +1343,7 @@ function VideosInner() {
                     </button>
 
                     <div className="flex items-center gap-1 rounded-lg overflow-hidden" style={{ border: '0.5px solid rgba(255,255,255,0.08)' }}>
-                      {(['720p', '1080p'] as ExportQuality[]).map(q => (
+                      {(['720p', '1080p', '1440p', '4K'] as ExportQuality[]).map(q => (
                         <button key={q} onClick={() => setExportQuality(q)}
                           className="px-3 py-2 text-[12px] font-medium transition-colors duration-150"
                           style={{ background: exportQuality === q ? 'rgba(99,102,241,0.12)' : '#18181C', color: exportQuality === q ? '#a5b4fc' : '#52525B' }}>

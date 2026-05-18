@@ -4,7 +4,7 @@
  */
 
 export type TransitionType = 'none' | 'fade' | 'dissolve'
-export type ExportQuality  = '720p' | '1080p'
+export type ExportQuality  = '720p' | '1080p' | '1440p' | '4K'
 export type CaptionStyle   = 'bold' | 'minimal' | 'neon' | 'film'
 export type CaptionPos     = 'top' | 'center' | 'bottom'
 
@@ -57,11 +57,15 @@ export interface ExportOptions {
 const RESOLUTIONS: Record<ExportQuality, { w: number; h: number }> = {
   '720p':  { w: 1280, h: 720  },
   '1080p': { w: 1920, h: 1080 },
+  '1440p': { w: 2560, h: 1440 },
+  '4K':    { w: 3840, h: 2160 },
 }
 
 const BITRATES: Record<ExportQuality, number> = {
   '720p':  4_000_000,
   '1080p': 10_000_000,
+  '1440p': 20_000_000,
+  '4K':    40_000_000,
 }
 
 /* Fetch remote → local object URL (bypasses canvas CORS) */
