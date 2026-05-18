@@ -674,21 +674,19 @@ function VideosInner() {
                   onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }} />
                 {scriptGenError && (
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-3">
-                      <p style={{ fontSize: 12, color: '#f87171' }}>
-                        {scriptGenMsg || 'Generation failed'}
-                      </p>
-                      <button
-                        onClick={() => {
-                          setScriptGenError(false)
-                          if (hasIdea) { setWriteOwn(false); streamingRef.current = false }
-                          else generateFromTemplate()
-                        }}
-                        style={{ fontSize: 12, color: '#818cf8', textDecoration: 'underline', cursor: 'pointer' }}>
-                        retry
-                      </button>
-                    </div>
+                  <div className="flex flex-col gap-1.5 p-3 rounded-lg" style={{ background: 'rgba(239,68,68,0.06)', border: '0.5px solid rgba(239,68,68,0.2)' }}>
+                    <p style={{ fontSize: 12, color: '#f87171', lineHeight: 1.5 }}>
+                      {scriptGenMsg || 'Generation failed — write your own or retry below'}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setScriptGenError(false)
+                        if (hasIdea) { setWriteOwn(false); streamingRef.current = false }
+                        else generateFromTemplate()
+                      }}
+                      style={{ fontSize: 12, color: '#818cf8', textDecoration: 'underline', cursor: 'pointer', alignSelf: 'flex-start' }}>
+                      retry
+                    </button>
                   </div>
                 )}
               </div>
