@@ -1,55 +1,61 @@
 /**
  * Browser-native video export engine.
- * Uses Canvas 2D + MediaRecorder + Web Audio API — no external packages needed.
+ * Canvas 2D + MediaRecorder + Web Audio API — no external packages.
  */
 
 export type TransitionType = 'none' | 'fade' | 'dissolve'
-export type ExportQuality = '720p' | '1080p'
+export type ExportQuality  = '720p' | '1080p'
+export type CaptionStyle   = 'bold' | 'minimal' | 'neon' | 'film'
+export type CaptionPos     = 'top' | 'center' | 'bottom'
 
 export interface ExportClip {
-  url: string        // Vercel Blob public URL
+  url: string
   trimStart: number  // 0–100
-  trimEnd: number    // 0–100
+  trimEnd:   number  // 0–100
 }
 
 export interface CaptionSegment {
-  text: string
-  start: number  // seconds from clip start
-  end: number
+  text:  string
+  start: number
+  end:   number
 }
 
 export interface ColorOverlay {
-  bg: string   // CSS gradient/color
-  blend: string
+  bg:      string
+  blend:   string
   opacity: number
 }
 
 export interface ExportOptions {
   clips: ExportClip[]
   // Color
-  colorFilter: string
-  colorOverlay?: ColorOverlay
+  colorFilter:     string
+  colorOverlay?:   ColorOverlay
   vignetteOpacity?: number
+  grain?:          number   // 0–100 film grain
   // Text
   captionsEnabled: boolean
-  captions: CaptionSegment[]
-  showHook: boolean
-  hookText: string
-  showCta: boolean
-  ctaText: string
+  captions:        CaptionSegment[]
+  captionStyle?:   CaptionStyle
+  captionPos?:     CaptionPos
+  captionSize?:    number   // relative multiplier 0.5–2
+  showHook:        boolean
+  hookText:        string
+  showCta:         boolean
+  ctaText:         string
   // Audio
-  musicUrl: string | null
-  musicVolume: number
+  musicUrl:        string | null
+  musicVolume:     number
   // Transitions
-  transition: TransitionType
-  transitionDuration: number  // seconds
+  transition:      TransitionType
+  transitionDuration: number
   // Quality
   quality: ExportQuality
   onProgress?: (pct: number, label: string) => void
 }
 
 const RESOLUTIONS: Record<ExportQuality, { w: number; h: number }> = {
-  '720p':  { w: 1280, h: 720 },
+  '720p':  { w: 1280, h: 720  },
   '1080p': { w: 1920, h: 1080 },
 }
 
@@ -58,22 +64,17 @@ const BITRATES: Record<ExportQuality, number> = {
   '1080p': 10_000_000,
 }
 
-/* Fetch a remote URL and return a local object URL (bypasses canvas CORS) */
+/* Fetch remote → local object URL (bypasses canvas CORS) */
 async function toBlobUrl(url: string): Promise<string> {
   const res = await fetch(url, { mode: 'cors', cache: 'no-store' })
   if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`)
-  const blob = await res.blob()
-  return URL.createObjectURL(blob)
+  return URL.createObjectURL(await res.blob())
 }
 
-/* Load a video element and resolve once metadata is ready */
 function loadVideo(src: string): Promise<HTMLVideoElement> {
   return new Promise((resolve, reject) => {
     const v = document.createElement('video')
-    v.preload = 'auto'
-    v.playsInline = true
-    v.muted = true           // allow autoplay without gesture
-    v.crossOrigin = 'anonymous'
+    v.preload = 'auto'; v.playsInline = true; v.muted = true; v.crossOrigin = 'anonymous'
     v.src = src
     v.addEventListener('loadedmetadata', () => resolve(v), { once: true })
     v.addEventListener('error', reject, { once: true })
@@ -81,20 +82,16 @@ function loadVideo(src: string): Promise<HTMLVideoElement> {
   })
 }
 
-/* Load an audio element */
 function loadAudio(src: string): Promise<HTMLAudioElement> {
   return new Promise((resolve, reject) => {
     const a = document.createElement('audio')
-    a.preload = 'auto'
-    a.crossOrigin = 'anonymous'
-    a.src = src
+    a.preload = 'auto'; a.crossOrigin = 'anonymous'; a.src = src
     a.addEventListener('canplaythrough', () => resolve(a), { once: true })
     a.addEventListener('error', reject, { once: true })
     a.load()
   })
 }
 
-/* Wait for video.seeked after setting currentTime */
 function seekTo(v: HTMLVideoElement, t: number): Promise<void> {
   return new Promise(resolve => {
     if (Math.abs(v.currentTime - t) < 0.01) { resolve(); return }
@@ -103,47 +100,63 @@ function seekTo(v: HTMLVideoElement, t: number): Promise<void> {
   })
 }
 
-/* Choose a supported MIME type */
 function pickMimeType(): string {
-  const types = [
-    'video/webm;codecs=vp9,opus',
-    'video/webm;codecs=vp8,opus',
-    'video/webm',
-    'video/mp4',
-  ]
+  const types = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4']
   for (const t of types) {
     if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) return t
   }
   return 'video/webm'
 }
 
-/* Draw a single frame to canvas with all effects applied */
+/* Film grain — adds luminance noise per-frame */
+function drawGrain(ctx: CanvasRenderingContext2D, w: number, h: number, amount: number) {
+  if (amount <= 0) return
+  const intensity = (amount / 100) * 40
+  const imgData = ctx.getImageData(0, 0, w, h)
+  const data = imgData.data
+  for (let i = 0; i < data.length; i += 4) {
+    const n = (Math.random() - 0.5) * intensity
+    data[i]   = Math.max(0, Math.min(255, data[i]   + n))
+    data[i+1] = Math.max(0, Math.min(255, data[i+1] + n))
+    data[i+2] = Math.max(0, Math.min(255, data[i+2] + n))
+  }
+  ctx.putImageData(imgData, 0, 0)
+}
+
+/* Resolve caption Y position */
+function captionY(h: number, pos: CaptionPos = 'bottom', size: number): number {
+  if (pos === 'top')    return h * 0.10 + size
+  if (pos === 'center') return h * 0.50
+  return h * 0.87  // bottom (default)
+}
+
 function drawFrame(
   ctx: CanvasRenderingContext2D,
   video: HTMLVideoElement,
   w: number,
   h: number,
-  opts: Pick<ExportOptions, 'colorFilter' | 'colorOverlay' | 'vignetteOpacity' |
-    'captionsEnabled' | 'showHook' | 'hookText' | 'showCta' | 'ctaText'>,
-  clipTime: number,        // current time within clip (seconds from clip start)
+  opts: Pick<ExportOptions,
+    'colorFilter' | 'colorOverlay' | 'vignetteOpacity' | 'grain' |
+    'captionsEnabled' | 'captionStyle' | 'captionPos' | 'captionSize' |
+    'showHook' | 'hookText' | 'showCta' | 'ctaText'>,
+  clipTime: number,
   captions: CaptionSegment[],
-  overlayAlpha: number,    // 0–1 for transition fade
+  overlayAlpha: number,
 ) {
   ctx.save()
   ctx.globalAlpha = overlayAlpha
 
-  // Base video frame + color filter
-  ctx.filter = opts.colorFilter !== 'none' && opts.colorFilter ? opts.colorFilter : 'none'
+  // Video frame + color filter
+  ctx.filter = (opts.colorFilter && opts.colorFilter !== 'none') ? opts.colorFilter : 'none'
   ctx.drawImage(video, 0, 0, w, h)
   ctx.filter = 'none'
 
-  // Color overlay (teal/orange/warm etc.)
+  // Color overlay
   if (opts.colorOverlay) {
     const { bg, blend, opacity } = opts.colorOverlay
     ctx.globalCompositeOperation = blend as GlobalCompositeOperation
     ctx.globalAlpha = overlayAlpha * opacity
-    const grad = parseGradientToCanvas(ctx, bg, w, h)
-    ctx.fillStyle = grad
+    ctx.fillStyle = parseGradientToCanvas(ctx, bg, w, h)
     ctx.fillRect(0, 0, w, h)
     ctx.globalCompositeOperation = 'source-over'
     ctx.globalAlpha = overlayAlpha
@@ -154,78 +167,105 @@ function drawFrame(
   if (vig > 0) {
     const cx = w / 2, cy = h / 2
     const r = Math.sqrt(cx * cx + cy * cy)
-    const vgrad = ctx.createRadialGradient(cx, cy, r * 0.35, cx, cy, r)
-    vgrad.addColorStop(0, 'rgba(0,0,0,0)')
-    vgrad.addColorStop(1, `rgba(0,0,0,${vig * overlayAlpha})`)
+    const vg = ctx.createRadialGradient(cx, cy, r * 0.3, cx, cy, r)
+    vg.addColorStop(0, 'rgba(0,0,0,0)')
+    vg.addColorStop(1, `rgba(0,0,0,${vig * overlayAlpha})`)
     ctx.globalCompositeOperation = 'source-over'
-    ctx.fillStyle = vgrad
+    ctx.fillStyle = vg
     ctx.fillRect(0, 0, w, h)
   }
 
   ctx.globalCompositeOperation = 'source-over'
   ctx.globalAlpha = overlayAlpha
 
-  // Hook (top overlay)
-  if (opts.showHook && opts.hookText) {
-    const size = Math.round(w * 0.032)
-    ctx.font = `700 ${size}px Inter, -apple-system, sans-serif`
-    ctx.textAlign = 'center'
-    const pad = h * 0.06
-    drawTextWithShadow(ctx, opts.hookText, w / 2, pad + size, w * 0.85, '#FAFAFA')
+  // Grain
+  if ((opts.grain ?? 0) > 0) {
+    drawGrain(ctx, w, h, opts.grain!)
   }
 
-  // Caption
+  // Hook
+  if (opts.showHook && opts.hookText) {
+    const sz = Math.round(w * 0.032 * (opts.captionSize ?? 1))
+    ctx.font = `700 ${sz}px Inter, sans-serif`
+    ctx.textAlign = 'center'
+    drawStyledText(ctx, opts.hookText, w / 2, h * 0.06 + sz, w * 0.85, '#FAFAFA', opts.captionStyle ?? 'bold')
+  }
+
+  // Captions
   if (opts.captionsEnabled) {
     const cap = captions.find(c => clipTime >= c.start && clipTime < c.end)
     if (cap) {
-      const size = Math.round(w * 0.028)
-      ctx.font = `600 ${size}px Inter, -apple-system, sans-serif`
+      const sz = Math.round(w * 0.028 * (opts.captionSize ?? 1))
+      const y = captionY(h, opts.captionPos, sz)
+      ctx.font = `${opts.captionStyle === 'minimal' ? 500 : 700} ${sz}px Inter, sans-serif`
       ctx.textAlign = 'center'
-      const y = h * 0.87
-      drawTextWithShadow(ctx, cap.text, w / 2, y, w * 0.80, '#FFFFFF')
+      drawStyledText(ctx, cap.text, w / 2, y, w * 0.80, '#FFFFFF', opts.captionStyle ?? 'bold')
     }
   }
 
-  // CTA (bottom)
+  // CTA
   if (opts.showCta && opts.ctaText) {
-    const size = Math.round(w * 0.025)
-    ctx.font = `600 ${size}px Inter, -apple-system, sans-serif`
+    const sz = Math.round(w * 0.025 * (opts.captionSize ?? 1))
+    ctx.font = `600 ${sz}px Inter, sans-serif`
     ctx.textAlign = 'center'
-    const y = h * 0.94
-    drawTextWithShadow(ctx, opts.ctaText, w / 2, y, w * 0.80, '#a5b4fc')
+    drawStyledText(ctx, opts.ctaText, w / 2, h * 0.94, w * 0.80, '#a5b4fc', opts.captionStyle ?? 'bold')
   }
 
   ctx.restore()
 }
 
-/* Draw text with multi-directional shadow (no background box) */
-function drawTextWithShadow(
+function drawStyledText(
   ctx: CanvasRenderingContext2D,
   text: string,
   x: number,
   y: number,
   maxWidth: number,
   color: string,
+  style: CaptionStyle = 'bold',
 ) {
-  // Shadows
-  ctx.shadowColor = 'rgba(0,0,0,0.9)'
-  ctx.shadowBlur = 8
-  for (const [dx, dy] of [[-2,-2],[2,-2],[-2,2],[2,2],[0,0]]) {
-    ctx.shadowOffsetX = dx
-    ctx.shadowOffsetY = dy
-    ctx.fillStyle = 'rgba(0,0,0,0.7)'
-    ctx.fillText(text, x, y, maxWidth)
-  }
-  // Actual text
   ctx.shadowColor = 'transparent'
   ctx.shadowBlur = 0
   ctx.shadowOffsetX = 0
   ctx.shadowOffsetY = 0
-  ctx.fillStyle = color
-  ctx.fillText(text, x, y, maxWidth)
+
+  if (style === 'bold') {
+    ctx.shadowColor = 'rgba(0,0,0,0.95)'
+    ctx.shadowBlur = 10
+    for (const [dx, dy] of [[-2,-2],[2,-2],[-2,2],[2,2]]) {
+      ctx.shadowOffsetX = dx; ctx.shadowOffsetY = dy
+      ctx.fillStyle = 'rgba(0,0,0,0.75)'
+      ctx.fillText(text, x, y, maxWidth)
+    }
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0
+    ctx.fillStyle = color
+    ctx.fillText(text, x, y, maxWidth)
+  } else if (style === 'minimal') {
+    ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2
+    ctx.fillStyle = color
+    ctx.fillText(text, x, y, maxWidth)
+  } else if (style === 'neon') {
+    ctx.shadowColor = '#6366f1'; ctx.shadowBlur = 20
+    ctx.fillStyle = '#c4b5fd'
+    ctx.fillText(text, x, y, maxWidth)
+    ctx.shadowBlur = 0
+    ctx.fillStyle = '#FFFFFF'
+    ctx.fillText(text, x, y, maxWidth)
+  } else if (style === 'film') {
+    // White on dark letterbox strip
+    const metrics = ctx.measureText(text)
+    const padX = 12, padY = 8
+    const bw = Math.min(metrics.width + padX * 2, maxWidth + padX * 2)
+    const bh = (parseFloat(ctx.font) || 18) + padY * 2
+    ctx.fillStyle = 'rgba(0,0,0,0.72)'
+    ctx.fillRect(x - bw / 2, y - bh + padY, bw, bh)
+    ctx.fillStyle = color
+    ctx.fillText(text, x, y, maxWidth)
+  } else {
+    ctx.fillStyle = color
+    ctx.fillText(text, x, y, maxWidth)
+  }
 }
 
-/* CSS gradient → canvas gradient. Handles commas inside rgb() correctly. */
 function parseGradientToCanvas(
   ctx: CanvasRenderingContext2D,
   bg: string,
@@ -233,16 +273,13 @@ function parseGradientToCanvas(
   h: number,
 ): CanvasGradient | string {
   const m = bg.match(/^linear-gradient\(\s*(\d+)deg\s*,(.+)\)$/)
-  if (!m) return '#888888'
-
+  if (!m) return '#888'
   const deg = parseInt(m[1])
   const rad = ((deg - 90) * Math.PI) / 180
   const cos = Math.cos(rad), sin = Math.sin(rad)
-  const x1 = w / 2 - cos * w / 2, y1 = h / 2 - sin * h / 2
-  const x2 = w / 2 + cos * w / 2, y2 = h / 2 + sin * h / 2
+  const x1 = w/2 - cos*w/2, y1 = h/2 - sin*h/2
+  const x2 = w/2 + cos*w/2, y2 = h/2 + sin*h/2
   const grad = ctx.createLinearGradient(x1, y1, x2, y2)
-
-  // Split stops on commas NOT inside parentheses
   const raw = m[2].trim()
   const stops: string[] = []
   let depth = 0, cur = ''
@@ -253,150 +290,102 @@ function parseGradientToCanvas(
     else cur += ch
   }
   stops.push(cur.trim())
-
   stops.forEach((s, i) => {
-    const pctMatch = s.match(/^(.+?)\s+(\d+(?:\.\d+)?)%$/)
-    if (pctMatch) grad.addColorStop(parseFloat(pctMatch[2]) / 100, pctMatch[1].trim())
+    const pm = s.match(/^(.+?)\s+(\d+(?:\.\d+)?)%$/)
+    if (pm) grad.addColorStop(parseFloat(pm[2]) / 100, pm[1].trim())
     else grad.addColorStop(i / Math.max(stops.length - 1, 1), s.trim())
   })
-
   return grad
 }
 
-/* Render a transition frame — black fade or dissolve */
 async function renderTransition(
   ctx: CanvasRenderingContext2D,
-  outVideo: HTMLVideoElement,
-  inVideo: HTMLVideoElement,
-  w: number,
-  h: number,
+  outV: HTMLVideoElement,
+  inV:  HTMLVideoElement,
+  w: number, h: number,
   type: TransitionType,
-  durationSec: number,
-  opts: Pick<ExportOptions, 'colorFilter' | 'colorOverlay' | 'vignetteOpacity' |
-    'captionsEnabled' | 'showHook' | 'hookText' | 'showCta' | 'ctaText'>,
+  dur: number,
+  opts: Pick<ExportOptions, 'colorFilter' | 'colorOverlay' | 'vignetteOpacity' | 'grain' |
+    'captionsEnabled' | 'captionStyle' | 'captionPos' | 'captionSize' |
+    'showHook' | 'hookText' | 'showCta' | 'ctaText'>,
   captions: CaptionSegment[],
   clipTime: number,
   fps: number,
-  recorder: MediaRecorder,
 ) {
   if (type === 'none') return
-
-  const totalFrames = Math.round(durationSec * fps)
+  const totalFrames = Math.round(dur * fps)
   const frameMs = 1000 / fps
-
   for (let f = 0; f <= totalFrames; f++) {
-    const t = f / totalFrames  // 0 → 1
-
+    const t = f / totalFrames
+    ctx.clearRect(0, 0, w, h)
     if (type === 'fade') {
-      // Out: fade to black; In: black to clip (handled in main loop)
-      const alpha = 1 - t
-      ctx.clearRect(0, 0, w, h)
-      drawFrame(ctx, outVideo, w, h, opts, clipTime, captions, alpha)
-      ctx.fillStyle = `rgba(0,0,0,${t})`
-      ctx.fillRect(0, 0, w, h)
-    } else if (type === 'dissolve') {
-      // Draw outgoing at 1-t, incoming at t
-      ctx.clearRect(0, 0, w, h)
-      drawFrame(ctx, outVideo, w, h, opts, clipTime, captions, 1 - t)
+      drawFrame(ctx, outV, w, h, opts, clipTime, captions, 1 - t)
+      ctx.fillStyle = `rgba(0,0,0,${t})`; ctx.fillRect(0, 0, w, h)
+    } else {
+      drawFrame(ctx, outV, w, h, opts, clipTime, captions, 1 - t)
       ctx.globalCompositeOperation = 'source-over'
-      drawFrame(ctx, inVideo, w, h, opts, 0, captions, t)
+      drawFrame(ctx, inV,  w, h, opts, 0,        captions, t)
       ctx.globalCompositeOperation = 'source-over'
     }
-
     await new Promise(r => setTimeout(r, frameMs))
   }
 }
 
-/* Main export function */
 export async function exportVideo(opts: ExportOptions): Promise<Blob> {
   const { w, h } = RESOLUTIONS[opts.quality]
-  const FPS = 30
-  const FRAME_MS = 1000 / FPS
+  const FPS = 30, FRAME_MS = 1000 / FPS
   const report = opts.onProgress ?? (() => {})
 
   report(0, 'Fetching clips…')
-
-  // ── 1. Fetch all clip blobs locally ────────────────────────────────────────
   const objectUrls: string[] = []
-  const clipBlobUrls = await Promise.all(
-    opts.clips.map(async (c) => {
-      const local = await toBlobUrl(c.url)
-      objectUrls.push(local)
-      return local
-    })
-  )
+  const clipBlobUrls = await Promise.all(opts.clips.map(async c => {
+    const u = await toBlobUrl(c.url); objectUrls.push(u); return u
+  }))
 
-  // Fetch music if selected
   let musicBlobUrl: string | null = null
-  if (opts.musicUrl) {
-    musicBlobUrl = await toBlobUrl(opts.musicUrl)
-    objectUrls.push(musicBlobUrl)
-  }
+  if (opts.musicUrl) { musicBlobUrl = await toBlobUrl(opts.musicUrl); objectUrls.push(musicBlobUrl) }
 
   report(5, 'Loading media…')
+  const videoEls = await Promise.all(clipBlobUrls.map(loadVideo))
 
-  // ── 2. Load video elements ─────────────────────────────────────────────────
-  const videoEls = await Promise.all(clipBlobUrls.map(u => loadVideo(u)))
-
-  // ── 3. Set up canvas ───────────────────────────────────────────────────────
   const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: false })!
+  canvas.width = w; canvas.height = h
+  const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: (opts.grain ?? 0) > 0 })!
 
-  // ── 4. Set up audio mixing ─────────────────────────────────────────────────
   const audioCtx = new AudioContext({ sampleRate: 48000 })
   const dest = audioCtx.createMediaStreamDestination()
-
-  // Route each video's audio through WebAudio
-  const videoSources = videoEls.map(v => {
-    v.muted = false  // unmute so WebAudio captures audio
+  videoEls.forEach(v => {
+    v.muted = false
     const src = audioCtx.createMediaElementSource(v)
-    const gain = audioCtx.createGain()
-    gain.gain.value = 1.0  // full video audio
-    src.connect(gain)
-    gain.connect(dest)
-    return gain
+    const gain = audioCtx.createGain(); gain.gain.value = 1
+    src.connect(gain); gain.connect(dest)
   })
 
-  // Background music
   let musicEl: HTMLAudioElement | null = null
   if (musicBlobUrl) {
     try {
       musicEl = await loadAudio(musicBlobUrl)
       musicEl.loop = true
-      const musicSrc = audioCtx.createMediaElementSource(musicEl)
-      const musicGain = audioCtx.createGain()
-      musicGain.gain.value = opts.musicVolume
-      musicSrc.connect(musicGain)
-      musicGain.connect(dest)
+      const ms = audioCtx.createMediaElementSource(musicEl)
+      const mg = audioCtx.createGain(); mg.gain.value = opts.musicVolume
+      ms.connect(mg); mg.connect(dest)
       musicEl.play().catch(() => {})
-    } catch { /* music optional */ }
+    } catch { /* optional */ }
   }
 
-  // ── 5. Set up MediaRecorder ────────────────────────────────────────────────
   const videoStream = canvas.captureStream(FPS)
-  const combinedStream = new MediaStream([
-    ...videoStream.getVideoTracks(),
-    ...dest.stream.getAudioTracks(),
-  ])
-
+  const combined = new MediaStream([...videoStream.getVideoTracks(), ...dest.stream.getAudioTracks()])
   const mimeType = pickMimeType()
-  const recorder = new MediaRecorder(combinedStream, {
-    mimeType,
-    videoBitsPerSecond: BITRATES[opts.quality],
-    audioBitsPerSecond: 192_000,
-  })
-
+  const recorder = new MediaRecorder(combined, { mimeType, videoBitsPerSecond: BITRATES[opts.quality], audioBitsPerSecond: 192_000 })
   const chunks: Blob[] = []
   recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data) }
-  recorder.start(100)  // collect chunks every 100ms
+  recorder.start(100)
 
   report(10, 'Rendering…')
 
-  // ── 6. Render each clip ────────────────────────────────────────────────────
   let totalDuration = 0
-  for (const v of videoEls) totalDuration += v.duration * ((opts.clips[videoEls.indexOf(v)].trimEnd - opts.clips[videoEls.indexOf(v)].trimStart) / 100)
+  for (const v of videoEls)
+    totalDuration += v.duration * ((opts.clips[videoEls.indexOf(v)].trimEnd - opts.clips[videoEls.indexOf(v)].trimStart) / 100)
 
   let renderedSec = 0
 
@@ -409,34 +398,25 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
     await seekTo(v, startT)
     v.play().catch(() => {})
 
-    // Transition in: fade from black at start of first clip
+    // Fade-in on first clip
     if (ci === 0 && opts.transition !== 'none' && opts.transitionDuration > 0) {
-      const fadInFrames = Math.round(opts.transitionDuration * FPS)
-      for (let f = 0; f <= fadInFrames; f++) {
-        const alpha = f / fadInFrames
+      const frames = Math.round(opts.transitionDuration * FPS)
+      for (let f = 0; f <= frames; f++) {
+        const alpha = f / frames
         ctx.clearRect(0, 0, w, h)
         drawFrame(ctx, v, w, h, opts, v.currentTime - startT, opts.captions, alpha)
-        ctx.fillStyle = `rgba(0,0,0,${1 - alpha})`
-        ctx.fillRect(0, 0, w, h)
+        ctx.fillStyle = `rgba(0,0,0,${1 - alpha})`; ctx.fillRect(0, 0, w, h)
         await new Promise(r => setTimeout(r, FRAME_MS))
       }
     }
 
-    // Main render loop for this clip
     await new Promise<void>(resolve => {
       const loop = () => {
         const t = v.currentTime
-
-        if (t >= endT - 0.05 || v.ended || v.paused) {
-          resolve()
-          return
-        }
-
+        if (t >= endT - 0.05 || v.ended || v.paused) { resolve(); return }
         drawFrame(ctx, v, w, h, opts, t - startT, opts.captions, 1)
-        renderedSec = renderedSec + FRAME_MS / 1000
-        const pct = 10 + (renderedSec / totalDuration) * 80
-        report(Math.min(pct, 89), `Rendering clip ${ci + 1}/${videoEls.length}… ${Math.round((t - startT) * 10) / 10}s`)
-
+        renderedSec += FRAME_MS / 1000
+        report(Math.min(10 + (renderedSec / totalDuration) * 80, 89), `Rendering clip ${ci+1}/${videoEls.length}…`)
         setTimeout(loop, FRAME_MS)
       }
       setTimeout(loop, FRAME_MS)
@@ -444,62 +424,42 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
 
     v.pause()
 
-    // Transition between clips
     if (ci < videoEls.length - 1 && opts.transition !== 'none' && opts.transitionDuration > 0) {
       const nextV = videoEls[ci + 1]
-      const nextClip = opts.clips[ci + 1]
-      await seekTo(nextV, nextV.duration * (nextClip.trimStart / 100))
-      await renderTransition(ctx, v, nextV, w, h, opts.transition, opts.transitionDuration, opts, opts.captions, endT - startT, FPS, recorder)
+      await seekTo(nextV, nextV.duration * (opts.clips[ci + 1].trimStart / 100))
+      await renderTransition(ctx, v, nextV, w, h, opts.transition, opts.transitionDuration, opts, opts.captions, endT - startT, FPS)
     }
   }
 
-  // Fade to black at end
+  // Fade-out
   if (opts.transition !== 'none' && opts.transitionDuration > 0 && videoEls.length > 0) {
-    const lastV = videoEls[videoEls.length - 1]
-    const lastClip = opts.clips[videoEls.length - 1]
-    const lastEndT = lastV.duration * (lastClip.trimEnd / 100)
+    const lv = videoEls[videoEls.length - 1]
+    const lc = opts.clips[videoEls.length - 1]
     const fadeFrames = Math.round(opts.transitionDuration * FPS)
     for (let f = 0; f <= fadeFrames; f++) {
       const alpha = 1 - f / fadeFrames
       ctx.clearRect(0, 0, w, h)
-      drawFrame(ctx, lastV, w, h, opts, lastEndT - (lastEndT - lastV.duration * lastClip.trimStart / 100), opts.captions, alpha)
-      ctx.fillStyle = `rgba(0,0,0,${1 - alpha})`
-      ctx.fillRect(0, 0, w, h)
+      drawFrame(ctx, lv, w, h, opts, lv.duration * lc.trimEnd / 100 - lv.duration * lc.trimStart / 100, opts.captions, alpha)
+      ctx.fillStyle = `rgba(0,0,0,${1 - alpha})`; ctx.fillRect(0, 0, w, h)
       await new Promise(r => setTimeout(r, FRAME_MS))
     }
   }
 
   report(92, 'Encoding…')
-
-  // ── 7. Stop recording ──────────────────────────────────────────────────────
   musicEl?.pause()
   for (const v of videoEls) { v.pause(); v.src = '' }
 
-  // Flush + stop recorder
-  await new Promise<void>(resolve => {
-    recorder.onstop = () => resolve()
-    recorder.stop()
-  })
-
-  // Close AudioContext
+  await new Promise<void>(resolve => { recorder.onstop = () => resolve(); recorder.stop() })
   audioCtx.close().catch(() => {})
-
-  // ── 8. Clean up object URLs ────────────────────────────────────────────────
   objectUrls.forEach(u => URL.revokeObjectURL(u))
-
   report(100, 'Done!')
-
   return new Blob(chunks, { type: mimeType })
 }
 
-/* Trigger a browser download from a Blob */
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
+  a.href = url; a.download = filename
+  document.body.appendChild(a); a.click(); document.body.removeChild(a)
   setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
