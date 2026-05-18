@@ -435,16 +435,26 @@ function VideosInner() {
     if (session !== undefined) load()
   }, [session, videosLoaded])
 
+  const [scriptGenMsg, setScriptGenMsg] = useState('')
+
   const runScriptGen = useCallback(async (idea: string, format: string) => {
     if (streamingRef.current) return
-    streamingRef.current = true; setIsGenerating(true); setGenerationDone(false); setScriptText(''); setScriptGenError(false)
+    streamingRef.current = true; setIsGenerating(true); setGenerationDone(false); setScriptText(''); setScriptGenError(false); setScriptGenMsg('')
     try {
       const res = await fetch('/api/video/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idea, format }) })
-      if (!res.ok || !res.body) { setScriptGenError(true); return }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setScriptGenMsg(data.error ?? `API error ${res.status}`)
+        setScriptGenError(true); return
+      }
+      if (!res.body) { setScriptGenError(true); return }
       const reader = res.body.getReader(); const dec = new TextDecoder(); let text = ''
       while (true) { const { done, value } = await reader.read(); if (done) break; text += dec.decode(value, { stream: true }); setScriptText(text) }
       setGenerationDone(true)
-    } catch { setScriptGenError(true) }
+    } catch (err) {
+      setScriptGenMsg(err instanceof Error ? err.message : 'Network error')
+      setScriptGenError(true)
+    }
     finally { streamingRef.current = false; setIsGenerating(false) }
   }, [])
 
@@ -664,17 +674,21 @@ function VideosInner() {
                   onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }} />
                 {scriptGenError && (
-                  <div className="flex items-center gap-3">
-                    <p style={{ fontSize: 12, color: '#f87171' }}>Generation failed — check your API key or</p>
-                    <button
-                      onClick={() => {
-                        setScriptGenError(false)
-                        if (hasIdea) { setWriteOwn(false); streamingRef.current = false }
-                        else generateFromTemplate()
-                      }}
-                      style={{ fontSize: 12, color: '#818cf8', textDecoration: 'underline', cursor: 'pointer' }}>
-                      retry
-                    </button>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-3">
+                      <p style={{ fontSize: 12, color: '#f87171' }}>
+                        {scriptGenMsg || 'Generation failed'}
+                      </p>
+                      <button
+                        onClick={() => {
+                          setScriptGenError(false)
+                          if (hasIdea) { setWriteOwn(false); streamingRef.current = false }
+                          else generateFromTemplate()
+                        }}
+                        style={{ fontSize: 12, color: '#818cf8', textDecoration: 'underline', cursor: 'pointer' }}>
+                        retry
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

@@ -1,5 +1,5 @@
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
-const MODEL = 'gemini-2.5-flash-lite'
+const MODEL = 'gemini-2.0-flash-lite'
 
 function apiKey(): string {
   const k = process.env.GEMINI_API_KEY

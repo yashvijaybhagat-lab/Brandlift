@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 503 })
+    return NextResponse.json({ error: 'GEMINI_API_KEY not configured — add it to your Vercel environment variables' }, { status: 503 })
   }
 
   const formatHint =
