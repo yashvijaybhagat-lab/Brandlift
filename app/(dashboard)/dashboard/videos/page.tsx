@@ -470,24 +470,32 @@ function VideosInner() {
     runScriptGen(idea, selectedTemplate)
   }, [scriptText, currentTemplate.placeholder, selectedTemplate, runScriptGen])
 
+  const [enhancementStatus, setEnhancementStatus] = useState<'idle' | 'enhancing' | 'done' | 'failed'>('idle')
+
   const runEnhancementInBackground = useCallback(async (blobUrl: string, recordId: string) => {
+    setEnhancementStatus('enhancing')
     try {
       const res = await fetch('/api/video/enhance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ videoUrl: blobUrl }) })
-      if (!res.ok) return
+      if (!res.ok) { setEnhancementStatus('failed'); return }
       const data = await res.json()
-      if (!data.id) return
+      if (!data.id) { setEnhancementStatus('failed'); return }
       const poll = async (): Promise<void> => {
         try {
           const r = await fetch(`/api/video/status/${data.id}`); const d = await r.json()
-          if (d.status === 'succeeded' && d.output) {
+          if ((d.status === 'succeeded' || d.status === 'completed') && d.output) {
             const enhanced = Array.isArray(d.output) ? d.output[0] : d.output
             setVideos(prev => { const next = prev.map(v => v.id === recordId ? { ...v, enhancedUrl: enhanced } : v); saveVideos(next); return next })
             setClips(prev => prev.map(c => c.id === recordId ? { ...c, url: enhanced } : c))
-          } else if (d.status !== 'failed') { await new Promise(r => setTimeout(r, POLL_INTERVAL)); return poll() }
-        } catch {}
+            setEnhancementStatus('done')
+          } else if (d.status === 'failed' || d.error) {
+            setEnhancementStatus('failed')
+          } else {
+            await new Promise(r => setTimeout(r, POLL_INTERVAL)); return poll()
+          }
+        } catch { setEnhancementStatus('failed') }
       }
       await poll()
-    } catch {}
+    } catch { setEnhancementStatus('failed') }
   }, [saveVideos])
 
   const uploadClip = useCallback(async (file: File): Promise<Clip | null> => {
@@ -599,7 +607,7 @@ function VideosInner() {
     setSelectedMusic('none'); setCaptions([]); setCaptionsEnabled(false); setCurrentCaption('')
     setCaptionStyle('bold'); setCaptionPos('bottom'); setCaptionSize(1.0)
     setEditingCaption(null); setShowAddCaption(false); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('')
-    setExportAspect('16:9')
+    setExportAspect('16:9'); setEnhancementStatus('idle')
     setTransition('fade'); setActiveTab('grade'); setTranscribing(false); setTranscribeError('')
     setDisplayedCaption(''); setCaptionOpacity(0); setExporting(false)
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
@@ -775,11 +783,21 @@ function VideosInner() {
 
               {/* Done bar */}
               <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
                   <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />
-                  <p style={{ fontSize: 14, fontWeight: 500, color: '#FAFAFA' }}>
+                  <p style={{ fontSize: 14, fontWeight: 500, color: '#FAFAFA' }} className="truncate">
                     {clips.length === 1 ? clips[0].name : `${clips.length} clips ready`}
                   </p>
+                  {enhancementStatus === 'enhancing' && (
+                    <span className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.3)', color: '#818cf8' }}>
+                      <Sparkles className="w-3 h-3 animate-pulse" />AI enhancing…
+                    </span>
+                  )}
+                  {enhancementStatus === 'done' && (
+                    <span className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]" style={{ background: 'rgba(74,222,128,0.08)', border: '0.5px solid rgba(74,222,128,0.3)', color: '#4ADE80' }}>
+                      ✦ Enhanced
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {addingClip ? (

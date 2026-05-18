@@ -72,10 +72,10 @@ const RESOLUTIONS: Record<ExportQuality, { w: number; h: number }> = {
 }
 
 const BITRATES: Record<ExportQuality, number> = {
-  '720p':  4_000_000,
-  '1080p': 10_000_000,
-  '1440p': 20_000_000,
-  '4K':    40_000_000,
+  '720p':  8_000_000,
+  '1080p': 25_000_000,
+  '1440p': 50_000_000,
+  '4K':    80_000_000,
 }
 
 /* Fetch remote → local object URL (bypasses canvas CORS) */
