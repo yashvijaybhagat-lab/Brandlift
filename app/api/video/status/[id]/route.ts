@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+const LTX_BASE = 'https://api.ltx.video'
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } },
 ) {
-  const token = process.env.REPLICATE_API_TOKEN
-  if (!token || token === 'your_replicate_token') {
-    return NextResponse.json({ error: 'API not configured' }, { status: 503 })
+  const key = process.env.LTX_API_KEY
+  if (!key) {
+    return NextResponse.json({ error: 'LTX_API_KEY not configured' }, { status: 503 })
   }
 
   const res = await fetch(
-    `https://api.replicate.com/v1/predictions/${params.id}`,
+    `${LTX_BASE}/v2/video-to-video-hdr/${params.id}`,
     {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${key}` },
       cache: 'no-store',
     },
   )
@@ -22,11 +24,15 @@ export async function GET(
   }
 
   const data = await res.json()
+
+  // Map LTX response → shape the frontend expects
+  // LTX statuses: pending, processing, succeeded, failed
+  const output = data.output?.video_uri ?? data.output ?? null
+
   return NextResponse.json({
-    id: data.id,
+    id:     data.id,
     status: data.status,
-    output: data.output,
-    error: data.error,
-    metrics: data.metrics,
+    output,
+    error:  data.error?.message ?? data.error ?? null,
   })
 }
