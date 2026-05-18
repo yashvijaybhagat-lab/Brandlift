@@ -6,7 +6,7 @@ export async function GET(
 ) {
   const token = process.env.REPLICATE_API_TOKEN
   if (!token || token === 'your_replicate_token') {
-    return NextResponse.json({ error: 'API not configured' }, { status: 503 })
+    return NextResponse.json({ error: 'REPLICATE_API_TOKEN not configured' }, { status: 503 })
   }
 
   const res = await fetch(
@@ -22,11 +22,12 @@ export async function GET(
   }
 
   const data = await res.json()
+  const output = Array.isArray(data.output) ? data.output[0] : data.output
+
   return NextResponse.json({
-    id: data.id,
-    status: data.status,
-    output: data.output,
-    error: data.error,
-    metrics: data.metrics,
+    id:     data.id,
+    status: data.status,          // 'starting' | 'processing' | 'succeeded' | 'failed'
+    output: output ?? null,
+    error:  data.error ?? null,
   })
 }

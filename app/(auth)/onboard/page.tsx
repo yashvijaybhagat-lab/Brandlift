@@ -185,14 +185,14 @@ export default function OnboardPage() {
           <ProgressBar step={currentStep} total={TOTAL_STEPS - 1} />
 
           {/* Nav row */}
-          <div className="flex items-center justify-between px-6 py-4">
-            {/* Logo */}
-            <span className="text-[14px] font-[600] text-brand-primary tracking-tight">
+          <div className="grid grid-cols-3 items-center px-6 py-4">
+            <div />
+            {/* Logo — centered */}
+            <span className="text-[14px] font-[600] text-brand-primary tracking-tight text-center">
               BrandLift
             </span>
-
-            {/* Step counter */}
-            <span className="text-[13px] text-brand-text-muted tabular-nums">
+            {/* Step counter — right */}
+            <span className="text-[13px] text-brand-text-muted tabular-nums text-right">
               {currentStep + 1} / {TOTAL_STEPS - 1}
             </span>
           </div>
