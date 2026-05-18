@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import {
   exportVideo, downloadBlob,
-  type TransitionType, type ExportQuality,
+  type TransitionType, type ExportQuality, type ExportAspect,
   type CaptionStyle, type CaptionPos,
 } from '@/lib/videoExport'
 
@@ -114,9 +114,19 @@ const CAPTION_POSITIONS: { id: CaptionPos; label: string; icon: string }[] = [
 
 const SCRIPT_TEMPLATES = [
   { id: 'promo',        label: 'Business Promo',    placeholder: 'e.g. We make the best tacos in Austin — fresh ingredients, made to order, open late.' },
+  { id: 'pov',          label: 'POV Format',        placeholder: 'e.g. POV: you finally found a barber who actually listens to what you want.' },
+  { id: 'storytime',    label: 'Story Time',        placeholder: 'e.g. A customer walked in crying last week. Here\'s what happened.' },
+  { id: 'hottake',      label: 'Hot Take',          placeholder: 'e.g. Most coffee shops don\'t actually care about flavor. Here\'s why mine is different.' },
+  { id: 'countdown',    label: 'Countdown',         placeholder: 'e.g. 5 things about our bakery that nobody talks about.' },
   { id: 'behindscenes', label: 'Behind the Scenes', placeholder: 'e.g. A day in our kitchen — from prep at 6am to the last order.' },
   { id: 'testimonial',  label: 'Customer Story',    placeholder: "e.g. Sarah's been coming every Friday for two years. Here's what she says." },
   { id: 'custom',       label: 'Write My Own',      placeholder: 'Write your script or talking points here...' },
+]
+
+const PLATFORM_OPTIONS: { id: ExportAspect; label: string; desc: string }[] = [
+  { id: '16:9', label: 'YouTube', desc: 'Landscape 16:9' },
+  { id: '9:16', label: 'TikTok',  desc: 'Vertical 9:16' },
+  { id: '1:1',  label: 'Square',  desc: 'Instagram 1:1' },
 ]
 
 const TRANSITION_OPTIONS: { id: TransitionType; label: string; desc: string }[] = [
@@ -275,6 +285,7 @@ function VideosInner() {
 
   // Export
   const [exportQuality, setExportQuality]     = useState<ExportQuality>('1080p')
+  const [exportAspect, setExportAspect]       = useState<ExportAspect>('16:9')
   const [exporting, setExporting]             = useState(false)
   const [exportProgress, setExportProgress]   = useState(0)
   const [exportLabel, setExportLabel]         = useState('')
@@ -551,6 +562,7 @@ function VideosInner() {
         musicUrl, musicVolume: 0.4,
         transition, transitionDuration,
         quality: exportQuality,
+        aspect:  exportAspect,
         onProgress: (pct, label) => { setExportProgress(pct); setExportLabel(label) },
       })
       downloadBlob(blob, `brandlift-${Date.now()}.webm`)
@@ -569,6 +581,7 @@ function VideosInner() {
     setSelectedMusic('none'); setCaptions([]); setCaptionsEnabled(false); setCurrentCaption('')
     setCaptionStyle('bold'); setCaptionPos('bottom'); setCaptionSize(1.0)
     setEditingCaption(null); setShowAddCaption(false); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('')
+    setExportAspect('16:9')
     setTransition('fade'); setActiveTab('grade'); setTranscribing(false); setTranscribeError('')
     setDisplayedCaption(''); setCaptionOpacity(0); setExporting(false)
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
@@ -615,7 +628,7 @@ function VideosInner() {
               {!writeOwn && !hasIdea && (
                 <div>
                   <p style={{ fontSize: 12, fontWeight: 600, color: '#52525B', letterSpacing: '0.06em', textTransform: 'uppercase' }} className="mb-3">Template</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-0.5">
                     {SCRIPT_TEMPLATES.map(t => (
                       <button key={t.id} onClick={() => setSelectedTemplate(t.id)}
                         className="flex items-center gap-2 p-3 rounded-xl text-left transition-all duration-150"
@@ -1342,6 +1355,19 @@ function VideosInner() {
                       Export {clips.length > 1 ? `${clips.length} clips →` : 'video →'}
                     </button>
 
+                    {/* Platform / aspect */}
+                    <div className="flex items-center gap-1 rounded-lg overflow-hidden" style={{ border: '0.5px solid rgba(255,255,255,0.08)' }}>
+                      {PLATFORM_OPTIONS.map(p => (
+                        <button key={p.id} onClick={() => setExportAspect(p.id)}
+                          className="px-3 py-2 text-[12px] font-medium transition-colors duration-150"
+                          title={p.desc}
+                          style={{ background: exportAspect === p.id ? 'rgba(99,102,241,0.12)' : '#18181C', color: exportAspect === p.id ? '#a5b4fc' : '#52525B' }}>
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Quality */}
                     <div className="flex items-center gap-1 rounded-lg overflow-hidden" style={{ border: '0.5px solid rgba(255,255,255,0.08)' }}>
                       {(['720p', '1080p', '1440p', '4K'] as ExportQuality[]).map(q => (
                         <button key={q} onClick={() => setExportQuality(q)}
@@ -1353,7 +1379,7 @@ function VideosInner() {
                     </div>
 
                     <p style={{ fontSize: 12, color: '#3f3f46' }}>
-                      {clips.length > 1 ? 'Merges all clips with transitions' : 'Color · Captions · Music baked in'}
+                      {exportAspect === '9:16' ? 'TikTok / Reels vertical' : exportAspect === '1:1' ? 'Square for Instagram' : clips.length > 1 ? 'Merges all clips' : 'Effects baked in'}
                     </p>
                   </div>
                 )}

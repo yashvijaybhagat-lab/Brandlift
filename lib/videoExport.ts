@@ -26,6 +26,8 @@ export interface ColorOverlay {
   opacity: number
 }
 
+export type ExportAspect = '16:9' | '9:16' | '1:1'
+
 export interface ExportOptions {
   clips: ExportClip[]
   // Color
@@ -49,9 +51,17 @@ export interface ExportOptions {
   // Transitions
   transition:      TransitionType
   transitionDuration: number
-  // Quality
+  // Quality + aspect
   quality: ExportQuality
+  aspect?: ExportAspect   // default '16:9'
   onProgress?: (pct: number, label: string) => void
+}
+
+function getCanvasSize(quality: ExportQuality, aspect: ExportAspect = '16:9'): { w: number; h: number } {
+  const base = RESOLUTIONS[quality]
+  if (aspect === '9:16') return { w: base.h, h: base.w }
+  if (aspect === '1:1')  return { w: base.h, h: base.h }
+  return base
 }
 
 const RESOLUTIONS: Record<ExportQuality, { w: number; h: number }> = {
@@ -134,6 +144,28 @@ function captionY(h: number, pos: CaptionPos = 'bottom', size: number): number {
   return h * 0.87  // bottom (default)
 }
 
+function drawVideoFit(ctx: CanvasRenderingContext2D, video: HTMLVideoElement, w: number, h: number) {
+  const vw = video.videoWidth  || w
+  const vh = video.videoHeight || h
+  const srcAspect = vw / vh
+  const dstAspect = w / h
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  if (Math.abs(srcAspect - dstAspect) < 0.02) {
+    ctx.drawImage(video, 0, 0, w, h)
+  } else if (dstAspect < srcAspect) {
+    // Canvas is taller (e.g. 9:16 output, 16:9 source) → center-crop sides
+    const drawH = h
+    const drawW = h * srcAspect
+    ctx.drawImage(video, (w - drawW) / 2, 0, drawW, drawH)
+  } else {
+    // Canvas is wider → center-crop top/bottom
+    const drawW = w
+    const drawH = w / srcAspect
+    ctx.drawImage(video, 0, (h - drawH) / 2, drawW, drawH)
+  }
+}
+
 function drawFrame(
   ctx: CanvasRenderingContext2D,
   video: HTMLVideoElement,
@@ -150,9 +182,9 @@ function drawFrame(
   ctx.save()
   ctx.globalAlpha = overlayAlpha
 
-  // Video frame + color filter
+  // Video frame — center-crop to fill canvas, high-quality interpolation
   ctx.filter = (opts.colorFilter && opts.colorFilter !== 'none') ? opts.colorFilter : 'none'
-  ctx.drawImage(video, 0, 0, w, h)
+  drawVideoFit(ctx, video, w, h)
   ctx.filter = 'none'
 
   // Color overlay
@@ -336,7 +368,7 @@ async function renderTransition(
 }
 
 export async function exportVideo(opts: ExportOptions): Promise<Blob> {
-  const { w, h } = RESOLUTIONS[opts.quality]
+  const { w, h } = getCanvasSize(opts.quality, opts.aspect ?? '16:9')
   const FPS = 30, FRAME_MS = 1000 / FPS
   const report = opts.onProgress ?? (() => {})
 
