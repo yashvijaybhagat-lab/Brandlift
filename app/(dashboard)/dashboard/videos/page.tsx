@@ -435,22 +435,30 @@ function VideosInner() {
     if (session !== undefined) load()
   }, [session, videosLoaded])
 
+  const runScriptGen = useCallback(async (idea: string, format: string) => {
+    if (streamingRef.current) return
+    streamingRef.current = true; setIsGenerating(true); setGenerationDone(false); setScriptText(''); setScriptGenError(false)
+    try {
+      const res = await fetch('/api/video/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idea, format }) })
+      if (!res.ok || !res.body) { setScriptGenError(true); return }
+      const reader = res.body.getReader(); const dec = new TextDecoder(); let text = ''
+      while (true) { const { done, value } = await reader.read(); if (done) break; text += dec.decode(value, { stream: true }); setScriptText(text) }
+      setGenerationDone(true)
+    } catch { setScriptGenError(true) }
+    finally { streamingRef.current = false; setIsGenerating(false) }
+  }, [])
+
   useEffect(() => {
     if (!hasIdea || writeOwn || streamingRef.current) return
-    const gen = async () => {
-      streamingRef.current = true; setIsGenerating(true); setGenerationDone(false); setScriptText('')
-      try {
-        const res = await fetch('/api/video/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idea: ideaHook, format: ideaFormat }) })
-        if (!res.ok || !res.body) { setScriptGenError(true); setWriteOwn(true); return }
-        const reader = res.body.getReader(); const dec = new TextDecoder(); let text = ''
-        while (true) { const { done, value } = await reader.read(); if (done) break; text += dec.decode(value, { stream: true }); setScriptText(text) }
-        setGenerationDone(true)
-      } catch { setScriptGenError(true); setWriteOwn(true) }
-      finally { streamingRef.current = false; setIsGenerating(false) }
-    }
-    gen()
+    runScriptGen(ideaHook, ideaFormat)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasIdea, writeOwn])
+
+  const generateFromTemplate = useCallback(() => {
+    // Use what the user typed as their idea; strip the "e.g." prefix from placeholder if empty
+    const idea = scriptText.trim() || currentTemplate.placeholder.replace(/^e\.g\.\s*/i, '')
+    runScriptGen(idea, selectedTemplate)
+  }, [scriptText, currentTemplate.placeholder, selectedTemplate, runScriptGen])
 
   const runEnhancementInBackground = useCallback(async (blobUrl: string, recordId: string) => {
     try {
@@ -570,7 +578,7 @@ function VideosInner() {
       console.error('[export]', err)
       alert('Export failed — try a shorter clip or reload the page.')
     } finally { setExporting(false); setExportProgress(0); setExportLabel('') }
-  }, [clips, exporting, colorGrade, customColor, grain, selectedMusic, captionsEnabled, captions, captionStyle, captionPos, captionSize, showHook, hookText, showCta, ctaText, transition, transitionDuration, exportQuality])
+  }, [clips, exporting, colorGrade, customColor, grain, selectedMusic, captionsEnabled, captions, captionStyle, captionPos, captionSize, showHook, hookText, showCta, ctaText, transition, transitionDuration, exportQuality, exportAspect])
 
   const reset = () => {
     setStage('script'); setUploadProgress(0); setErrorMsg(''); setClips([]); setActiveClipId(null)
@@ -657,9 +665,13 @@ function VideosInner() {
                   onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }} />
                 {scriptGenError && (
                   <div className="flex items-center gap-3">
-                    <p style={{ fontSize: 12, color: '#f87171' }}>Generation failed — write your own or</p>
+                    <p style={{ fontSize: 12, color: '#f87171' }}>Generation failed — check your API key or</p>
                     <button
-                      onClick={() => { setScriptGenError(false); setWriteOwn(false); streamingRef.current = false }}
+                      onClick={() => {
+                        setScriptGenError(false)
+                        if (hasIdea) { setWriteOwn(false); streamingRef.current = false }
+                        else generateFromTemplate()
+                      }}
                       style={{ fontSize: 12, color: '#818cf8', textDecoration: 'underline', cursor: 'pointer' }}>
                       retry
                     </button>
@@ -667,11 +679,20 @@ function VideosInner() {
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <Button variant="primary" size="md" onClick={() => setStage('upload')} className="flex items-center gap-2">
                   Continue to upload <ChevronRight className="w-4 h-4" />
                 </Button>
-                {!writeOwn && (
+                {!hasIdea && !isGenerating && (
+                  <Button
+                    variant="ghost" size="md"
+                    onClick={generateFromTemplate}
+                    className="flex items-center gap-1.5"
+                    style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', color: '#a5b4fc' }}>
+                    <Sparkles className="w-3.5 h-3.5" />Generate with AI
+                  </Button>
+                )}
+                {!writeOwn && !isGenerating && (
                   <button onClick={() => setWriteOwn(true)} className="flex items-center gap-1 transition-colors" style={{ fontSize: 13, color: '#52525B' }}
                     onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA'}
                     onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#52525B'}>

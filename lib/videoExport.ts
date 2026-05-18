@@ -122,19 +122,30 @@ function pickMimeType(): string {
   return 'video/webm'
 }
 
-/* Film grain — adds luminance noise per-frame */
+/* Film grain — uses a fixed low-res off-screen canvas blended with 'overlay'.
+   This avoids getImageData/putImageData on the main canvas (extremely slow at 4K)
+   by working on a 320×180 texture regardless of output resolution. */
 function drawGrain(ctx: CanvasRenderingContext2D, w: number, h: number, amount: number) {
   if (amount <= 0) return
-  const intensity = (amount / 100) * 40
-  const imgData = ctx.getImageData(0, 0, w, h)
+  const GW = 320, GH = 180
+  const intensity = (amount / 100) * 80
+  const gc = document.createElement('canvas')
+  gc.width = GW; gc.height = GH
+  const gctx = gc.getContext('2d', { willReadFrequently: true })!
+  const imgData = gctx.createImageData(GW, GH)
   const data = imgData.data
   for (let i = 0; i < data.length; i += 4) {
-    const n = (Math.random() - 0.5) * intensity
-    data[i]   = Math.max(0, Math.min(255, data[i]   + n))
-    data[i+1] = Math.max(0, Math.min(255, data[i+1] + n))
-    data[i+2] = Math.max(0, Math.min(255, data[i+2] + n))
+    const n = Math.abs(Math.floor((Math.random() - 0.5) * intensity))
+    data[i] = data[i+1] = data[i+2] = 128
+    data[i+3] = Math.min(255, n * 3)
   }
-  ctx.putImageData(imgData, 0, 0)
+  gctx.putImageData(imgData, 0, 0)
+  ctx.save()
+  ctx.globalCompositeOperation = 'overlay'
+  ctx.globalAlpha = 0.38
+  ctx.imageSmoothingEnabled = false
+  ctx.drawImage(gc, 0, 0, w, h)
+  ctx.restore()
 }
 
 /* Resolve caption Y position */
@@ -367,9 +378,17 @@ async function renderTransition(
   }
 }
 
+const FPS_MAP: Record<ExportQuality, number> = {
+  '720p':  30,
+  '1080p': 30,
+  '1440p': 24,
+  '4K':    20,
+}
+
 export async function exportVideo(opts: ExportOptions): Promise<Blob> {
   const { w, h } = getCanvasSize(opts.quality, opts.aspect ?? '16:9')
-  const FPS = 30, FRAME_MS = 1000 / FPS
+  const FPS = FPS_MAP[opts.quality]
+  const FRAME_MS = 1000 / FPS
   const report = opts.onProgress ?? (() => {})
 
   report(0, 'Fetching clips…')
@@ -386,7 +405,7 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
 
   const canvas = document.createElement('canvas')
   canvas.width = w; canvas.height = h
-  const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: (opts.grain ?? 0) > 0 })!
+  const ctx = canvas.getContext('2d', { alpha: false })!
 
   const audioCtx = new AudioContext({ sampleRate: 48000 })
   const dest = audioCtx.createMediaStreamDestination()
