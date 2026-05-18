@@ -442,15 +442,13 @@ function VideosInner() {
     streamingRef.current = true; setIsGenerating(true); setGenerationDone(false); setScriptText(''); setScriptGenError(false); setScriptGenMsg('')
     try {
       const res = await fetch('/api/video/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idea, format }) })
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
         setScriptGenMsg(data.error ?? `API error ${res.status}`)
         setScriptGenError(true); return
       }
-      if (!res.body) { setScriptGenError(true); return }
-      const reader = res.body.getReader(); const dec = new TextDecoder(); let text = ''
-      while (true) { const { done, value } = await reader.read(); if (done) break; text += dec.decode(value, { stream: true }); setScriptText(text) }
-      setGenerationDone(true)
+      if (data.script) { setScriptText(data.script); setGenerationDone(true) }
+      else { setScriptGenMsg('Empty response from AI'); setScriptGenError(true) }
     } catch (err) {
       setScriptGenMsg(err instanceof Error ? err.message : 'Network error')
       setScriptGenError(true)
