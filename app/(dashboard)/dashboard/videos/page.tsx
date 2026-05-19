@@ -23,9 +23,10 @@ type Stage     = 'script' | 'upload' | 'uploading' | 'done' | 'error'
 type StudioTab = 'grade' | 'captions' | 'music' | 'text' | 'clips' | 'transition'
 type GradeKey  = 'original' | 'teal_orange' | 'moody' | 'bleach' | 'golden' | 'noir' | 'fuji' | 'vintage' | 'arctic' | 'kodak' | 'custom'
 
-interface VideoRecord { id: string; name: string; script: string; originalUrl: string; enhancedUrl: string; createdAt: number }
-interface Caption     { text: string; start: number; end: number }
-interface Clip        { id: string; name: string; url: string; trimStart: number; trimEnd: number; duration: number }
+interface VideoRecord  { id: string; name: string; script: string; originalUrl: string; enhancedUrl: string; createdAt: number }
+interface Caption      { text: string; start: number; end: number }
+interface Clip         { id: string; name: string; url: string; trimStart: number; trimEnd: number; duration: number }
+interface PexelsResult { id: number; thumbnail: string; url: string; width: number; height: number; duration: number; photographer: string }
 interface CustomColor { exposure: number; contrast: number; saturation: number; temperature: number; highlights: number; shadows: number; tint: number }
 
 const DEFAULT_CUSTOM: CustomColor = { exposure: 0, contrast: 0, saturation: 0, temperature: 0, highlights: 0, shadows: 0, tint: 0 }
@@ -284,6 +285,12 @@ function VideosInner() {
   const [transitionDuration, setTransitionDuration] = useState(0.6)
   const [tabVisible, setTabVisible]           = useState(true)
 
+  // B-roll search
+  const [pexelsQuery, setPexelsQuery]               = useState('')
+  const [pexelsResults, setPexelsResults]           = useState<PexelsResult[]>([])
+  const [pexelsSearching, setPexelsSearching]       = useState(false)
+  const [pexelsTotal, setPexelsTotal]               = useState(0)
+
   // AI Tools
   const [hashtagsOpen, setHashtagsOpen]             = useState(false)
   const [hashtags, setHashtags]                     = useState<string[]>([])
@@ -506,6 +513,26 @@ function VideosInner() {
     finally { setGeneratingSocial(false) }
   }, [scriptText, generatingSocial])
 
+  const searchPexels = useCallback(async (q: string) => {
+    if (!q.trim() || pexelsSearching) return
+    setPexelsSearching(true); setPexelsResults([])
+    try {
+      const res = await fetch(`/api/pexels/search?q=${encodeURIComponent(q)}&orientation=portrait&per_page=12`)
+      const data = await res.json()
+      setPexelsResults(data.videos ?? [])
+      setPexelsTotal(data.total ?? 0)
+    } catch {}
+    finally { setPexelsSearching(false) }
+  }, [pexelsSearching])
+
+  const useStockVideo = useCallback((video: PexelsResult) => {
+    const clip: Clip = { id: `pexels-${video.id}`, name: `Stock: ${video.photographer}`, url: video.url, trimStart: 0, trimEnd: 100, duration: video.duration }
+    const record: VideoRecord = { id: clip.id, name: clip.name, script: scriptText, originalUrl: video.url, enhancedUrl: video.url, createdAt: Date.now() }
+    setClips([clip]); setActiveClipId(clip.id)
+    setVideos(prev => { const next = [record, ...prev]; saveVideos(next); return next })
+    setStage('done')
+  }, [scriptText, saveVideos])
+
   const [enhancementStatus, setEnhancementStatus] = useState<'idle' | 'enhancing' | 'done' | 'failed'>('idle')
 
   const runEnhancementInBackground = useCallback(async (blobUrl: string, recordId: string) => {
@@ -648,6 +675,7 @@ function VideosInner() {
     setDisplayedCaption(''); setCaptionOpacity(0); setExporting(false)
     setHashtagsOpen(false); setHashtags([]); setGeneratingHashtags(false)
     setSocialOpen(false); setSocialCaptions(null); setGeneratingSocial(false)
+    setPexelsQuery(''); setPexelsResults([]); setPexelsSearching(false); setPexelsTotal(0)
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
   }
 
@@ -879,6 +907,115 @@ function VideosInner() {
               <Button variant="primary" size="sm" onClick={e => { e.stopPropagation(); fileInputRef.current?.click() }}>
                 Browse files
               </Button>
+            </div>
+          )}
+
+          {/* ── B-ROLL SEARCH (shown in upload stage) ──── */}
+          {stage === 'upload' && (
+            <div className="flex flex-col gap-4">
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                <span style={{ fontSize: 12, color: '#3f3f46', whiteSpace: 'nowrap' }}>or search free stock footage</span>
+                <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+              </div>
+
+              {/* Search bar */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={pexelsQuery}
+                  onChange={e => setPexelsQuery(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') searchPexels(pexelsQuery) }}
+                  placeholder="coffee shop, yoga, restaurant kitchen…"
+                  className="flex-1 px-3 py-2.5 rounded-xl text-[13px]"
+                  style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.1)', color: '#E4E4E7', outline: 'none' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                  onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
+                />
+                <button
+                  onClick={() => searchPexels(pexelsQuery)}
+                  disabled={pexelsSearching || !pexelsQuery.trim()}
+                  className="px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150 flex-shrink-0"
+                  style={{ background: pexelsSearching || !pexelsQuery.trim() ? '#18181C' : 'rgba(99,102,241,0.15)', color: pexelsSearching || !pexelsQuery.trim() ? '#52525B' : '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.2)', cursor: pexelsSearching || !pexelsQuery.trim() ? 'not-allowed' : 'pointer' }}
+                >
+                  {pexelsSearching ? 'Searching…' : 'Search'}
+                </button>
+              </div>
+
+              {/* Quick tags */}
+              {pexelsResults.length === 0 && !pexelsSearching && (
+                <div className="flex gap-2 flex-wrap">
+                  {['barber shop', 'coffee shop', 'yoga', 'restaurant', 'gym', 'retail store', 'food prep', 'city street'].map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => { setPexelsQuery(tag); searchPexels(tag) }}
+                      className="px-2.5 py-1 rounded-lg text-[12px] transition-all duration-150"
+                      style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)', color: '#71717A', cursor: 'pointer' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#A1A1AA'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#71717A'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)' }}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Loading skeletons */}
+              {pexelsSearching && (
+                <div className="grid grid-cols-3 gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="rounded-xl animate-pulse" style={{ aspectRatio: '9/16', background: 'rgba(255,255,255,0.05)' }} />
+                  ))}
+                </div>
+              )}
+
+              {/* Results grid */}
+              {pexelsResults.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <p style={{ fontSize: 11, color: '#52525B' }}>
+                    {pexelsTotal.toLocaleString()} results — click to use
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {pexelsResults.map(video => (
+                      <button
+                        key={video.id}
+                        onClick={() => useStockVideo(video)}
+                        className="relative rounded-xl overflow-hidden group"
+                        style={{ aspectRatio: '9/16', cursor: 'pointer', background: '#18181C' }}
+                        title={`By ${video.photographer} · ${video.duration}s`}
+                      >
+                        <img
+                          src={video.thumbnail}
+                          alt={`Stock footage by ${video.photographer}`}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                        {/* Hover overlay */}
+                        <div
+                          className="absolute inset-0 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                          style={{ background: 'rgba(10,10,11,0.75)', backdropFilter: 'blur(4px)' }}
+                        >
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.9)' }}>
+                            <Plus className="w-4 h-4 text-white" />
+                          </div>
+                          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Use clip</span>
+                        </div>
+                        {/* Duration badge */}
+                        <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold"
+                          style={{ background: 'rgba(0,0,0,0.7)', color: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)' }}>
+                          {video.duration}s
+                        </div>
+                        {/* Pexels attribution */}
+                        <div className="absolute bottom-1.5 left-1.5 text-[8px]"
+                          style={{ color: 'rgba(255,255,255,0.4)' }}>
+                          Pexels
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

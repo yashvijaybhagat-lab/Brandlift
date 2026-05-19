@@ -35,6 +35,7 @@ const ROUTE_LIMITS: { pattern: RegExp; limit: number; windowMs: number }[] = [
   { pattern: /^\/api\/video\/transcribe/,limit: 5,   windowMs: 60 * 60_000 }, // Replicate $$
   { pattern: /^\/api\/video\/script/,    limit: 20,  windowMs: 60 * 60_000 }, // Gemini quota
   { pattern: /^\/api\/ideas\/generate/,  limit: 20,  windowMs: 60 * 60_000 }, // Gemini quota
+  { pattern: /^\/api\/pexels\//,          limit: 60,  windowMs: 60 * 60_000 }, // Pexels searches
   { pattern: /^\/api\/chat/,             limit: 30,  windowMs: 60_000       }, // streaming abuse
   { pattern: /^\/api\//,                 limit: 120, windowMs: 60_000       }, // global fallback
 ]
