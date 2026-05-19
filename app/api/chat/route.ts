@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { geminiStream } from '@/lib/gemini'
+import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
 interface Message { role: 'user' | 'assistant'; content: string }
 
 export async function POST(req: NextRequest) {
+  const ip = getIp(req)
+  const rl = rateLimit(`chat:${ip}`, 30, 60_000)  // 30/min — streaming abuse prevention
+  if (!rl.success) return tooManyRequests(rl.reset)
   let body: { message: string; context?: string; history?: Message[] }
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })

@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { geminiGenerate } from '@/lib/gemini'
+import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30
 
 export async function POST(req: NextRequest) {
+  const ip = getIp(req)
+  const rl = rateLimit(`script:${ip}`, 15, 60 * 60_000)  // 15/hour
+  if (!rl.success) return tooManyRequests(rl.reset)
+
   try {
     const { idea, format } = await req.json() as { idea: string; format?: string }
 

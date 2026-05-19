@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
+  const ip = getIp(req)
+  const rl = rateLimit(`enhance:${ip}`, 10, 60 * 60_000)  // 10/hour — Replicate costs money
+  if (!rl.success) return tooManyRequests(rl.reset)
+
   const token = process.env.REPLICATE_API_TOKEN
   if (!token || token === 'your_replicate_token') {
     return NextResponse.json({ error: 'REPLICATE_API_TOKEN not configured' }, { status: 503 })

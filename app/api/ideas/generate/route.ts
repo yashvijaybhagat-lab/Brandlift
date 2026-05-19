@@ -1,12 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { list } from '@vercel/blob'
 import { geminiGenerate } from '@/lib/gemini'
+import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const ip = getIp(req)
+  const rl = rateLimit(`ideas:${ip}`, 20, 60 * 60_000)  // 20/hour — Gemini quota
+  if (!rl.success) return tooManyRequests(rl.reset)
   // Load business profile for this user
   let profileContext = 'A small local business looking to grow on social media.'
   try {

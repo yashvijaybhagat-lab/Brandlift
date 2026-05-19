@@ -194,7 +194,10 @@ function drawFrame(
   ctx.globalAlpha = overlayAlpha
 
   // Video frame — center-crop to fill canvas, high-quality interpolation
-  ctx.filter = (opts.colorFilter && opts.colorFilter !== 'none') ? opts.colorFilter : 'none'
+  // Clarity boost: bake in contrast + saturation lift for perceived sharpness
+  const clarityBoost = 'contrast(1.06) saturate(1.04)'
+  const baseFilter   = (opts.colorFilter && opts.colorFilter !== 'none') ? opts.colorFilter : 'none'
+  ctx.filter = baseFilter !== 'none' ? `${baseFilter} ${clarityBoost}` : clarityBoost
   drawVideoFit(ctx, video, w, h)
   ctx.filter = 'none'
 

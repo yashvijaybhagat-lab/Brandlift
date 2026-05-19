@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -6,6 +7,10 @@ export const maxDuration = 60
 const WHISPER_VERSION = '4d50797290df275329f202e48c76360b3f22b08d28c196cbc54600319435f8d2'
 
 export async function POST(request: NextRequest) {
+  const ip = getIp(request)
+  const rl = rateLimit(`transcribe:${ip}`, 5, 60 * 60_000)  // 5/hour — Replicate costs money
+  if (!rl.success) return tooManyRequests(rl.reset)
+
   const { videoUrl } = await request.json()
   if (!videoUrl) return NextResponse.json({ error: 'videoUrl required' }, { status: 400 })
   if (!process.env.REPLICATE_API_TOKEN) return NextResponse.json({ error: 'Replicate not configured' }, { status: 503 })

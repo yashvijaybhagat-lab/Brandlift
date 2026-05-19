@@ -9,13 +9,14 @@ import { Button } from '@/components/ui/Button'
 import {
   Upload, Video, CheckCircle2, AlertCircle, Sparkles, X,
   ChevronRight, PenLine, Music, Type, Palette, MessageSquare,
-  Layers, GitMerge, Plus, Trash2, ChevronUp, ChevronDown, Film,
+  Layers, GitMerge, Plus, Trash2, ChevronUp, ChevronDown, Film, Lock,
 } from 'lucide-react'
 import {
   exportVideo, downloadBlob,
   type TransitionType, type ExportQuality, type ExportAspect,
   type CaptionStyle, type CaptionPos,
 } from '@/lib/videoExport'
+import { useBetaAccess } from '@/lib/betaAccess'
 
 /* ─── Types ──────────────────────────────────────────── */
 type Stage     = 'script' | 'upload' | 'uploading' | 'done' | 'error'
@@ -437,6 +438,11 @@ function VideosInner() {
 
   const [scriptGenMsg, setScriptGenMsg] = useState('')
 
+  // Beta access
+  const beta = useBetaAccess()
+  const [showBetaPanel, setShowBetaPanel] = useState(false)
+  const [betaCodeInput, setBetaCodeInput] = useState('')
+
   const runScriptGen = useCallback(async (idea: string, format: string) => {
     if (streamingRef.current) return
     streamingRef.current = true; setIsGenerating(true); setGenerationDone(false); setScriptText(''); setScriptGenError(false); setScriptGenMsg('')
@@ -444,7 +450,9 @@ function VideosInner() {
       const res = await fetch('/api/video/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idea, format }) })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setScriptGenMsg(data.error ?? `API error ${res.status}`)
+        // data.error may be an object — always coerce to string
+        const msg = typeof data.error === 'string' ? data.error : (data.error?.message ?? `API error ${res.status}`)
+        setScriptGenMsg(msg)
         setScriptGenError(true); return
       }
       if (data.script) { setScriptText(data.script); setGenerationDone(true) }
@@ -518,7 +526,7 @@ function VideosInner() {
     setClips([clip]); setActiveClipId(clip.id)
     setVideos(prev => { const next = [record, ...prev]; saveVideos(next); return next })
     setStage('done')
-    runEnhancementInBackground(clip.url, clip.id)
+    if (beta.has('enhancement')) runEnhancementInBackground(clip.url, clip.id)
   }, [uploadClip, scriptText, saveVideos, runEnhancementInBackground])
 
   const addClip = useCallback(async (file: File) => {
@@ -605,7 +613,7 @@ function VideosInner() {
     setSelectedMusic('none'); setCaptions([]); setCaptionsEnabled(false); setCurrentCaption('')
     setCaptionStyle('bold'); setCaptionPos('bottom'); setCaptionSize(1.0)
     setEditingCaption(null); setShowAddCaption(false); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('')
-    setExportAspect('16:9'); setEnhancementStatus('idle')
+    setExportAspect('16:9'); setEnhancementStatus('idle'); setShowBetaPanel(false); setBetaCodeInput('')
     setTransition('fade'); setActiveTab('grade'); setTranscribing(false); setTranscribeError('')
     setDisplayedCaption(''); setCaptionOpacity(0); setExporting(false)
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
@@ -796,6 +804,24 @@ function VideosInner() {
                       ✦ Enhanced
                     </span>
                   )}
+                  {enhancementStatus === 'failed' && (
+                    <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]" style={{ background: 'rgba(239,68,68,0.08)', border: '0.5px solid rgba(239,68,68,0.2)', color: '#f87171' }}
+                      title="Enhancement failed — check REPLICATE_API_TOKEN">
+                      Enhancement unavailable
+                    </span>
+                  )}
+                  {!beta.has('enhancement') && enhancementStatus === 'idle' && (
+                    <button onClick={() => setShowBetaPanel(true)}
+                      className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] transition-colors"
+                      style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.25)', color: '#8b5cf6' }}>
+                      <Lock className="w-2.5 h-2.5" />AI Enhancement
+                    </button>
+                  )}
+                  {beta.unlocked && (
+                    <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest" style={{ background: 'rgba(99,102,241,0.12)', border: '0.5px solid rgba(99,102,241,0.3)', color: '#6366f1', letterSpacing: '0.1em' }}>
+                      BETA
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {addingClip ? (
@@ -894,21 +920,21 @@ function VideosInner() {
               <div className="rounded-2xl overflow-hidden" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
 
                 {/* Tab bar */}
-                <div className="flex overflow-x-auto" style={{ borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+                <div className="flex overflow-x-auto" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   {([
                     { id: 'grade'      as StudioTab, label: 'Color', Icon: Palette },
                     { id: 'captions'   as StudioTab, label: 'Captions', Icon: Type },
                     { id: 'music'      as StudioTab, label: 'Music', Icon: Music },
                     { id: 'text'       as StudioTab, label: 'Text', Icon: MessageSquare },
                     { id: 'clips'      as StudioTab, label: 'Clips', Icon: Layers },
-                    { id: 'transition' as StudioTab, label: 'Transitions', Icon: GitMerge },
+                    { id: 'transition' as StudioTab, label: 'Cuts', Icon: GitMerge },
                   ] as const).map(({ id, label, Icon }) => (
                     <button key={id} onClick={() => switchTab(id)}
-                      className="flex-shrink-0 flex items-center gap-1.5 px-4 py-3 text-[12px] font-medium transition-colors duration-150 relative whitespace-nowrap"
-                      style={{ color: activeTab === id ? '#FAFAFA' : '#52525B', background: 'transparent', minWidth: 0 }}>
-                      <Icon className="w-3.5 h-3.5 flex-shrink-0" />{label}
+                      className="flex-shrink-0 flex items-center gap-1.5 px-4 py-3 text-[11px] font-semibold tracking-wide uppercase transition-all duration-150 relative whitespace-nowrap"
+                      style={{ color: activeTab === id ? '#FAFAFA' : '#3f3f46', background: 'transparent', letterSpacing: '0.05em' }}>
+                      <Icon className="w-3 h-3 flex-shrink-0" />{label}
                       {activeTab === id && (
-                        <span className="absolute bottom-0 left-0 right-0 h-px" style={{ background: '#6366f1', boxShadow: '0 0 6px rgba(99,102,241,0.6)' }} />
+                        <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6)', boxShadow: '0 0 8px rgba(99,102,241,0.7)' }} />
                       )}
                     </button>
                   ))}
@@ -920,73 +946,88 @@ function VideosInner() {
                   {/* ── COLOR GRADE ─────────────────────── */}
                   {activeTab === 'grade' && (
                     <div className="flex flex-col gap-5">
-                      <div>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Color Grade</p>
-                        <p style={{ fontSize: 12, color: '#52525B', marginTop: 2 }}>Cinematic film looks — applied live and baked into export</p>
+
+                      {/* Active grade label */}
+                      <div className="flex items-baseline justify-between">
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.02em' }}>
+                          {GRADE_META.find(g => g.key === colorGrade)?.label ?? 'Color Grade'}
+                        </p>
+                        <p style={{ fontSize: 11, color: '#3f3f46', fontFamily: 'monospace' }}>
+                          {GRADE_META.find(g => g.key === colorGrade)?.desc ?? ''}
+                        </p>
                       </div>
 
-                      {/* Film strip swatches */}
-                      <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1">
-                        {GRADE_META.map(({ key, label, swatch, desc }) => (
+                      {/* Film strip swatches — cinematic 2:1 aspect */}
+                      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
+                        {GRADE_META.map(({ key, label, swatch }) => (
                           <button key={key} onClick={() => setColorGrade(key)}
-                            className="flex-shrink-0 flex flex-col gap-1.5 transition-all duration-150"
-                            style={{ width: 76 }}>
-                            <div className="w-full rounded-xl overflow-hidden transition-all duration-200"
+                            className="flex-shrink-0 flex flex-col gap-2 transition-all duration-200"
+                            style={{ width: 82 }}>
+                            {/* Swatch — 2:1 cinematic ratio */}
+                            <div className="w-full relative overflow-hidden transition-all duration-200"
                               style={{
-                                height: 50,
+                                height: 46,
+                                borderRadius: 8,
                                 background: swatch,
-                                outline: colorGrade === key ? '2px solid #6366f1' : '1.5px solid rgba(255,255,255,0.06)',
+                                outline: colorGrade === key ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.08)',
                                 outlineOffset: colorGrade === key ? 2 : 0,
-                                boxShadow: colorGrade === key ? '0 0 14px rgba(99,102,241,0.35)' : 'none',
+                                boxShadow: colorGrade === key ? '0 0 16px rgba(99,102,241,0.4), 0 2px 8px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.3)',
                               }}>
+                              {/* Letterbox bars — cinematic look */}
+                              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5, background: 'rgba(0,0,0,0.55)' }} />
+                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 5, background: 'rgba(0,0,0,0.55)' }} />
                               {colorGrade === key && (
-                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <div style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', borderRadius: 999, padding: '1px 6px', fontSize: 8, fontWeight: 800, color: '#a5b4fc', letterSpacing: '0.08em' }}>
-                                    ON
-                                  </div>
+                                <div style={{ position: 'absolute', top: 6, right: 5, width: 12, height: 12, borderRadius: '50%', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <span style={{ fontSize: 7, color: '#fff', fontWeight: 900 }}>✓</span>
                                 </div>
                               )}
                             </div>
-                            <div style={{ textAlign: 'center' }}>
-                              <p style={{ fontSize: 10.5, fontWeight: 600, color: colorGrade === key ? '#a5b4fc' : '#71717A' }}>{label}</p>
-                              <p style={{ fontSize: 9.5, color: '#3f3f46', marginTop: 1 }}>{desc}</p>
-                            </div>
+                            <p style={{ fontSize: 10, fontWeight: colorGrade === key ? 700 : 500, color: colorGrade === key ? '#a5b4fc' : '#52525B', textAlign: 'center', letterSpacing: '0.02em' }}>{label}</p>
                           </button>
                         ))}
                       </div>
 
-                      {/* Film grain */}
+                      {/* Film grain — with presets */}
                       <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.05)' }}>
                         <div className="flex items-center justify-between">
-                          <span style={{ fontSize: 13, fontWeight: 500, color: '#A1A1AA' }}>Film Grain</span>
-                          <span style={{ fontSize: 11, fontFamily: 'monospace', color: grain > 0 ? '#818cf8' : '#3f3f46' }}>{grain}%</span>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA', letterSpacing: '0.02em' }}>Film Grain</span>
+                          <div className="flex items-center gap-2">
+                            {[{ label: 'None', v: 0 }, { label: 'Light', v: 22 }, { label: 'Medium', v: 48 }, { label: 'Heavy', v: 80 }].map(p => (
+                              <button key={p.label} onClick={() => setGrain(p.v)}
+                                className="px-2 py-0.5 rounded text-[10px] font-semibold transition-all duration-150"
+                                style={{
+                                  background: grain === p.v ? 'rgba(99,102,241,0.15)' : 'transparent',
+                                  color: grain === p.v ? '#818cf8' : '#3f3f46',
+                                  border: grain === p.v ? '0.5px solid rgba(99,102,241,0.3)' : '0.5px solid transparent',
+                                }}>
+                                {p.label}
+                              </button>
+                            ))}
+                            <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#6366f1', minWidth: 28, textAlign: 'right' }}>{grain}</span>
+                          </div>
                         </div>
                         <input type="range" min={0} max={100} value={grain}
                           onChange={e => setGrain(Number(e.target.value))}
-                          className="w-full" style={{ accentColor: '#6366f1', cursor: 'pointer' }} />
-                        <div className="flex justify-between">
-                          <span style={{ fontSize: 10, color: '#3f3f46' }}>Clean</span>
-                          <span style={{ fontSize: 10, color: '#3f3f46' }}>Heavy grain</span>
-                        </div>
+                          className="w-full" style={{ accentColor: '#6366f1', cursor: 'pointer', height: 3 }} />
                       </div>
 
                       {/* Custom controls */}
                       {colorGrade === 'custom' && (
                         <div className="flex flex-col gap-4 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(99,102,241,0.15)' }}>
                           <div className="flex items-center justify-between">
-                            <p style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Tone</p>
-                            <button onClick={() => setCustomColor(DEFAULT_CUSTOM)} style={{ fontSize: 11, color: '#52525B', cursor: 'pointer' }}
+                            <p style={{ fontSize: 10, fontWeight: 700, color: '#6366f1', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Tone</p>
+                            <button onClick={() => setCustomColor(DEFAULT_CUSTOM)} style={{ fontSize: 10, fontWeight: 600, color: '#3f3f46', cursor: 'pointer', letterSpacing: '0.04em' }}
                               onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA'}
-                              onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#52525B'}>
-                              Reset
+                              onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#3f3f46'}>
+                              RESET
                             </button>
                           </div>
                           <RangeSlider label="Exposure"   value={customColor.exposure}   min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, exposure: v }))} />
                           <RangeSlider label="Contrast"   value={customColor.contrast}   min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, contrast: v }))} />
                           <RangeSlider label="Highlights" value={customColor.highlights} min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, highlights: v }))} />
                           <RangeSlider label="Shadows"    value={customColor.shadows}    min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, shadows: v }))} />
-                          <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
-                          <p style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Color</p>
+                          <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '2px 0' }} />
+                          <p style={{ fontSize: 10, fontWeight: 700, color: '#6366f1', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Color</p>
                           <RangeSlider label="Saturation"  value={customColor.saturation}  min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, saturation: v }))} />
                           <RangeSlider label="Temperature" value={customColor.temperature} min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, temperature: v }))} />
                           <RangeSlider label="Tint"        value={customColor.tint}        min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, tint: v }))} />
@@ -1187,42 +1228,56 @@ function VideosInner() {
                   {/* ── MUSIC ───────────────────────────── */}
                   {activeTab === 'music' && (
                     <div className="flex flex-col gap-4">
-                      <div>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Background Music</p>
-                        <p style={{ fontSize: 12, color: '#52525B', marginTop: 2 }}>Royalty-free — mixed in at 40% volume on export</p>
+                      <div className="flex items-baseline justify-between">
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.02em' }}>Background Music</p>
+                        <p style={{ fontSize: 10, fontFamily: 'monospace', color: '#3f3f46', letterSpacing: '0.04em' }}>40% MIX · ROYALTY-FREE</p>
                       </div>
-                      <div className="flex flex-col">
-                        {MUSIC_MOODS.map((m, i) => (
-                          <button key={m.id} onClick={() => playMusic(m.id)}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150"
-                            style={{
-                              background: selectedMusic === m.id ? 'rgba(99,102,241,0.08)' : 'transparent',
-                              border: selectedMusic === m.id ? '0.5px solid rgba(99,102,241,0.25)' : '0.5px solid transparent',
-                              marginBottom: i < MUSIC_MOODS.length - 1 ? 1 : 0,
-                            }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 8, background: selectedMusic === m.id ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              {selectedMusic === m.id && m.id !== 'none' ? (
-                                <span className="relative flex w-2 h-2">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ADE80] opacity-75" />
-                                  <span className="relative inline-flex rounded-full w-2 h-2 bg-[#4ADE80]" />
-                                </span>
-                              ) : (
-                                <Music style={{ width: 14, height: 14, color: m.id === 'none' ? '#3f3f46' : '#52525B' }} />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p style={{ fontSize: 13, fontWeight: 600, color: selectedMusic === m.id ? '#FAFAFA' : '#A1A1AA' }}>{m.label}</p>
-                              {m.desc && <p style={{ fontSize: 11, color: '#52525B' }}>{m.desc}</p>}
-                            </div>
-                            {m.genre && (
-                              <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <span style={{ fontSize: 10, fontWeight: 600, color: '#52525B', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 4, padding: '1px 5px' }}>{m.genre}</span>
-                                {m.bpm && <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#3f3f46' }}>{m.bpm}</span>}
+                      <div className="flex flex-col gap-0.5">
+                        {MUSIC_MOODS.map(m => {
+                          const isPlaying = selectedMusic === m.id && m.id !== 'none'
+                          return (
+                            <button key={m.id} onClick={() => playMusic(m.id)}
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150"
+                              style={{
+                                background: selectedMusic === m.id ? 'rgba(99,102,241,0.07)' : 'transparent',
+                                borderLeft: selectedMusic === m.id ? '2px solid #6366f1' : '2px solid transparent',
+                              }}>
+                              {/* Waveform bars / icon */}
+                              <div style={{ width: 26, height: 18, display: 'flex', alignItems: 'flex-end', gap: 2, flexShrink: 0 }}>
+                                {isPlaying ? (
+                                  [0.4, 1, 0.6, 0.85, 0.5].map((h, i) => (
+                                    <div key={i} style={{
+                                      flex: 1,
+                                      borderRadius: 1,
+                                      background: '#4ADE80',
+                                      height: `${h * 100}%`,
+                                      animation: `musicBar ${0.6 + i * 0.13}s ease-in-out infinite alternate`,
+                                      transformOrigin: 'bottom',
+                                    }} />
+                                  ))
+                                ) : (
+                                  [0.25, 0.55, 0.35, 0.65, 0.3].map((h, i) => (
+                                    <div key={i} style={{ flex: 1, borderRadius: 1, background: m.id === 'none' ? '#1f1f23' : '#27272a', height: `${h * 100}%` }} />
+                                  ))
+                                )}
                               </div>
-                            )}
-                          </button>
-                        ))}
+                              <div className="flex-1 min-w-0">
+                                <p style={{ fontSize: 13, fontWeight: 600, color: selectedMusic === m.id ? '#FAFAFA' : '#71717A' }}>{m.label}</p>
+                                {m.desc && <p style={{ fontSize: 10, color: '#3f3f46', marginTop: 1 }}>{m.desc}</p>}
+                              </div>
+                              {m.bpm && (
+                                <span style={{ fontSize: 10, fontFamily: 'monospace', color: selectedMusic === m.id ? '#52525B' : '#27272a', flexShrink: 0 }}>{m.bpm}bpm</span>
+                              )}
+                            </button>
+                          )
+                        })}
                       </div>
+                      <style>{`
+                        @keyframes musicBar {
+                          from { transform: scaleY(0.3); }
+                          to   { transform: scaleY(1); }
+                        }
+                      `}</style>
                     </div>
                   )}
 
@@ -1384,53 +1439,155 @@ function VideosInner() {
                 </div>
               </div>
 
-              {/* Export row */}
-              <div className="flex flex-col gap-3 p-5 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+              {/* Export panel */}
+              <div className="flex flex-col gap-4 p-5 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
                 {exporting ? (
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA' }}>Rendering {exportQuality}…</p>
+                      <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#6366f1' }}>{Math.round(exportProgress)}%</span>
+                    </div>
                     <ProgressBar value={exportProgress} label={exportLabel || 'Rendering…'} />
-                    <p style={{ fontSize: 12, color: '#52525B', textAlign: 'center' }}>
-                      Rendering {exportQuality} — all effects applied. Don&apos;t close this tab.
+                    <p style={{ fontSize: 11, color: '#3f3f46', textAlign: 'center', letterSpacing: '0.02em' }}>
+                      All effects baked in — don&apos;t close this tab
                     </p>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 flex-wrap">
+                  <>
+                    {/* Quality + Platform selectors */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1.5">
+                        <p style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Quality</p>
+                        <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+                          {([
+                            { q: '720p'  as ExportQuality, short: '720',  beta: false },
+                            { q: '1080p' as ExportQuality, short: '1080', beta: false },
+                            { q: '1440p' as ExportQuality, short: '2K',   beta: true  },
+                            { q: '4K'    as ExportQuality, short: '4K',   beta: true  },
+                          ]).map(({ q, short, beta: needsBeta }, i) => {
+                            const locked = needsBeta && !beta.unlocked
+                            return (
+                              <button key={q}
+                                onClick={() => {
+                                  if (locked) { setShowBetaPanel(true); return }
+                                  setExportQuality(q)
+                                }}
+                                className="flex-1 py-2 text-[11px] font-bold transition-all duration-150 flex items-center justify-center gap-1 relative"
+                                title={locked ? 'Beta access required' : q}
+                                style={{
+                                  background: exportQuality === q && !locked ? '#6366f1' : 'transparent',
+                                  color: locked ? '#27272a' : exportQuality === q ? '#fff' : '#3f3f46',
+                                  borderRight: i < 3 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                                }}>
+                                {locked && <Lock className="w-2.5 h-2.5" style={{ color: '#27272a' }} />}
+                                {short}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <p style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Platform</p>
+                        <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+                          {PLATFORM_OPTIONS.map((p, i) => (
+                            <button key={p.id} onClick={() => setExportAspect(p.id)}
+                              className="flex-1 py-2 text-[11px] font-bold transition-all duration-150"
+                              title={p.desc}
+                              style={{
+                                background: exportAspect === p.id ? '#6366f1' : 'transparent',
+                                color: exportAspect === p.id ? '#fff' : '#3f3f46',
+                                borderRight: i < PLATFORM_OPTIONS.length - 1 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                              }}>
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Beta unlock panel */}
+                    {showBetaPanel && !beta.unlocked && (
+                      <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Lock className="w-3.5 h-3.5" style={{ color: '#8b5cf6' }} />
+                            <p style={{ fontSize: 13, fontWeight: 600, color: '#c4b5fd' }}>Beta Access</p>
+                          </div>
+                          <button onClick={() => { setShowBetaPanel(false); setBetaCodeInput('') }} style={{ color: '#52525B' }}>
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p style={{ fontSize: 12, color: '#71717A', lineHeight: 1.5 }}>
+                          Enter your beta code to unlock 2K, 4K export and AI video enhancement.
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            value={betaCodeInput}
+                            onChange={e => setBetaCodeInput(e.target.value.toUpperCase())}
+                            onKeyDown={async e => { if (e.key === 'Enter') await beta.unlock(betaCodeInput) }}
+                            placeholder="ENTER CODE"
+                            className="flex-1 px-3 py-2 rounded-lg text-[13px] font-mono uppercase outline-none tracking-widest"
+                            style={{ background: '#18181C', border: '0.5px solid rgba(139,92,246,0.3)', color: '#c4b5fd', letterSpacing: '0.15em' }}
+                            onFocus={e => { e.currentTarget.style.borderColor = 'rgba(139,92,246,0.6)' }}
+                            onBlur={e => { e.currentTarget.style.borderColor = 'rgba(139,92,246,0.3)' }}
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => beta.unlock(betaCodeInput)}
+                            disabled={beta.loading || !betaCodeInput.trim()}
+                            className="px-4 py-2 rounded-lg text-[12px] font-semibold transition-all duration-150 disabled:opacity-40"
+                            style={{ background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.4)', color: '#c4b5fd' }}>
+                            {beta.loading ? '…' : 'Unlock'}
+                          </button>
+                        </div>
+                        {beta.error && (
+                          <p style={{ fontSize: 11, color: '#f87171' }}>{beta.error}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Success state after unlock */}
+                    {beta.unlocked && showBetaPanel && (
+                      <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: 'rgba(74,222,128,0.06)', border: '0.5px solid rgba(74,222,128,0.2)' }}>
+                        <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />
+                        <p style={{ fontSize: 12, color: '#4ADE80' }}>Beta access active — 2K, 4K, and AI Enhancement unlocked</p>
+                        <button onClick={() => setShowBetaPanel(false)} className="ml-auto flex-shrink-0" style={{ color: '#52525B' }}>
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Export CTA */}
                     <button onClick={handleExport}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-semibold text-white transition-all duration-150"
-                      style={{ background: 'linear-gradient(135deg,#6366f1 0%,#5558e8 100%)', boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.2)' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.5), 0 12px 32px rgba(99,102,241,0.3)' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.2)' }}>
+                      className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all duration-200"
+                      style={{ background: 'linear-gradient(135deg,#6366f1 0%,#7c3aed 100%)', boxShadow: '0 0 0 1px rgba(99,102,241,0.5), 0 8px 32px rgba(99,102,241,0.25)', letterSpacing: '-0.01em' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.6), 0 16px 40px rgba(99,102,241,0.35)' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.5), 0 8px 32px rgba(99,102,241,0.25)' }}>
                       <Sparkles className="w-4 h-4" />
-                      Export {clips.length > 1 ? `${clips.length} clips →` : 'video →'}
+                      Export {exportQuality} · {exportAspect}{clips.length > 1 ? ` · ${clips.length} clips` : ''}
                     </button>
 
-                    {/* Platform / aspect */}
-                    <div className="flex items-center gap-1 rounded-lg overflow-hidden" style={{ border: '0.5px solid rgba(255,255,255,0.08)' }}>
-                      {PLATFORM_OPTIONS.map(p => (
-                        <button key={p.id} onClick={() => setExportAspect(p.id)}
-                          className="px-3 py-2 text-[12px] font-medium transition-colors duration-150"
-                          title={p.desc}
-                          style={{ background: exportAspect === p.id ? 'rgba(99,102,241,0.12)' : '#18181C', color: exportAspect === p.id ? '#a5b4fc' : '#52525B' }}>
-                          {p.label}
+                    <div className="flex items-center justify-between">
+                      <p style={{ fontSize: 10, color: '#27272a', letterSpacing: '0.04em' }}>
+                        {exportQuality === '4K' ? '3840×2160 · 80Mbps' : exportQuality === '1440p' ? '2560×1440 · 50Mbps' : exportQuality === '1080p' ? '1920×1080 · 25Mbps' : '1280×720 · 8Mbps'}
+                        {' '}· WebM
+                      </p>
+                      {!beta.unlocked && (
+                        <button onClick={() => setShowBetaPanel(p => !p)}
+                          className="flex items-center gap-1 text-[10px] font-semibold transition-colors"
+                          style={{ color: showBetaPanel ? '#8b5cf6' : '#3f3f46', letterSpacing: '0.06em' }}>
+                          <Lock className="w-2.5 h-2.5" />BETA ACCESS
                         </button>
-                      ))}
-                    </div>
-
-                    {/* Quality */}
-                    <div className="flex items-center gap-1 rounded-lg overflow-hidden" style={{ border: '0.5px solid rgba(255,255,255,0.08)' }}>
-                      {(['720p', '1080p', '1440p', '4K'] as ExportQuality[]).map(q => (
-                        <button key={q} onClick={() => setExportQuality(q)}
-                          className="px-3 py-2 text-[12px] font-medium transition-colors duration-150"
-                          style={{ background: exportQuality === q ? 'rgba(99,102,241,0.12)' : '#18181C', color: exportQuality === q ? '#a5b4fc' : '#52525B' }}>
-                          {q}
+                      )}
+                      {beta.unlocked && (
+                        <button onClick={beta.revoke} style={{ fontSize: 10, color: '#27272a', letterSpacing: '0.04em' }}
+                          onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#f87171'}
+                          onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#27272a'}>
+                          revoke
                         </button>
-                      ))}
+                      )}
                     </div>
-
-                    <p style={{ fontSize: 12, color: '#3f3f46' }}>
-                      {exportAspect === '9:16' ? 'TikTok / Reels vertical' : exportAspect === '1:1' ? 'Square for Instagram' : clips.length > 1 ? 'Merges all clips' : 'Effects baked in'}
-                    </p>
-                  </div>
+                  </>
                 )}
               </div>
 
