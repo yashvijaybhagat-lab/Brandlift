@@ -1,87 +1,92 @@
+/**
+ * Starts a Whisper transcription job on Replicate.
+ * Returns segments immediately if Replicate finishes within 25s (Prefer: wait),
+ * otherwise returns { id, status } so the client can poll /api/video/status/[id].
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
 
 const WHISPER_VERSION = '4d50797290df275329f202e48c76360b3f22b08d28c196cbc54600319435f8d2'
 
-export async function POST(request: NextRequest) {
-  const ip = getIp(request)
-  const rl = rateLimit(`transcribe:${ip}`, 5, 60 * 60_000)  // 5/hour — Replicate costs money
-  if (!rl.success) return tooManyRequests(rl.reset)
+interface WSegment { start: number; end: number; text: string }
+interface WOutput  { segments?: WSegment[]; transcription?: string; text?: string }
 
-  const { videoUrl } = await request.json()
-  if (!videoUrl) return NextResponse.json({ error: 'videoUrl required' }, { status: 400 })
-  if (!process.env.REPLICATE_API_TOKEN) return NextResponse.json({ error: 'Replicate not configured' }, { status: 503 })
-
-  try {
-    // Start Whisper prediction
-    const startRes = await fetch('https://api.replicate.com/v1/predictions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        version: WHISPER_VERSION,
-        input: { audio: videoUrl, model: 'base', word_timestamps: true, language: 'en' },
-      }),
-    })
-    if (!startRes.ok) throw new Error(`Replicate start failed: ${startRes.status}`)
-    const prediction = await startRes.json()
-    if (!prediction.id) throw new Error('No prediction ID')
-
-    // Poll until done (max 50s)
-    for (let i = 0; i < 25; i++) {
-      await new Promise(r => setTimeout(r, 2000))
-      const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-        headers: { 'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}` },
-      })
-      const data = await pollRes.json()
-      if (data.status === 'succeeded' && data.output) {
-        const segments = parseToSegments(data.output)
-        return NextResponse.json({ segments })
-      }
-      if (data.status === 'failed') throw new Error('Whisper transcription failed')
-    }
-    throw new Error('Transcription timed out')
-  } catch (err) {
-    console.error('[transcribe]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Transcription failed' }, { status: 500 })
-  }
-}
-
-interface WhisperSegment { start: number; end: number; text: string }
-interface WhisperOutput { segments?: WhisperSegment[]; text?: string }
-
-function parseToSegments(output: WhisperOutput): { text: string; start: number; end: number }[] {
-  if (output.segments && output.segments.length > 0) {
-    // Merge short segments into ~6-word chunks
+function parseToSegments(output: WOutput): { text: string; start: number; end: number }[] {
+  const segs = output?.segments ?? []
+  if (segs.length > 0) {
     const result: { text: string; start: number; end: number }[] = []
-    let buf = ''
-    let bufStart = 0
-    for (const seg of output.segments) {
-      const words = (seg.text.trim() + ' ' + buf).trim().split(/\s+/)
-      if (words.length >= 5 || seg === output.segments[output.segments.length - 1]) {
-        result.push({ text: (buf + ' ' + seg.text).trim(), start: bufStart || seg.start, end: seg.end })
+    let buf = '', bufStart = 0
+    for (let i = 0; i < segs.length; i++) {
+      const seg = segs[i]
+      const merged = (buf + ' ' + seg.text.trim()).trim()
+      const wordCount = merged.split(/\s+/).length
+      if (wordCount >= 5 || i === segs.length - 1) {
+        if (merged) result.push({ text: merged, start: bufStart || seg.start, end: seg.end })
         buf = ''; bufStart = 0
       } else {
-        buf = (buf + ' ' + seg.text).trim()
+        buf = merged
         if (!bufStart) bufStart = seg.start
       }
     }
     return result.filter(s => s.text.length > 0)
   }
-  // Fallback: split plain text into timed chunks
-  if (output.text) {
-    const words = output.text.trim().split(/\s+/)
-    const chunks: { text: string; start: number; end: number }[] = []
-    let t = 0.5
-    for (let i = 0; i < words.length; i += 6) {
-      const chunk = words.slice(i, i + 6).join(' ')
-      const dur = chunk.split(' ').length * 0.42 + 0.3
-      chunks.push({ text: chunk, start: t, end: t + dur })
-      t += dur + 0.2
-    }
-    return chunks
+  const text = output?.transcription ?? output?.text ?? ''
+  if (!text) return []
+  const words = text.trim().split(/\s+/)
+  let t = 0.5
+  const chunks: { text: string; start: number; end: number }[] = []
+  for (let i = 0; i < words.length; i += 6) {
+    const chunk = words.slice(i, i + 6).join(' ')
+    const dur = chunk.split(' ').length * 0.42 + 0.3
+    chunks.push({ text: chunk, start: t, end: t + dur })
+    t += dur + 0.2
   }
-  return []
+  return chunks
+}
+
+export async function POST(request: NextRequest) {
+  const ip = getIp(request)
+  const rl = rateLimit(`transcribe:${ip}`, 5, 60 * 60_000)
+  if (!rl.success) return tooManyRequests(rl.reset)
+
+  const { videoUrl } = await request.json()
+  if (!videoUrl) return NextResponse.json({ error: 'videoUrl required' }, { status: 400 })
+  if (!process.env.REPLICATE_API_TOKEN) {
+    return NextResponse.json({ error: 'Replicate not configured' }, { status: 503 })
+  }
+
+  try {
+    const res = await fetch('https://api.replicate.com/v1/predictions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'wait=25',
+      },
+      body: JSON.stringify({
+        version: WHISPER_VERSION,
+        input: { audio: videoUrl, model: 'base', word_timestamps: true, language: 'en' },
+      }),
+    })
+
+    if (!res.ok) throw new Error(`Replicate error ${res.status}`)
+    const prediction = await res.json()
+
+    // Completed within the wait window
+    if ((prediction.status === 'succeeded' || prediction.status === 'completed') && prediction.output) {
+      const segments = parseToSegments(prediction.output as WOutput)
+      return NextResponse.json({ segments, id: prediction.id })
+    }
+
+    // Still processing — client polls /api/video/status/[id]
+    if (prediction.id) {
+      return NextResponse.json({ id: prediction.id, status: prediction.status ?? 'starting' })
+    }
+
+    throw new Error('No prediction ID returned')
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Transcription failed' }, { status: 500 })
+  }
 }

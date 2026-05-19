@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   if (validCodes.includes(normalized)) {
     return NextResponse.json({
       valid:    true,
-      features: ['4k', '1440p', 'enhancement'],
+      features: ['4k', '1440p', 'enhancement', 'ai_captions', 'noise_reduce', 'smart_enhance'],
       message:  'Beta access granted',
     })
   }

@@ -170,6 +170,33 @@ function buildCaptions(script: string): Caption[] {
   })
 }
 
+/* Parse Whisper output from Replicate into Caption[] */
+interface WSegment { start: number; end: number; text: string }
+function parseWhisperOutput(output: unknown): Caption[] {
+  const o = output as { segments?: WSegment[]; transcription?: string; text?: string } | null
+  if (!o) return []
+  const segs = o.segments ?? []
+  if (segs.length > 0) {
+    const result: Caption[] = []
+    let buf = '', bufStart = 0
+    for (let i = 0; i < segs.length; i++) {
+      const seg = segs[i]
+      const merged = (buf + ' ' + seg.text.trim()).trim()
+      const wordCount = merged.split(/\s+/).length
+      if (wordCount >= 5 || i === segs.length - 1) {
+        if (merged) result.push({ text: merged, start: bufStart || seg.start, end: seg.end })
+        buf = ''; bufStart = 0
+      } else {
+        buf = merged
+        if (!bufStart) bufStart = seg.start
+      }
+    }
+    return result.filter(c => c.text.length > 0)
+  }
+  const text = o.transcription ?? o.text ?? ''
+  return text ? buildCaptions(text) : []
+}
+
 /* ─── Sub-components ─────────────────────────────────── */
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
@@ -275,6 +302,7 @@ function VideosInner() {
   const [colorGrade, setColorGrade]           = useState<GradeKey>('original')
   const [customColor, setCustomColor]         = useState<CustomColor>(DEFAULT_CUSTOM)
   const [grain, setGrain]                     = useState(0)
+  const [noiseReduce, setNoiseReduce]         = useState(false)
   const [hookText, setHookText]               = useState('')
   const [ctaText, setCtaText]                 = useState('')
   const [showHook, setShowHook]               = useState(false)
@@ -329,9 +357,10 @@ function VideosInner() {
   const currentTemplate = SCRIPT_TEMPLATES.find(t => t.id === selectedTemplate)!
 
   /* ── Preview filter ───────────────────────────────── */
-  const previewFilter = colorGrade === 'custom'
+  const baseFilter = colorGrade === 'custom'
     ? buildCustomFilter(customColor)
-    : GRADES[colorGrade].filter !== 'none' ? GRADES[colorGrade].filter : undefined
+    : GRADES[colorGrade].filter !== 'none' ? GRADES[colorGrade].filter : ''
+  const previewFilter = [baseFilter, noiseReduce ? 'contrast(1.08) saturate(1.06)' : ''].filter(Boolean).join(' ') || undefined
   const previewGrade = GRADES[colorGrade]
 
   /* ── Caption overlay position ─────────────────────── */
@@ -391,25 +420,55 @@ function VideosInner() {
     if (p) p.catch((e: Error) => { if (e.name !== 'AbortError') console.warn('[music]', e.name, e.message) })
   }, [])
 
-  const transcribeFromAudio = useCallback(async () => {
-    if (!displayUrl) return
+  const transcribeFromAudio = useCallback(async (urlOverride?: string) => {
+    const url = urlOverride ?? displayUrl
+    if (!url || transcribing) return
     setTranscribing(true); setTranscribeError('')
-    try {
-      const res  = await fetch('/api/video/transcribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ videoUrl: displayUrl }) })
-      const data = await res.json()
-      if (res.status === 429 || data.fallback) {
-        const sc = buildCaptions(scriptText)
-        if (sc.length) { setCaptions(sc); setCaptionsEnabled(true) } else setTranscribeError('Rate limited. Add a script to generate captions.')
-        return
-      }
-      if (!res.ok) throw new Error(data.error ?? 'Transcription failed')
-      if (data.segments?.length > 0) { setCaptions(data.segments); setCaptionsEnabled(true) }
-      else setTranscribeError('No speech detected — add a script above to generate captions.')
-    } catch {
+
+    const fallbackToScript = () => {
       const sc = buildCaptions(scriptText)
-      if (sc.length) { setCaptions(sc); setCaptionsEnabled(true) } else setTranscribeError('Transcription failed. Add a script to generate captions.')
-    } finally { setTranscribing(false) }
-  }, [displayUrl, scriptText])
+      if (sc.length) { setCaptions(sc); setCaptionsEnabled(true) }
+      else setTranscribeError('No speech detected. Add a script above to generate captions.')
+    }
+
+    try {
+      const res = await fetch('/api/video/transcribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl: url }),
+      })
+      if (res.status === 429) { fallbackToScript(); return }
+      if (!res.ok) throw new Error('Transcription start failed')
+      const data = await res.json()
+
+      // Completed within Replicate's wait window
+      if (data.segments?.length > 0) {
+        setCaptions(data.segments); setCaptionsEnabled(true); return
+      }
+
+      // Need to poll via /api/video/status/[id]
+      if (!data.id) { fallbackToScript(); return }
+
+      for (let i = 0; i < 40; i++) {
+        await new Promise(r => setTimeout(r, 3500))
+        const statusRes = await fetch(`/api/video/status/${data.id}`)
+        if (!statusRes.ok) continue
+        const s = await statusRes.json()
+        if ((s.status === 'succeeded' || s.status === 'completed') && s.output) {
+          const segs = parseWhisperOutput(s.output)
+          if (segs.length) { setCaptions(segs); setCaptionsEnabled(true) }
+          else fallbackToScript()
+          return
+        }
+        if (s.status === 'failed' || s.error) { fallbackToScript(); return }
+      }
+      fallbackToScript() // 2.5 min timeout
+    } catch {
+      fallbackToScript()
+    } finally {
+      setTranscribing(false)
+    }
+  }, [displayUrl, scriptText, transcribing])
 
   useEffect(() => {
     if (currentCaption === displayedCaption) return
@@ -548,6 +607,9 @@ function VideosInner() {
     setClips([clip]); setActiveClipId(clip.id)
     setVideos(prev => { const next = [record, ...prev]; saveVideos(next); return next })
     setStage('done')
+    // Stock videos have background music/ambient audio — use script captions instead
+    const sc = buildCaptions(scriptText)
+    if (sc.length) { setCaptions(sc); setCaptionsEnabled(true) }
   }, [scriptText, saveVideos])
 
   const [enhancementStatus, setEnhancementStatus] = useState<'idle' | 'enhancing' | 'done' | 'failed'>('idle')
@@ -601,7 +663,9 @@ function VideosInner() {
     setVideos(prev => { const next = [record, ...prev]; saveVideos(next); return next })
     setStage('done')
     if (beta.has('enhancement')) runEnhancementInBackground(clip.url, clip.id)
-  }, [uploadClip, scriptText, saveVideos, runEnhancementInBackground])
+    // Auto-transcribe from actual audio (fires in bg; falls back to script if no speech)
+    setTimeout(() => transcribeFromAudio(clip.url), 400)
+  }, [uploadClip, scriptText, saveVideos, runEnhancementInBackground, transcribeFromAudio])
 
   const addClip = useCallback(async (file: File) => {
     if (!file.type.startsWith('video/')) return
@@ -682,7 +746,7 @@ function VideosInner() {
     setStage('script'); setUploadProgress(0); setErrorMsg(''); setClips([]); setActiveClipId(null)
     setScriptText(''); setGenerationDone(false); setWriteOwn(false); setScriptGenError(false)
     setSelectedTemplate('promo'); streamingRef.current = false
-    setColorGrade('original'); setCustomColor(DEFAULT_CUSTOM); setGrain(0)
+    setColorGrade('original'); setCustomColor(DEFAULT_CUSTOM); setGrain(0); setNoiseReduce(false)
     setHookText(''); setCtaText(''); setShowHook(false); setShowCta(false)
     setSelectedMusic('none'); setCaptions([]); setCaptionsEnabled(false); setCurrentCaption('')
     setCaptionStyle('bold'); setCaptionPos('bottom'); setCaptionSize(1.0)
@@ -1116,6 +1180,14 @@ function VideosInner() {
                       Enhancement unavailable
                     </span>
                   )}
+                  {beta.has('enhancement') && (enhancementStatus === 'idle' || enhancementStatus === 'failed') && (
+                    <button
+                      onClick={() => { if (activeClip) runEnhancementInBackground(activeClip.url, activeClip.id) }}
+                      className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] transition-colors"
+                      style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.25)', color: '#818cf8' }}>
+                      <Sparkles className="w-2.5 h-2.5" />{enhancementStatus === 'failed' ? 'Retry enhance' : 'Enhance'}
+                    </button>
+                  )}
                   {!beta.has('enhancement') && enhancementStatus === 'idle' && (
                     <button onClick={() => setShowBetaPanel(true)}
                       className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] transition-colors"
@@ -1331,6 +1403,33 @@ function VideosInner() {
                         ))}
                       </div>
 
+                      {/* Noise reduction — beta feature */}
+                      <div className="flex items-center justify-between p-3.5 rounded-xl" style={{ background: '#0d0d10', border: `0.5px solid ${noiseReduce ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'}` }}>
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-2">
+                            <span style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA' }}>Noise Reduction</span>
+                            {!beta.has('noise_reduce') && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold"
+                                style={{ background: 'rgba(139,92,246,0.1)', color: '#8b5cf6', border: '0.5px solid rgba(139,92,246,0.25)' }}>
+                                <Lock className="w-2 h-2" />BETA
+                              </span>
+                            )}
+                          </div>
+                          <span style={{ fontSize: 11, color: '#3f3f46' }}>
+                            {noiseReduce ? 'Active — sharpening applied' : 'Reduce visual noise and boost clarity'}
+                          </span>
+                        </div>
+                        {beta.has('noise_reduce') ? (
+                          <Toggle on={noiseReduce} onToggle={() => setNoiseReduce(p => !p)} />
+                        ) : (
+                          <button onClick={() => setShowBetaPanel(true)}
+                            className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+                            style={{ background: 'rgba(139,92,246,0.1)', border: '0.5px solid rgba(139,92,246,0.25)', color: '#a78bfa' }}>
+                            Unlock
+                          </button>
+                        )}
+                      </div>
+
                       {/* Film grain — with presets */}
                       <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.05)' }}>
                         <div className="flex items-center justify-between">
@@ -1392,13 +1491,17 @@ function VideosInner() {
                       </div>
 
                       {/* Generate buttons */}
-                      <div className="flex gap-2">
-                        <button onClick={transcribeFromAudio} disabled={transcribing}
-                          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200"
-                          style={{ background: transcribing ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: transcribing ? '#52525B' : '#a5b4fc' }}>
-                          {transcribing ? <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Transcribing…</> : <><Sparkles className="w-3.5 h-3.5" />From audio</>}
-                        </button>
-                        {scriptText.trim() && (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          {/* From audio — Whisper AI */}
+                          <button onClick={() => transcribeFromAudio()} disabled={transcribing}
+                            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200"
+                            style={{ background: transcribing ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: transcribing ? '#52525B' : '#a5b4fc' }}>
+                            {transcribing
+                              ? <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Transcribing…</>
+                              : <><Sparkles className="w-3.5 h-3.5" />From audio (AI)</>}
+                          </button>
+                          {/* From script — instant timing estimate */}
                           <button
                             onClick={() => { const sc = buildCaptions(scriptText); if (sc.length) { setCaptions(sc); setCaptionsEnabled(true) } }}
                             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200"
@@ -1407,9 +1510,23 @@ function VideosInner() {
                             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#71717A'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)' }}>
                             From script
                           </button>
+                        </div>
+                        {transcribing && (
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(99,102,241,0.05)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#6366f1' }} />
+                            <p style={{ fontSize: 12, color: '#818cf8' }}>
+                              AI is reading your audio — this takes 30–90 seconds. You can keep editing.
+                            </p>
+                          </div>
                         )}
+                        {transcribeError && (
+                          <p style={{ fontSize: 12, color: '#f87171', lineHeight: 1.5 }}>{transcribeError}</p>
+                        )}
+                        <p style={{ fontSize: 11, color: '#3f3f46', lineHeight: 1.5 }}>
+                          <span style={{ color: '#52525B' }}>From audio</span> uses Whisper AI for accurate real-time sync.
+                          {' '}<span style={{ color: '#52525B' }}>From script</span> estimates timing instantly.
+                        </p>
                       </div>
-                      {transcribeError && <p style={{ fontSize: 12, color: '#f87171' }}>{transcribeError}</p>}
 
                       {/* Caption style */}
                       <div className="flex flex-col gap-2">
@@ -1851,25 +1968,41 @@ function VideosInner() {
 
                     {/* Beta unlock panel */}
                     {showBetaPanel && !beta.unlocked && (
-                      <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                      <div className="flex flex-col gap-4 p-4 rounded-xl" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)' }}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Lock className="w-3.5 h-3.5" style={{ color: '#8b5cf6' }} />
-                            <p style={{ fontSize: 13, fontWeight: 600, color: '#c4b5fd' }}>Beta Access</p>
+                            <p style={{ fontSize: 13, fontWeight: 600, color: '#c4b5fd' }}>Unlock Beta Features</p>
                           </div>
                           <button onClick={() => { setShowBetaPanel(false); setBetaCodeInput('') }} style={{ color: '#52525B' }}>
                             <X className="w-4 h-4" />
                           </button>
                         </div>
-                        <p style={{ fontSize: 12, color: '#71717A', lineHeight: 1.5 }}>
-                          Enter your beta code to unlock 2K, 4K export and AI video enhancement.
-                        </p>
+
+                        {/* Feature list */}
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { icon: '✦', label: '4K & 2K export', desc: 'Ultra-high resolution output' },
+                            { icon: '⬆', label: 'AI Enhancement', desc: 'Replicate upscaling on every video' },
+                            { icon: '🎙', label: 'Audio Captions', desc: 'Whisper AI auto-sync to speech' },
+                            { icon: '✦', label: 'Noise Reduction', desc: 'Clarity boost in Color tab' },
+                          ].map(f => (
+                            <div key={f.label} className="flex items-start gap-2 p-2.5 rounded-lg" style={{ background: 'rgba(139,92,246,0.06)', border: '0.5px solid rgba(139,92,246,0.12)' }}>
+                              <span style={{ fontSize: 13, color: '#8b5cf6', flexShrink: 0, lineHeight: 1.4 }}>{f.icon}</span>
+                              <div>
+                                <p style={{ fontSize: 11, fontWeight: 700, color: '#c4b5fd' }}>{f.label}</p>
+                                <p style={{ fontSize: 10, color: '#52525B', lineHeight: 1.4 }}>{f.desc}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
                         <div className="flex gap-2">
                           <input
                             value={betaCodeInput}
                             onChange={e => setBetaCodeInput(e.target.value.toUpperCase())}
                             onKeyDown={async e => { if (e.key === 'Enter') await beta.unlock(betaCodeInput) }}
-                            placeholder="ENTER CODE"
+                            placeholder="ENTER BETA CODE"
                             className="flex-1 px-3 py-2 rounded-lg text-[13px] font-mono uppercase outline-none tracking-widest"
                             style={{ background: '#18181C', border: '0.5px solid rgba(139,92,246,0.3)', color: '#c4b5fd', letterSpacing: '0.15em' }}
                             onFocus={e => { e.currentTarget.style.borderColor = 'rgba(139,92,246,0.6)' }}
