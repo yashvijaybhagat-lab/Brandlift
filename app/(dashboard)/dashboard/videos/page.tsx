@@ -20,7 +20,11 @@ import { useBetaAccess } from '@/lib/betaAccess'
 
 /* ─── Types ──────────────────────────────────────────── */
 type Stage     = 'script' | 'upload' | 'uploading' | 'done' | 'error'
-type StudioTab = 'grade' | 'captions' | 'music' | 'text' | 'clips' | 'transition'
+type StudioTab = 'grade' | 'captions' | 'music' | 'text' | 'clips' | 'transition' | 'copy'
+type CopyPlatform = 'tiktok' | 'instagram' | 'youtube' | 'linkedin'
+interface PostCopy { title: string; caption: string; hashtags: string[]; cta: string }
+interface HookItem { text: string; style: string; emoji: string }
+interface ScriptScore { score: number; grade: string; color: string; tips: string[] }
 type GradeKey  = 'original' | 'teal_orange' | 'moody' | 'bleach' | 'golden' | 'noir' | 'fuji' | 'vintage' | 'arctic' | 'kodak' | 'custom'
 
 interface VideoRecord  { id: string; name: string; script: string; originalUrl: string; enhancedUrl: string; createdAt: number }
@@ -344,6 +348,21 @@ function VideosInner() {
   // Quick Looks
   const [activeQuickLook, setActiveQuickLook] = useState<string | null>(null)
 
+  // Hook Generator
+  const [hooks, setHooks]                     = useState<HookItem[]>([])
+  const [generatingHooks, setGeneratingHooks] = useState(false)
+  const [hooksOpen, setHooksOpen]             = useState(false)
+
+  // Script Virality Score
+  const [scriptScore, setScriptScore]         = useState<ScriptScore | null>(null)
+  const [scoringScript, setScoringScript]     = useState(false)
+  const [scoreOpen, setScoreOpen]             = useState(false)
+
+  // Post Copy (studio tab)
+  const [copyPlatform, setCopyPlatform]       = useState<CopyPlatform>('tiktok')
+  const [copyData, setCopyData]               = useState<Partial<Record<CopyPlatform, PostCopy>>>({})
+  const [copyLoading, setCopyLoading]         = useState(false)
+
   // Export
   const [exportQuality, setExportQuality]     = useState<ExportQuality>('1080p')
   const [exportAspect, setExportAspect]       = useState<ExportAspect>('16:9')
@@ -589,6 +608,39 @@ function VideosInner() {
     finally { setGeneratingSocial(false) }
   }, [scriptText, generatingSocial])
 
+  const generateHooks = useCallback(async () => {
+    if (!scriptText.trim() || generatingHooks) return
+    setGeneratingHooks(true); setHooksOpen(true); setHooks([])
+    try {
+      const res = await fetch('/api/hooks/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ script: scriptText }) })
+      const data = await res.json()
+      if (data.hooks) setHooks(data.hooks)
+    } catch {}
+    finally { setGeneratingHooks(false) }
+  }, [scriptText, generatingHooks])
+
+  const scoreScript = useCallback(async () => {
+    if (!scriptText.trim() || scoringScript) return
+    setScoringScript(true); setScoreOpen(true); setScriptScore(null)
+    try {
+      const res = await fetch('/api/script/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ script: scriptText }) })
+      const data = await res.json()
+      if (typeof data.score === 'number') setScriptScore(data)
+    } catch {}
+    finally { setScoringScript(false) }
+  }, [scriptText, scoringScript])
+
+  const generatePostCopy = useCallback(async (platform: CopyPlatform) => {
+    if (!scriptText.trim() || copyLoading) return
+    setCopyLoading(true)
+    try {
+      const res = await fetch('/api/video/post-copy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ script: scriptText, platform }) })
+      const data = await res.json()
+      if (data.copy) setCopyData(prev => ({ ...prev, [platform]: data.copy }))
+    } catch {}
+    finally { setCopyLoading(false) }
+  }, [scriptText, copyLoading])
+
   const searchPexels = useCallback(async (q: string) => {
     if (!q.trim() || pexelsSearching) return
     setPexelsSearching(true); setPexelsResults([])
@@ -756,6 +808,9 @@ function VideosInner() {
     setDisplayedCaption(''); setCaptionOpacity(0); setExporting(false)
     setHashtagsOpen(false); setHashtags([]); setGeneratingHashtags(false)
     setSocialOpen(false); setSocialCaptions(null); setGeneratingSocial(false)
+    setHooks([]); setGeneratingHooks(false); setHooksOpen(false)
+    setScriptScore(null); setScoringScript(false); setScoreOpen(false)
+    setCopyPlatform('tiktok'); setCopyData({}); setCopyLoading(false)
     setPexelsQuery(''); setPexelsResults([]); setPexelsSearching(false); setPexelsTotal(0)
     setActiveQuickLook(null)
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
@@ -913,6 +968,24 @@ function VideosInner() {
                       <MessageSquare className="w-3 h-3" />
                       {generatingSocial ? 'Generating…' : 'Social Captions'}
                     </button>
+                    <button
+                      onClick={generateHooks}
+                      disabled={generatingHooks}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150"
+                      style={{ background: 'rgba(251,146,60,0.08)', border: '0.5px solid rgba(251,146,60,0.25)', color: '#fdba74', cursor: generatingHooks ? 'default' : 'pointer', opacity: generatingHooks ? 0.6 : 1 }}
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      {generatingHooks ? 'Generating…' : 'Hook Ideas'}
+                    </button>
+                    <button
+                      onClick={scoreScript}
+                      disabled={scoringScript}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150"
+                      style={{ background: 'rgba(74,222,128,0.06)', border: '0.5px solid rgba(74,222,128,0.2)', color: '#86efac', cursor: scoringScript ? 'default' : 'pointer', opacity: scoringScript ? 0.6 : 1 }}
+                    >
+                      <ChevronRight className="w-3 h-3" />
+                      {scoringScript ? 'Scoring…' : 'Virality Score'}
+                    </button>
                   </div>
 
                   {/* Hashtags panel */}
@@ -982,6 +1055,101 @@ function VideosInner() {
                           ))}
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* Hook Ideas panel */}
+                  {hooksOpen && (
+                    <div className="flex flex-col gap-2.5 p-3 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(251,146,60,0.15)' }}>
+                      <div className="flex items-center justify-between">
+                        <p style={{ fontSize: 11, color: '#fb923c', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Hook Ideas</p>
+                        <button onClick={() => setHooksOpen(false)} style={{ fontSize: 13, color: '#52525B', cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1 }}>✕</button>
+                      </div>
+                      {generatingHooks ? (
+                        <div className="flex flex-col gap-2">
+                          {[44, 36, 44, 36, 44].map((h,i) => (
+                            <div key={i} className="rounded-lg animate-pulse" style={{ height: h, background: 'rgba(255,255,255,0.04)' }} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {hooks.map((hook, i) => (
+                            <div key={i} className="flex items-start gap-2.5 p-3 rounded-lg group" style={{ background: 'rgba(255,255,255,0.02)', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                              <span style={{ fontSize: 15, lineHeight: 1.4, flexShrink: 0 }}>{hook.emoji}</span>
+                              <div className="flex-1 min-w-0">
+                                <p style={{ fontSize: 12, color: '#E4E4E7', lineHeight: 1.6 }}>{hook.text}</p>
+                                <span style={{ fontSize: 10, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{hook.style}</span>
+                              </div>
+                              <div className="flex gap-1.5 flex-shrink-0">
+                                <button
+                                  onClick={() => { setScriptText(hook.text); }}
+                                  className="px-2 py-1 rounded text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
+                                  style={{ background: 'rgba(251,146,60,0.1)', color: '#fdba74', border: '0.5px solid rgba(251,146,60,0.25)' }}>
+                                  Use
+                                </button>
+                                <button
+                                  onClick={() => navigator.clipboard.writeText(hook.text)}
+                                  className="px-2 py-1 rounded text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
+                                  style={{ background: 'rgba(99,102,241,0.08)', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.2)' }}>
+                                  Copy
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Virality Score panel */}
+                  {scoreOpen && (
+                    <div className="flex flex-col gap-3 p-3 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(74,222,128,0.12)' }}>
+                      <div className="flex items-center justify-between">
+                        <p style={{ fontSize: 11, color: '#4ADE80', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Virality Score</p>
+                        <button onClick={() => setScoreOpen(false)} style={{ fontSize: 13, color: '#52525B', cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1 }}>✕</button>
+                      </div>
+                      {scoringScript ? (
+                        <div className="flex items-center gap-3">
+                          <div className="w-14 h-14 rounded-full animate-pulse flex-shrink-0" style={{ background: 'rgba(255,255,255,0.04)' }} />
+                          <div className="flex flex-col gap-1.5 flex-1">
+                            {[80, 60, 70].map((w,i) => (
+                              <div key={i} className="rounded animate-pulse" style={{ height: 10, width: `${w}%`, background: 'rgba(255,255,255,0.04)' }} />
+                            ))}
+                          </div>
+                        </div>
+                      ) : scriptScore ? (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-4">
+                            <div className="relative w-16 h-16 flex-shrink-0">
+                              <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                                <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
+                                <circle cx="18" cy="18" r="15.9" fill="none" stroke={scriptScore.color} strokeWidth="3"
+                                  strokeDasharray={`${scriptScore.score} 100`} strokeLinecap="round" />
+                              </svg>
+                              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span style={{ fontSize: 16, fontWeight: 800, color: scriptScore.color, lineHeight: 1 }}>{scriptScore.grade}</span>
+                                <span style={{ fontSize: 9, color: '#52525B' }}>{scriptScore.score}</span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <p style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA' }}>
+                                {scriptScore.score >= 85 ? 'High viral potential' : scriptScore.score >= 70 ? 'Good script' : scriptScore.score >= 55 ? 'Needs improvement' : 'Weak hook'}
+                              </p>
+                              <p style={{ fontSize: 11, color: '#52525B' }}>Score out of 100</p>
+                            </div>
+                          </div>
+                          {scriptScore.tips.length > 0 && (
+                            <div className="flex flex-col gap-1.5">
+                              {scriptScore.tips.map((tip, i) => (
+                                <div key={i} className="flex items-start gap-2">
+                                  <span style={{ fontSize: 10, color: scriptScore.color, flexShrink: 0, marginTop: 2 }}>→</span>
+                                  <p style={{ fontSize: 12, color: '#A1A1AA', lineHeight: 1.5 }}>{tip}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                   )}
                 </div>
@@ -1344,6 +1512,7 @@ function VideosInner() {
                     { id: 'text'       as StudioTab, label: 'Text', Icon: MessageSquare },
                     { id: 'clips'      as StudioTab, label: 'Clips', Icon: Layers },
                     { id: 'transition' as StudioTab, label: 'Cuts', Icon: GitMerge },
+                    { id: 'copy'       as StudioTab, label: 'Post Copy', Icon: PenLine },
                   ] as const).map(({ id, label, Icon }) => (
                     <button key={id} onClick={() => switchTab(id)}
                       className="flex-shrink-0 flex items-center gap-1.5 px-4 py-3 text-[11px] font-semibold tracking-wide uppercase transition-all duration-150 relative whitespace-nowrap"
@@ -1893,6 +2062,110 @@ function VideosInner() {
                               : `${transition === 'fade' ? 'Fade to black' : 'Cross-dissolve'} between ${clips.length - 1} clip transition${clips.length > 2 ? 's' : ''}`}
                           </p>
                         </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── POST COPY ───────────────────────── */}
+                  {activeTab === 'copy' && (
+                    <div className="flex flex-col gap-5">
+                      <div>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Post Copy</p>
+                        <p style={{ fontSize: 12, color: '#52525B', marginTop: 2 }}>AI-written captions, hashtags & CTAs ready to post</p>
+                      </div>
+
+                      {/* Platform selector */}
+                      <div className="flex gap-2">
+                        {(['tiktok', 'instagram', 'youtube', 'linkedin'] as const).map(p => (
+                          <button key={p} onClick={() => setCopyPlatform(p)}
+                            className="flex-1 py-2 rounded-lg text-[11px] font-bold capitalize transition-all duration-150"
+                            style={{
+                              background: copyPlatform === p ? 'rgba(99,102,241,0.15)' : '#18181C',
+                              color: copyPlatform === p ? '#a5b4fc' : '#52525B',
+                              border: copyPlatform === p ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.06)',
+                            }}>
+                            {p === 'tiktok' ? 'TikTok' : p === 'instagram' ? 'Instagram' : p === 'youtube' ? 'YouTube' : 'LinkedIn'}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Generate button */}
+                      <button
+                        onClick={() => generatePostCopy(copyPlatform)}
+                        disabled={copyLoading || !scriptText.trim()}
+                        className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150 disabled:opacity-40"
+                        style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc' }}>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        {copyLoading ? 'Generating…' : `Generate ${copyPlatform === 'tiktok' ? 'TikTok' : copyPlatform === 'instagram' ? 'Instagram' : copyPlatform === 'youtube' ? 'YouTube' : 'LinkedIn'} copy`}
+                      </button>
+
+                      {/* Copy results */}
+                      {copyData[copyPlatform] ? (() => {
+                        const c = copyData[copyPlatform]!
+                        return (
+                          <div className="flex flex-col gap-3">
+                            {/* Title */}
+                            <div className="flex flex-col gap-1.5 p-3 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                              <div className="flex items-center justify-between">
+                                <span style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Title / Hook</span>
+                                <button onClick={() => navigator.clipboard.writeText(c.title)} style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>Copy</button>
+                              </div>
+                              <p style={{ fontSize: 13, color: '#FAFAFA', fontWeight: 600, lineHeight: 1.4 }}>{c.title}</p>
+                            </div>
+                            {/* Caption */}
+                            <div className="flex flex-col gap-1.5 p-3 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                              <div className="flex items-center justify-between">
+                                <span style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Caption</span>
+                                <button onClick={() => navigator.clipboard.writeText(c.caption)} style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>Copy</button>
+                              </div>
+                              <p style={{ fontSize: 12, color: '#E4E4E7', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{c.caption}</p>
+                            </div>
+                            {/* Hashtags */}
+                            {c.hashtags?.length > 0 && (
+                              <div className="flex flex-col gap-1.5 p-3 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                                <div className="flex items-center justify-between">
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Hashtags</span>
+                                  <button onClick={() => navigator.clipboard.writeText(c.hashtags.join(' '))} style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>Copy all</button>
+                                </div>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {c.hashtags.map(tag => (
+                                    <button key={tag} onClick={() => navigator.clipboard.writeText(tag)}
+                                      className="px-2 py-0.5 rounded text-[11px] transition-all"
+                                      style={{ background: 'rgba(99,102,241,0.08)', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.2)' }}
+                                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.18)' }}
+                                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.08)' }}>
+                                      {tag}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {/* CTA */}
+                            {c.cta && (
+                              <div className="flex items-center justify-between p-3 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                                <div className="flex flex-col gap-0.5">
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', textTransform: 'uppercase', letterSpacing: '0.07em' }}>CTA</span>
+                                  <p style={{ fontSize: 12, color: '#E4E4E7' }}>{c.cta}</p>
+                                </div>
+                                <button onClick={() => navigator.clipboard.writeText(c.cta)} style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none', flexShrink: 0 }}>Copy</button>
+                              </div>
+                            )}
+                            {/* Copy everything */}
+                            <button
+                              onClick={() => navigator.clipboard.writeText(`${c.title}\n\n${c.caption}\n\n${c.hashtags?.join(' ') ?? ''}\n\n${c.cta}`)}
+                              className="w-full py-2 rounded-xl text-[12px] font-semibold transition-all"
+                              style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.2)', color: '#818cf8' }}>
+                              Copy everything
+                            </button>
+                          </div>
+                        )
+                      })() : (
+                        !copyLoading && (
+                          <div className="flex flex-col items-center gap-2 py-6" style={{ color: '#3f3f46' }}>
+                            <PenLine className="w-7 h-7 opacity-30" />
+                            <p style={{ fontSize: 12 }}>Select a platform and generate your post copy</p>
+                          </div>
+                        )
                       )}
                     </div>
                   )}

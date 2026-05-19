@@ -614,9 +614,149 @@ function PlatformHealth() {
   )
 }
 
+/* ─── Statistics tab content ──────────────────────────────────────────────── */
+const BENCHMARK_ROWS: { label: string; smb: string; avg: string; top: string; color: string }[] = [
+  { label: 'Monthly views',      smb: '800–4K',   avg: '5K–20K',  top: '50K+',   color: '#6366f1' },
+  { label: 'Engagement rate',    smb: '3–5%',     avg: '6–9%',    top: '12%+',   color: '#4ADE80' },
+  { label: 'Follower growth',    smb: '50–200',   avg: '400–1K',  top: '5K+',    color: '#8b5cf6' },
+  { label: 'Profile visits/mo', smb: '100–400',  avg: '800–2K',  top: '10K+',   color: '#f59e0b' },
+  { label: 'Link clicks/mo',    smb: '10–40',    avg: '80–200',  top: '1K+',    color: '#06b6d4' },
+]
+
+const FORMAT_PERFORMANCE: { format: string; avgViews: string; engRate: string; difficulty: string; color: string }[] = [
+  { format: 'Talking Head',   avgViews: '2–8K',   engRate: '4.2%', difficulty: 'Easy',   color: '#6366f1' },
+  { format: 'B-Roll + VO',    avgViews: '5–20K',  engRate: '5.8%', difficulty: 'Medium', color: '#4ADE80' },
+  { format: 'Tutorial',       avgViews: '8–35K',  engRate: '7.1%', difficulty: 'Medium', color: '#f59e0b' },
+  { format: 'Text-on-screen', avgViews: '3–12K',  engRate: '6.4%', difficulty: 'Easy',   color: '#8b5cf6' },
+  { format: 'POV / Story',    avgViews: '10–50K', engRate: '8.9%', difficulty: 'Easy',   color: '#f87171' },
+]
+
+const GROWTH_MILESTONES: { followers: string; label: string; tip: string; color: string }[] = [
+  { followers: '100',   label: 'First 100',    tip: 'Post 3×/week for 2–3 weeks. Focus on one platform.',         color: '#52525B' },
+  { followers: '500',   label: '500 followers', tip: 'Use trending audio and niche hashtags consistently.',        color: '#8b5cf6' },
+  { followers: '1K',    label: '1K milestone',  tip: 'Collab with one similar creator. Cross-post your best hit.', color: '#6366f1' },
+  { followers: '5K',    label: '5K reach',      tip: 'Run a giveaway or challenge. Batch-create 10 videos at once.', color: '#4ADE80' },
+  { followers: '10K+',  label: 'Brand deals',   tip: 'Micro-influencer territory — brands pay $50–$500/post.',     color: '#f59e0b' },
+]
+
+function StatisticsTab() {
+  return (
+    <div className="flex flex-col gap-8">
+
+      {/* Benchmarks table */}
+      <section className="flex flex-col gap-3">
+        <div>
+          <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Industry Benchmarks</h2>
+          <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>Where small businesses typically start vs what&apos;s possible</p>
+        </div>
+        <div className="rounded-2xl overflow-hidden" style={{ border: '0.5px solid rgba(255,255,255,0.07)' }}>
+          {/* Header */}
+          <div className="grid grid-cols-4 px-4 py-2.5" style={{ background: '#18181C', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+            {['Metric', 'New Account', 'Growing', 'Top 10%'].map((h, i) => (
+              <span key={h} style={{ fontSize: 10, fontWeight: 700, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: i > 0 ? 'center' : 'left' }}>{h}</span>
+            ))}
+          </div>
+          {BENCHMARK_ROWS.map((row, i) => (
+            <div key={row.label} className="grid grid-cols-4 px-4 py-3 transition-colors"
+              style={{ borderBottom: i < BENCHMARK_ROWS.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none', background: 'transparent' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
+              <span style={{ fontSize: 12, color: '#A1A1AA' }}>{row.label}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#52525B', textAlign: 'center', fontFamily: 'monospace' }}>{row.smb}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA', textAlign: 'center', fontFamily: 'monospace' }}>{row.avg}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: row.color, textAlign: 'center', fontFamily: 'monospace' }}>{row.top}</span>
+            </div>
+          ))}
+        </div>
+        <p style={{ fontSize: 11, color: '#27272a' }}>Sources: Sprout Social 2024 benchmark report · Later Media · internal aggregates</p>
+      </section>
+
+      <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
+
+      {/* Content format performance */}
+      <section className="flex flex-col gap-3">
+        <div>
+          <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Content Format Performance</h2>
+          <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>Average performance by video format across TikTok, Reels, and Shorts</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          {FORMAT_PERFORMANCE.map(row => (
+            <div key={row.format} className="flex items-center gap-4 p-3.5 rounded-xl transition-colors"
+              style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${row.color}25` }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)' }}>
+              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: row.color, boxShadow: `0 0 6px ${row.color}60` }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#E4E4E7', minWidth: 120 }}>{row.format}</span>
+              <div className="flex-1 flex items-center gap-1">
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#18181C' }}>
+                  <div className="h-full rounded-full" style={{
+                    width: row.format === 'POV / Story' ? '90%' : row.format === 'Tutorial' ? '76%' : row.format === 'B-Roll + VO' ? '62%' : row.format === 'Text-on-screen' ? '50%' : '38%',
+                    background: `linear-gradient(90deg,${row.color}80,${row.color})`,
+                  }} />
+                </div>
+              </div>
+              <div className="flex items-center gap-4 text-right flex-shrink-0">
+                <div className="flex flex-col items-end">
+                  <span style={{ fontSize: 11, fontWeight: 700, color: row.color, fontFamily: 'monospace' }}>{row.avgViews}</span>
+                  <span style={{ fontSize: 10, color: '#3f3f46' }}>avg views</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#A1A1AA', fontFamily: 'monospace' }}>{row.engRate}</span>
+                  <span style={{ fontSize: 10, color: '#3f3f46' }}>eng rate</span>
+                </div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold"
+                  style={{
+                    background: row.difficulty === 'Easy' ? 'rgba(74,222,128,0.08)' : 'rgba(245,158,11,0.08)',
+                    color: row.difficulty === 'Easy' ? '#4ADE80' : '#f59e0b',
+                    border: row.difficulty === 'Easy' ? '0.5px solid rgba(74,222,128,0.2)' : '0.5px solid rgba(245,158,11,0.2)',
+                  }}>
+                  {row.difficulty}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
+
+      {/* Growth roadmap */}
+      <section className="flex flex-col gap-3">
+        <div>
+          <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Growth Roadmap</h2>
+          <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>Milestones and what moves the needle at each stage</p>
+        </div>
+        <div className="relative flex flex-col gap-0">
+          {GROWTH_MILESTONES.map((m, i) => (
+            <div key={m.followers} className="flex items-start gap-4 relative">
+              {/* Timeline line */}
+              {i < GROWTH_MILESTONES.length - 1 && (
+                <div className="absolute left-[19px] top-8 w-0.5 h-full" style={{ background: 'rgba(255,255,255,0.05)' }} />
+              )}
+              {/* Dot */}
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 z-10"
+                style={{ background: `${m.color}15`, border: `1px solid ${m.color}40` }}>
+                <span style={{ fontSize: 10, fontWeight: 800, color: m.color }}>{m.followers}</span>
+              </div>
+              <div className="flex flex-col gap-0.5 pb-6">
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#E4E4E7' }}>{m.label}</span>
+                <span style={{ fontSize: 12, color: '#71717A', lineHeight: 1.55 }}>{m.tip}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+    </div>
+  )
+}
+
 /* ─── Page ────────────────────────────────────────────────────────────────── */
+type DashTab = 'overview' | 'statistics'
+
 export default function DashboardPage() {
   const [selectedIdea, setSelectedIdea] = React.useState<ContentIdea | null>(null)
+  const [activeTab, setActiveTab] = React.useState<DashTab>('overview')
   const stats = React.useMemo(() => buildStats(selectedIdea), [selectedIdea])
 
   return (
@@ -627,43 +767,50 @@ export default function DashboardPage() {
 
           <QuickActionsBar />
 
-          {/* Analytics */}
-          <section className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>
-                  {selectedIdea ? 'Idea Forecast' : 'Your Performance'}
-                </h2>
-                <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>
-                  {selectedIdea ? 'Projected numbers if you post this idea at peak time' : 'Click any idea below to see its reach, engagement, and best posting time'}
-                </p>
-              </div>
-            </div>
+          {/* Tab bar */}
+          <div className="flex items-center gap-1" style={{ borderBottom: '0.5px solid rgba(255,255,255,0.06)', paddingBottom: 0 }}>
+            {(['overview', 'statistics'] as const).map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)}
+                className="relative px-4 py-2.5 text-[12px] font-semibold capitalize transition-colors duration-150"
+                style={{ color: activeTab === tab ? '#FAFAFA' : '#52525B', background: 'transparent', border: 'none' }}>
+                {tab}
+                {activeTab === tab && (
+                  <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6)' }} />
+                )}
+              </button>
+            ))}
+          </div>
 
-            {selectedIdea && (
-              <IdeaAnalyticsPanel idea={selectedIdea} onClose={() => setSelectedIdea(null)} />
-            )}
+          {activeTab === 'overview' && (
+            <>
+              {/* Idea analytics — only when idea selected */}
+              {selectedIdea && (
+                <section className="flex flex-col gap-3">
+                  <IdeaAnalyticsPanel idea={selectedIdea} onClose={() => setSelectedIdea(null)} />
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {stats.map(stat => <StatCard key={stat.label} stat={stat} />)}
+                  </div>
+                </section>
+              )}
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {stats.map(stat => <StatCard key={stat.label} stat={stat} />)}
-            </div>
-          </section>
+              <WeekCalendar />
 
-          <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
+              <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
 
-          <WeekCalendar />
+              <PlatformHealth />
 
-          <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
+              <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
 
-          <PlatformHealth />
+              <ContentIdeasFeed
+                showFilters
+                gridClass="grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
+                onSelectIdea={setSelectedIdea}
+              />
+            </>
+          )}
 
-          <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
+          {activeTab === 'statistics' && <StatisticsTab />}
 
-          <ContentIdeasFeed
-            showFilters
-            gridClass="grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
-            onSelectIdea={setSelectedIdea}
-          />
         </div>
       </div>
     </div>
