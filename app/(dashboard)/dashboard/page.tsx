@@ -1,7 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { TrendingUp, Eye, Video, Lightbulb, BarChart2, X, Clock, Calendar, CheckCircle2, Circle } from 'lucide-react'
+import Link from 'next/link'
+import { TrendingUp, Eye, Video, Lightbulb, BarChart2, X, Clock, Calendar, CheckCircle2, Circle, Zap, Sparkles, Activity } from 'lucide-react'
 import { TopBar } from '@/components/dashboard/TopBar'
 import { ContentIdeasFeed, type ContentIdea } from '@/components/dashboard/ContentIdeasFeed'
 
@@ -513,6 +514,106 @@ function WeekCalendar() {
   )
 }
 
+/* ─── Quick Actions bar ───────────────────────────────────────────────────── */
+const QUICK_ACTIONS = [
+  { label: 'Create Video', href: '/dashboard/videos', Icon: Video, color: '#6366f1', bg: 'rgba(99,102,241,0.1)', border: 'rgba(99,102,241,0.25)' },
+  { label: 'Generate Ideas', href: '#ideas', Icon: Sparkles, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.25)' },
+  { label: 'Best Time', href: '#schedule', Icon: Zap, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
+]
+
+function QuickActionsBar() {
+  return (
+    <div className="flex items-center gap-2.5 flex-wrap">
+      {QUICK_ACTIONS.map(({ label, href, Icon, color, bg, border }) => (
+        <Link key={label} href={href}
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12px] font-semibold transition-all duration-150 flex-shrink-0"
+          style={{ background: bg, border: `0.5px solid ${border}`, color }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.15)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1)' }}
+        >
+          <Icon className="w-3.5 h-3.5" />
+          {label}
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+/* ─── Platform Health widget ──────────────────────────────────────────────── */
+const PLATFORM_HEALTH = [
+  {
+    name: 'TikTok', color: '#4ADE80', score: 82,
+    tip: 'Post at 9pm on Tue/Thu — your niche peaks during evening scroll sessions.',
+    status: 'Trending window open',
+  },
+  {
+    name: 'Instagram', color: '#a78bfa', score: 71,
+    tip: 'Reels get 3× more reach than static posts. Use Reels for every video.',
+    status: 'Good engagement zone',
+  },
+  {
+    name: 'YouTube', color: '#f87171', score: 58,
+    tip: 'Shorts under 60s indexed fastest. Add keyword-rich titles for search.',
+    status: 'Growth opportunity',
+  },
+]
+
+function PlatformHealth() {
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Platform Health</h2>
+          <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>Algorithmic opportunity scores based on current trends</p>
+        </div>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+          <Activity className="w-3 h-3" style={{ color: '#52525B' }} />
+          <span style={{ fontSize: 11, color: '#52525B' }}>Live data</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        {PLATFORM_HEALTH.map(({ name, color, score, tip, status }) => (
+          <div key={name} className="flex flex-col gap-3 p-4 rounded-2xl transition-all duration-200"
+            style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${color}30` }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)' }}
+          >
+            {/* Platform + score */}
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: '#E4E4E7' }}>{name}</p>
+                <p style={{ fontSize: 11, color, marginTop: 1 }}>{status}</p>
+              </div>
+              <div className="relative w-10 h-10 flex-shrink-0">
+                <svg width="40" height="40" viewBox="0 0 40 40" className="-rotate-90" aria-hidden>
+                  <circle cx="20" cy="20" r="15" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
+                  <circle cx="20" cy="20" r="15" fill="none" stroke={color} strokeWidth="3"
+                    strokeDasharray={`${2 * Math.PI * 15}`}
+                    strokeDashoffset={`${2 * Math.PI * 15 * (1 - score / 100)}`}
+                    strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s ease' }} />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center" style={{ fontSize: 10, fontWeight: 800, color, letterSpacing: '-0.02em' }}>{score}</span>
+              </div>
+            </div>
+
+            {/* Score bar */}
+            <div className="flex flex-col gap-1.5">
+              <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${score}%`, background: `linear-gradient(90deg,${color}80,${color})` }} />
+              </div>
+            </div>
+
+            {/* Tip */}
+            <p style={{ fontSize: 11, color: '#71717A', lineHeight: 1.55 }}>{tip}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 /* ─── Page ────────────────────────────────────────────────────────────────── */
 export default function DashboardPage() {
   const [selectedIdea, setSelectedIdea] = React.useState<ContentIdea | null>(null)
@@ -523,6 +624,8 @@ export default function DashboardPage() {
       <TopBar />
       <div className="flex-1 overflow-auto">
         <div className="max-w-5xl mx-auto px-6 py-6 flex flex-col gap-8">
+
+          <QuickActionsBar />
 
           {/* Analytics */}
           <section className="flex flex-col gap-3">
@@ -549,6 +652,10 @@ export default function DashboardPage() {
           <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
 
           <WeekCalendar />
+
+          <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
+
+          <PlatformHealth />
 
           <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
 

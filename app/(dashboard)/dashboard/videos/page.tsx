@@ -137,6 +137,20 @@ const TRANSITION_OPTIONS: { id: TransitionType; label: string; desc: string }[] 
   { id: 'dissolve', label: 'Dissolve', desc: 'Cross-dissolve blend' },
 ]
 
+/* ─── Quick Looks presets ────────────────────────────── */
+interface QuickLook {
+  id: string; label: string; desc: string; swatch: string
+  grade: GradeKey; music: string; captionStyle: CaptionStyle; captionPos: CaptionPos; captions: boolean
+}
+const QUICK_LOOKS: QuickLook[] = [
+  { id: 'viral-tiktok', label: 'Viral TikTok',  desc: 'Teal/orange + hype beat',   swatch: 'linear-gradient(135deg,#003d3d 0%,#7a3000 100%)', grade: 'teal_orange', music: 'hype',      captionStyle: 'bold',    captionPos: 'center', captions: true },
+  { id: 'warm-brand',   label: 'Warm Brand',    desc: 'Golden hour + acoustic',     swatch: 'linear-gradient(135deg,#a0620f 0%,#d48a10 100%)', grade: 'golden',      music: 'acoustic',  captionStyle: 'minimal', captionPos: 'bottom', captions: true },
+  { id: 'cinematic',    label: 'Cinematic',     desc: 'Moody grade + orchestral',   swatch: 'linear-gradient(135deg,#070a18 0%,#150510 100%)', grade: 'moody',       music: 'cinematic', captionStyle: 'film',    captionPos: 'bottom', captions: true },
+  { id: 'clean-pro',    label: 'Clean Pro',     desc: 'No grade + corporate',       swatch: 'linear-gradient(135deg,#3a3a3a 0%,#888 100%)',    grade: 'original',    music: 'corporate', captionStyle: 'bold',    captionPos: 'bottom', captions: false },
+  { id: 'retro',        label: 'Retro',         desc: 'Vintage film + jazz',        swatch: 'linear-gradient(135deg,#5a2a10 0%,#a8703c 100%)', grade: 'vintage',     music: 'jazz',      captionStyle: 'film',    captionPos: 'bottom', captions: true },
+  { id: 'noir-drama',   label: 'Noir Drama',    desc: 'B&W + tension score',        swatch: 'linear-gradient(135deg,#000 0%,#4a4a4a 100%)',    grade: 'noir',        music: 'dark',      captionStyle: 'minimal', captionPos: 'center', captions: true },
+]
+
 const POLL_INTERVAL = 4000
 
 /* ─── Helpers ────────────────────────────────────────── */
@@ -298,6 +312,9 @@ function VideosInner() {
   const [socialOpen, setSocialOpen]                 = useState(false)
   const [socialCaptions, setSocialCaptions]         = useState<{platform: string; caption: string}[] | null>(null)
   const [generatingSocial, setGeneratingSocial]     = useState(false)
+
+  // Quick Looks
+  const [activeQuickLook, setActiveQuickLook] = useState<string | null>(null)
 
   // Export
   const [exportQuality, setExportQuality]     = useState<ExportQuality>('1080p')
@@ -676,8 +693,30 @@ function VideosInner() {
     setHashtagsOpen(false); setHashtags([]); setGeneratingHashtags(false)
     setSocialOpen(false); setSocialCaptions(null); setGeneratingSocial(false)
     setPexelsQuery(''); setPexelsResults([]); setPexelsSearching(false); setPexelsTotal(0)
+    setActiveQuickLook(null)
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
   }
+
+  const applyQuickLook = useCallback((look: QuickLook) => {
+    setActiveQuickLook(look.id)
+    setColorGrade(look.grade)
+    setCaptionStyle(look.captionStyle)
+    setCaptionPos(look.captionPos)
+    setCaptionsEnabled(look.captions)
+    const prev = selectedMusic
+    setSelectedMusic(look.music)
+    if (look.music !== 'none' && look.music !== prev && audioRef.current) {
+      const track = MUSIC_MOODS.find(m => m.id === look.music)
+      if (track?.url) {
+        audioRef.current.src = track.url
+        audioRef.current.volume = 0.35
+        audioRef.current.loop = true
+        audioRef.current.play().catch(() => {})
+      }
+    }
+    setActiveTab('grade')
+    switchTab('grade')
+  }, [selectedMusic, switchTab])
 
   /* ── Render ──────────────────────────────────────── */
   return (
@@ -1182,6 +1221,44 @@ function VideosInner() {
               </div>
 
               <audio ref={audioRef} />
+
+              {/* Quick Looks row */}
+              <div className="flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#3f3f46', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Quick Looks</p>
+                  {activeQuickLook && (
+                    <button onClick={() => { setActiveQuickLook(null); setColorGrade('original'); setSelectedMusic('none'); setCaptionsEnabled(false); if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' } }}
+                      style={{ fontSize: 11, color: '#52525B', cursor: 'pointer', background: 'none', border: 'none' }}>
+                      Reset
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-0.5 px-0.5">
+                  {QUICK_LOOKS.map(look => {
+                    const active = activeQuickLook === look.id
+                    return (
+                      <button
+                        key={look.id}
+                        onClick={() => applyQuickLook(look)}
+                        className="flex flex-col items-start gap-2 p-2.5 rounded-xl flex-shrink-0 transition-all duration-150"
+                        style={{
+                          width: 104,
+                          background: active ? 'rgba(99,102,241,0.1)' : '#111113',
+                          border: active ? '1px solid rgba(99,102,241,0.45)' : '0.5px solid rgba(255,255,255,0.07)',
+                          boxShadow: active ? '0 0 0 1px rgba(99,102,241,0.15)' : 'none',
+                        }}
+                      >
+                        <div className="w-full h-12 rounded-lg flex-shrink-0" style={{ background: look.swatch, boxShadow: active ? `0 2px 8px rgba(0,0,0,0.4)` : 'none' }} />
+                        <div className="flex flex-col gap-0.5 w-full">
+                          <p style={{ fontSize: 11, fontWeight: 700, color: active ? '#a5b4fc' : '#E4E4E7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{look.label}</p>
+                          <p style={{ fontSize: 10, color: '#52525B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{look.desc}</p>
+                        </div>
+                        {active && <div className="w-full h-0.5 rounded-full" style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6)' }} />}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
 
               {/* Studio panel */}
               <div className="rounded-2xl overflow-hidden" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
