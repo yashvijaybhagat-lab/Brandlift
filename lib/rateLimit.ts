@@ -14,7 +14,7 @@ const store = new Map<string, Entry>()
 if (typeof global !== 'undefined' && typeof (global as Record<string, unknown>).__rlCleanup === 'undefined') {
   ;(global as Record<string, unknown>).__rlCleanup = setInterval(() => {
     const now = Date.now()
-    for (const [key, entry] of store) if (now > entry.resetAt) store.delete(key)
+    store.forEach((entry, key) => { if (now > entry.resetAt) store.delete(key) })
   }, 5 * 60_000)
 }
 
