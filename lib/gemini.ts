@@ -16,6 +16,7 @@ interface GeminiRequest {
   system?: string
   messages: GeminiMessage[]
   maxTokens?: number
+  tools?: Record<string, unknown>[]
 }
 
 /* Non-streaming — returns the full text response */
@@ -41,13 +42,16 @@ export async function geminiGenerate({ system, messages, maxTokens = 1024 }: Gem
 }
 
 /* Streaming — returns a ReadableStream that emits text chunks */
-export function geminiStream({ system, messages, maxTokens = 512 }: GeminiRequest): ReadableStream<Uint8Array> {
+export function geminiStream({ system, messages, maxTokens = 512, tools }: GeminiRequest): ReadableStream<Uint8Array> {
   const body: Record<string, unknown> = {
     contents: messages,
     generationConfig: { maxOutputTokens: maxTokens },
   }
   if (system) {
     body.system_instruction = { parts: [{ text: system }] }
+  }
+  if (tools?.length) {
+    body.tools = tools
   }
 
   const encoder = new TextEncoder()
@@ -82,8 +86,11 @@ export function geminiStream({ system, messages, maxTokens = 512 }: GeminiReques
             if (!json || json === '[DONE]') continue
             try {
               const chunk = JSON.parse(json)
-              const text: string = chunk?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-              if (text) controller.enqueue(encoder.encode(text))
+              // Collect text from all parts (skip tool/function call parts)
+              const parts: { text?: string }[] = chunk?.candidates?.[0]?.content?.parts ?? []
+              for (const part of parts) {
+                if (part.text) controller.enqueue(encoder.encode(part.text))
+              }
             } catch { /* skip malformed line */ }
           }
         }

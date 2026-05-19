@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { useSession } from 'next-auth/react'
 import { Sidebar } from '@/components/dashboard/Sidebar'
+import { LyraChat } from '@/components/chat/LyraChat'
 
 const STORAGE_KEY = 'brandlift:sidebar-collapsed'
 
@@ -46,6 +47,9 @@ export default function DashboardLayout({
       <main className="flex-1 overflow-auto min-w-0">
         {children}
       </main>
+
+      {/* Lyra AI assistant — floats over all dashboard pages */}
+      <LyraChat />
     </div>
   )
 }
