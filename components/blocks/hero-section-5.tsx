@@ -1,11 +1,12 @@
 'use client'
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { InfiniteSlider } from '@/components/ui/infinite-slider'
 import { ProgressiveBlur } from '@/components/ui/progressive-blur'
 import { cn } from '@/lib/utils'
-import { Menu, X, ChevronRight, ArrowUpRight } from 'lucide-react'
+import { Menu, X, ChevronRight, ArrowUpRight, Unlock, CheckCircle2 } from 'lucide-react'
 import { useScroll, motion } from 'motion/react'
+import { useBetaAccess } from '@/lib/betaAccess'
 
 /* ─── BrandLift Logo ──────────────────────────────────────────────────────── */
 const Logo = ({ className }: { className?: string }) => (
@@ -165,6 +166,19 @@ function StatBadge({ value, label }: { value: string; label: string }) {
 
 /* ─── Hero Section ────────────────────────────────────────────────────────── */
 export function HeroSection() {
+  const beta = useBetaAccess()
+  const [showBeta, setShowBeta] = useState(false)
+  const [betaInput, setBetaInput] = useState('')
+
+  // Auto-close panel on successful unlock
+  useEffect(() => { if (beta.unlocked) setShowBeta(false) }, [beta.unlocked])
+
+  const submitBetaCode = async () => {
+    if (!betaInput.trim() || beta.loading) return
+    await beta.unlock(betaInput.trim())
+    if (!beta.unlocked) setBetaInput('')
+  }
+
   return (
     <>
       <HeroHeader />
@@ -310,6 +324,87 @@ export function HeroSection() {
                   </Link>
                 </motion.div>
 
+                {/* Beta code entry */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.34, ease: [0.23, 1, 0.32, 1] }}
+                >
+                  {beta.unlocked ? (
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
+                      style={{ background: 'rgba(74,222,128,0.08)', border: '0.5px solid rgba(74,222,128,0.25)' }}>
+                      <CheckCircle2 className="w-3.5 h-3.5" style={{ color: '#4ADE80' }} />
+                      <span style={{ fontSize: 12, color: '#4ADE80', fontWeight: 500 }}>Beta access active — 4K &amp; AI Enhancement unlocked</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={() => setShowBeta(v => !v)}
+                        className="inline-flex items-center gap-1.5 w-fit transition-colors duration-150"
+                        style={{ fontSize: 13, color: showBeta ? '#a5b4fc' : '#52525B', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        onMouseEnter={e => { if (!showBeta) (e.currentTarget as HTMLElement).style.color = '#A1A1AA' }}
+                        onMouseLeave={e => { if (!showBeta) (e.currentTarget as HTMLElement).style.color = '#52525B' }}
+                      >
+                        <Unlock className="w-3 h-3" />
+                        <span>Have a beta code?</span>
+                      </button>
+
+                      {showBeta && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                          className="flex flex-col gap-3 p-4 rounded-xl"
+                          style={{ background: 'rgba(14,14,16,0.95)', border: '0.5px solid rgba(99,102,241,0.25)', backdropFilter: 'blur(16px)', maxWidth: 340 }}
+                        >
+                          <div>
+                            <p style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA' }}>Unlock beta features</p>
+                            <p style={{ fontSize: 12, color: '#71717A', marginTop: 3 }}>4K export, AI Enhancement, and early access features.</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={betaInput}
+                              onChange={e => setBetaInput(e.target.value.toUpperCase())}
+                              onKeyDown={e => { if (e.key === 'Enter') submitBetaCode() }}
+                              placeholder="BETACODE"
+                              autoFocus
+                              className="flex-1 px-3 py-2 rounded-lg text-[13px]"
+                              style={{
+                                background: '#18181C',
+                                border: `0.5px solid ${beta.error ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                                color: '#FAFAFA',
+                                outline: 'none',
+                                fontFamily: 'monospace',
+                                letterSpacing: '0.1em',
+                              }}
+                              onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)' }}
+                              onBlur={e => { e.currentTarget.style.borderColor = beta.error ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.1)' }}
+                            />
+                            <button
+                              onClick={submitBetaCode}
+                              disabled={beta.loading || !betaInput.trim()}
+                              className="px-3 py-2 rounded-lg text-[13px] font-semibold transition-all duration-150 flex-shrink-0"
+                              style={{
+                                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                color: 'white',
+                                border: 'none',
+                                cursor: beta.loading || !betaInput.trim() ? 'not-allowed' : 'pointer',
+                                opacity: beta.loading || !betaInput.trim() ? 0.5 : 1,
+                              }}
+                            >
+                              {beta.loading ? '…' : 'Unlock'}
+                            </button>
+                          </div>
+                          {beta.error && (
+                            <p style={{ fontSize: 12, color: '#f87171' }}>{beta.error}</p>
+                          )}
+                        </motion.div>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+
                 {/* Trust line + stats */}
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -422,7 +517,7 @@ const PLATFORM_LOGOS: PlatformLogo[] = [
 ]
 
 /* ─── Before/After Slider ─────────────────────────────────────────────────── */
-import { useRef, useState, useEffect } from 'react'
+import { useRef } from 'react'
 import { useMotionValue, useTransform, motion as m } from 'motion/react'
 
 function BeforeAfterSlider() {

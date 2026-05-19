@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { TrendingUp, Eye, Video, Lightbulb, BarChart2, X, Clock, Calendar } from 'lucide-react'
+import { TrendingUp, Eye, Video, Lightbulb, BarChart2, X, Clock, Calendar, CheckCircle2, Circle } from 'lucide-react'
 import { TopBar } from '@/components/dashboard/TopBar'
 import { ContentIdeasFeed, type ContentIdea } from '@/components/dashboard/ContentIdeasFeed'
 
@@ -403,6 +403,116 @@ function IdeaAnalyticsPanel({ idea, onClose }: { idea: ContentIdea; onClose: () 
   )
 }
 
+/* ─── Weekly Content Calendar ─────────────────────────────────────────────── */
+const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const PLATFORM_SCHEDULE: { day: number; platform: string; time: string; score: number }[] = [
+  { day: 1, platform: 'TikTok',    time: '9pm',  score: 1.00 },
+  { day: 2, platform: 'Instagram', time: '9am',  score: 0.92 },
+  { day: 3, platform: 'TikTok',    time: '6pm',  score: 0.88 },
+  { day: 4, platform: 'YouTube',   time: '3pm',  score: 0.88 },
+  { day: 4, platform: 'Instagram', time: '6pm',  score: 0.95 },
+  { day: 5, platform: 'TikTok',    time: '9pm',  score: 0.95 },
+  { day: 6, platform: 'YouTube',   time: '9pm',  score: 0.95 },
+]
+
+const PLATFORM_COLORS: Record<string, string> = {
+  TikTok:    '#4ADE80',
+  Instagram: '#a78bfa',
+  YouTube:   '#f87171',
+  LinkedIn:  '#60a5fa',
+}
+
+function WeekCalendar() {
+  const today = new Date().getDay()
+  const [checked, setChecked] = React.useState<Set<string>>(new Set())
+
+  const toggle = (key: string) =>
+    setChecked(prev => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next })
+
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Posting Schedule</h2>
+          <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>Optimal days and times based on platform data</p>
+        </div>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+          <Calendar className="w-3 h-3" style={{ color: '#52525B' }} />
+          <span style={{ fontSize: 11, color: '#52525B' }}>This week</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1.5">
+        {WEEK_DAYS.map((day, idx) => {
+          const isToday = idx === today
+          const slots = PLATFORM_SCHEDULE.filter(s => s.day === idx)
+          const topSlot = slots.sort((a, b) => b.score - a.score)[0]
+          const isPast = idx < today
+          return (
+            <div
+              key={day}
+              className="flex flex-col gap-1.5 p-2.5 rounded-xl transition-all duration-200"
+              style={{
+                background: isToday ? 'rgba(99,102,241,0.08)' : '#111113',
+                border: `0.5px solid ${isToday ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.05)'}`,
+                opacity: isPast ? 0.5 : 1,
+              }}
+            >
+              <div className="flex flex-col items-center gap-0.5">
+                <span style={{ fontSize: 10, fontWeight: 600, color: isToday ? '#818cf8' : '#52525B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{day}</span>
+                {isToday && <div className="w-1 h-1 rounded-full" style={{ background: '#6366f1' }} />}
+              </div>
+
+              {topSlot ? (
+                <div className="flex flex-col gap-1">
+                  <div
+                    className="w-full h-1 rounded-full"
+                    style={{ background: PLATFORM_COLORS[topSlot.platform] ?? '#6366f1', opacity: topSlot.score }}
+                  />
+                  <p style={{ fontSize: 9, color: PLATFORM_COLORS[topSlot.platform] ?? '#a5b4fc', fontWeight: 700, textAlign: 'center', lineHeight: 1.2 }}>
+                    {topSlot.platform}
+                  </p>
+                  <p style={{ fontSize: 9, color: '#52525B', textAlign: 'center' }}>{topSlot.time}</p>
+                  {slots.length > 1 && (
+                    <p style={{ fontSize: 8, color: '#3f3f46', textAlign: 'center' }}>+{slots.length - 1} more</p>
+                  )}
+                </div>
+              ) : (
+                <p style={{ fontSize: 9, color: '#27272a', textAlign: 'center' }}>Rest</p>
+              )}
+
+              {topSlot && !isPast && (
+                <button
+                  onClick={() => toggle(`${idx}`)}
+                  className="flex items-center justify-center w-full mt-auto transition-opacity duration-150"
+                  title={checked.has(`${idx}`) ? 'Mark as not posted' : 'Mark as posted'}
+                >
+                  {checked.has(`${idx}`) ? (
+                    <CheckCircle2 className="w-3.5 h-3.5" style={{ color: '#4ADE80' }} />
+                  ) : (
+                    <Circle className="w-3.5 h-3.5" style={{ color: '#27272a' }} />
+                  )}
+                </button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 flex-wrap">
+        {Object.entries(PLATFORM_COLORS).map(([p, c]) => (
+          <div key={p} className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full" style={{ background: c }} />
+            <span style={{ fontSize: 11, color: '#52525B' }}>{p}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 /* ─── Page ────────────────────────────────────────────────────────────────── */
 export default function DashboardPage() {
   const [selectedIdea, setSelectedIdea] = React.useState<ContentIdea | null>(null)
@@ -435,6 +545,10 @@ export default function DashboardPage() {
               {stats.map(stat => <StatCard key={stat.label} stat={stat} />)}
             </div>
           </section>
+
+          <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
+
+          <WeekCalendar />
 
           <div style={{ height: '0.5px', background: 'rgba(255,255,255,0.05)' }} />
 

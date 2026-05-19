@@ -284,6 +284,14 @@ function VideosInner() {
   const [transitionDuration, setTransitionDuration] = useState(0.6)
   const [tabVisible, setTabVisible]           = useState(true)
 
+  // AI Tools
+  const [hashtagsOpen, setHashtagsOpen]             = useState(false)
+  const [hashtags, setHashtags]                     = useState<string[]>([])
+  const [generatingHashtags, setGeneratingHashtags] = useState(false)
+  const [socialOpen, setSocialOpen]                 = useState(false)
+  const [socialCaptions, setSocialCaptions]         = useState<{platform: string; caption: string}[] | null>(null)
+  const [generatingSocial, setGeneratingSocial]     = useState(false)
+
   // Export
   const [exportQuality, setExportQuality]     = useState<ExportQuality>('1080p')
   const [exportAspect, setExportAspect]       = useState<ExportAspect>('16:9')
@@ -476,6 +484,28 @@ function VideosInner() {
     runScriptGen(idea, selectedTemplate)
   }, [scriptText, currentTemplate.placeholder, selectedTemplate, runScriptGen])
 
+  const generateHashtags = useCallback(async () => {
+    if (!scriptText.trim() || generatingHashtags) return
+    setGeneratingHashtags(true); setHashtagsOpen(true); setHashtags([])
+    try {
+      const res = await fetch('/api/hashtags/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ script: scriptText, platform: 'tiktok' }) })
+      const data = await res.json()
+      if (data.hashtags) setHashtags(data.hashtags)
+    } catch {}
+    finally { setGeneratingHashtags(false) }
+  }, [scriptText, generatingHashtags])
+
+  const generateSocialCaptions = useCallback(async () => {
+    if (!scriptText.trim() || generatingSocial) return
+    setGeneratingSocial(true); setSocialOpen(true); setSocialCaptions(null)
+    try {
+      const res = await fetch('/api/captions/social', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ script: scriptText }) })
+      const data = await res.json()
+      if (data.captions) setSocialCaptions(data.captions)
+    } catch {}
+    finally { setGeneratingSocial(false) }
+  }, [scriptText, generatingSocial])
+
   const [enhancementStatus, setEnhancementStatus] = useState<'idle' | 'enhancing' | 'done' | 'failed'>('idle')
 
   const runEnhancementInBackground = useCallback(async (blobUrl: string, recordId: string) => {
@@ -616,6 +646,8 @@ function VideosInner() {
     setExportAspect('16:9'); setEnhancementStatus('idle'); setShowBetaPanel(false); setBetaCodeInput('')
     setTransition('fade'); setActiveTab('grade'); setTranscribing(false); setTranscribeError('')
     setDisplayedCaption(''); setCaptionOpacity(0); setExporting(false)
+    setHashtagsOpen(false); setHashtags([]); setGeneratingHashtags(false)
+    setSocialOpen(false); setSocialCaptions(null); setGeneratingSocial(false)
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
   }
 
@@ -726,6 +758,104 @@ function VideosInner() {
                   </button>
                 )}
               </div>
+
+              {/* ── AI Tools ───────────────────────────── */}
+              {scriptText.trim().length > 20 && !isGenerating && (
+                <div className="flex flex-col gap-3 pt-3" style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+                  <p style={{ fontSize: 11, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>AI Tools</p>
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={generateHashtags}
+                      disabled={generatingHashtags}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150"
+                      style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.25)', color: '#a5b4fc', cursor: generatingHashtags ? 'default' : 'pointer', opacity: generatingHashtags ? 0.6 : 1 }}
+                    >
+                      <span style={{ fontWeight: 700 }}>#</span>
+                      {generatingHashtags ? 'Generating…' : 'Hashtags'}
+                    </button>
+                    <button
+                      onClick={generateSocialCaptions}
+                      disabled={generatingSocial}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150"
+                      style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.25)', color: '#c4b5fd', cursor: generatingSocial ? 'default' : 'pointer', opacity: generatingSocial ? 0.6 : 1 }}
+                    >
+                      <MessageSquare className="w-3 h-3" />
+                      {generatingSocial ? 'Generating…' : 'Social Captions'}
+                    </button>
+                  </div>
+
+                  {/* Hashtags panel */}
+                  {hashtagsOpen && (
+                    <div className="flex flex-col gap-2.5 p-3 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+                      <div className="flex items-center justify-between">
+                        <p style={{ fontSize: 11, color: '#71717A', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Hashtags</p>
+                        <div className="flex items-center gap-3">
+                          {hashtags.length > 0 && (
+                            <button onClick={() => navigator.clipboard.writeText(hashtags.join(' '))}
+                              style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              Copy all
+                            </button>
+                          )}
+                          <button onClick={() => setHashtagsOpen(false)} style={{ fontSize: 13, color: '#52525B', cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1 }}>✕</button>
+                        </div>
+                      </div>
+                      {generatingHashtags ? (
+                        <div className="flex gap-1.5 flex-wrap">
+                          {[10,14,8,12,9,11,7,13,10,8,12,9,11,7,10].map((w,i) => (
+                            <div key={i} className="h-6 rounded-lg animate-pulse" style={{ width: w * 7, background: 'rgba(255,255,255,0.06)' }} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex gap-1.5 flex-wrap">
+                          {hashtags.map(tag => (
+                            <button key={tag} onClick={() => navigator.clipboard.writeText(tag)} title="Click to copy"
+                              className="px-2.5 py-1 rounded-lg text-[12px] font-medium transition-all duration-150"
+                              style={{ background: 'rgba(99,102,241,0.08)', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.2)', cursor: 'pointer' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.18)' }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.08)' }}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Social captions panel */}
+                  {socialOpen && (
+                    <div className="flex flex-col gap-2.5 p-3 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+                      <div className="flex items-center justify-between">
+                        <p style={{ fontSize: 11, color: '#71717A', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Social Captions</p>
+                        <button onClick={() => setSocialOpen(false)} style={{ fontSize: 13, color: '#52525B', cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1 }}>✕</button>
+                      </div>
+                      {generatingSocial ? (
+                        <div className="flex flex-col gap-2">
+                          {[56, 40, 48].map((h,i) => (
+                            <div key={i} className="rounded-lg animate-pulse" style={{ height: h, background: 'rgba(255,255,255,0.04)' }} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {socialCaptions?.map(({ platform, caption }) => (
+                            <div key={platform} className="flex flex-col gap-1.5 p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                              <div className="flex items-center justify-between">
+                                <span style={{ fontSize: 10, fontWeight: 700, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{platform}</span>
+                                <button onClick={() => navigator.clipboard.writeText(caption)}
+                                  style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                  Copy
+                                </button>
+                              </div>
+                              <p style={{ fontSize: 12, color: '#E4E4E7', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{caption}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
             </div>
           )}
 
