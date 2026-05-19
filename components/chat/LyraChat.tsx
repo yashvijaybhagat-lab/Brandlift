@@ -306,15 +306,17 @@ export function LyraChat() {
     <>
       {/* ── Keyframes ──────────────────────────────────────── */}
       <style>{`
-        @keyframes lyra-dot  { 0%,80%,100%{opacity:.3;transform:scale(.8)} 40%{opacity:1;transform:scale(1)} }
-        @keyframes lyra-in   { from{opacity:0;transform:translateY(14px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
-        @keyframes lyra-glow { 0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0)} 50%{box-shadow:0 0 0 8px rgba(99,102,241,.12)} }
-        @keyframes lyra-tab  { from{opacity:0;transform:translateX(8px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes lyra-badge{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+        @keyframes lyra-dot   { 0%,80%,100%{opacity:.3;transform:scale(.8)} 40%{opacity:1;transform:scale(1)} }
+        @keyframes lyra-in    { from{opacity:0;transform:translateY(14px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+        @keyframes lyra-tab   { from{opacity:0;transform:translateX(8px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes lyra-badge { 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+        @keyframes lyra-ring  { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.9);opacity:0} }
+        @keyframes lyra-label { 0%,100%{opacity:1;transform:translateX(0)} 50%{opacity:.85;transform:translateX(-1px)} }
         .lyra-panel { animation: lyra-in .22s cubic-bezier(.34,1.56,.64,1) forwards; }
         .lyra-tab   { animation: lyra-tab .2s ease forwards; }
         .lyra-hover-actions { opacity: 0 !important; }
         .lyra-msg:hover .lyra-hover-actions { opacity: 1 !important; }
+        .lyra-btn:hover .lyra-label-pill { opacity: 1 !important; transform: translateX(0) !important; }
       `}</style>
 
       {/* ── Pull tab — shown when Lyra is hidden ──────────── */}
@@ -390,35 +392,69 @@ export function LyraChat() {
           </button>
 
           {/* Main Lyra button */}
-          <button
-            onClick={() => { setOpen(p => !p); setHasNewMsg(false) }}
-            aria-label="Open Lyra AI assistant"
-            style={{
-              width: 52, height: 52, borderRadius: '50%',
-              background: open
-                ? 'rgba(99,102,241,0.15)'
-                : 'linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)',
-              border: open ? '1px solid rgba(99,102,241,0.4)' : 'none',
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: open
-                ? '0 4px 24px rgba(99,102,241,0.2)'
-                : '0 4px 24px rgba(99,102,241,0.4), 0 0 0 1px rgba(99,102,241,0.6)',
-              transition: 'all 0.2s ease',
-              animation: !open ? 'lyra-glow 3s ease-in-out infinite' : 'none',
-              position: 'relative',
-            }}
-            onMouseEnter={e => { if (!open) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.08)' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = '' }}
-          >
-            {open
-              ? <span style={{ fontSize: 20, color: '#a5b4fc', lineHeight: 1 }}>×</span>
-              : <LyraIcon size={24} />
-            }
-            {hasNewMsg && !open && (
-              <div style={{ position: 'absolute', top: 2, right: 2, width: 10, height: 10, borderRadius: '50%', background: '#4ADE80', border: '2px solid #0A0A0B', animation: 'lyra-badge 1s ease infinite' }} />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+
+            {/* "Lyra AI" label — peeks out to the left on hover */}
+            {!open && (
+              <div className="lyra-label-pill" style={{
+                position: 'absolute', right: 70,
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px',
+                background: 'linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)',
+                borderRadius: 24,
+                whiteSpace: 'nowrap',
+                pointerEvents: 'none',
+                opacity: 0,
+                transform: 'translateX(8px)',
+                transition: 'opacity 0.2s ease, transform 0.2s ease',
+                boxShadow: '0 4px 16px rgba(99,102,241,0.4)',
+              }}>
+                <LyraIcon size={13} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>Lyra AI</span>
+              </div>
             )}
-          </button>
+
+            {/* Pulsing rings — only when closed */}
+            {!open && (
+              <>
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(99,102,241,0.35)', animation: 'lyra-ring 2s ease-out infinite', zIndex: -1 }} />
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(139,92,246,0.25)', animation: 'lyra-ring 2s ease-out 0.6s infinite', zIndex: -1 }} />
+              </>
+            )}
+
+            <button
+              className="lyra-btn"
+              onClick={() => { setOpen(p => !p); setHasNewMsg(false) }}
+              aria-label="Open Lyra AI assistant"
+              style={{
+                width: 60, height: 60, borderRadius: '50%',
+                background: open
+                  ? 'rgba(99,102,241,0.15)'
+                  : 'linear-gradient(135deg,#5254f0 0%,#7c3aed 100%)',
+                border: open
+                  ? '1px solid rgba(99,102,241,0.4)'
+                  : '2px solid rgba(255,255,255,0.15)',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: open
+                  ? '0 4px 24px rgba(99,102,241,0.2)'
+                  : '0 8px 32px rgba(99,102,241,0.55), 0 2px 8px rgba(0,0,0,0.4)',
+                transition: 'all 0.2s cubic-bezier(.34,1.56,.64,1)',
+                position: 'relative',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.1)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = '' }}
+            >
+              {open
+                ? <span style={{ fontSize: 22, color: '#a5b4fc', lineHeight: 1 }}>×</span>
+                : <LyraIcon size={28} />
+              }
+              {/* New message badge */}
+              {hasNewMsg && !open && (
+                <div style={{ position: 'absolute', top: 3, right: 3, width: 12, height: 12, borderRadius: '50%', background: '#4ADE80', border: '2px solid #0A0A0B', animation: 'lyra-badge 1s ease infinite' }} />
+              )}
+            </button>
+          </div>
         </div>
       )}
 
