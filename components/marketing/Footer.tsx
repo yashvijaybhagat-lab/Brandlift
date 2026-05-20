@@ -152,6 +152,11 @@ export default function Footer() {
             </ul>
           </nav>
 
+          {/* Made by */}
+          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            Made by Yash Bhagat &amp; Ansh Thakar
+          </span>
+
         </div>
       </div>
     </footer>
