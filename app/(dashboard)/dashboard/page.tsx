@@ -407,14 +407,36 @@ function IdeaAnalyticsPanel({ idea, onClose }: { idea: ContentIdea; onClose: () 
 /* ─── Weekly Content Calendar ─────────────────────────────────────────────── */
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+// Full per-day schedule — every platform scored for every day
 const PLATFORM_SCHEDULE: { day: number; platform: string; time: string; score: number }[] = [
+  // Sunday — YouTube & TikTok leisure browsing peaks
+  { day: 0, platform: 'YouTube',   time: '8pm',  score: 1.00 },
+  { day: 0, platform: 'TikTok',    time: '7pm',  score: 0.82 },
+  { day: 0, platform: 'Instagram', time: '11am', score: 0.64 },
+  // Monday — Instagram morning commute spike
+  { day: 1, platform: 'Instagram', time: '8am',  score: 0.93 },
   { day: 1, platform: 'TikTok',    time: '9pm',  score: 1.00 },
-  { day: 2, platform: 'Instagram', time: '9am',  score: 0.92 },
-  { day: 3, platform: 'TikTok',    time: '6pm',  score: 0.88 },
-  { day: 4, platform: 'YouTube',   time: '3pm',  score: 0.88 },
-  { day: 4, platform: 'Instagram', time: '6pm',  score: 0.95 },
-  { day: 5, platform: 'TikTok',    time: '9pm',  score: 0.95 },
-  { day: 6, platform: 'YouTube',   time: '9pm',  score: 0.95 },
+  { day: 1, platform: 'LinkedIn',  time: '9am',  score: 0.88 },
+  // Tuesday — TikTok peak day
+  { day: 2, platform: 'TikTok',    time: '9pm',  score: 1.00 },
+  { day: 2, platform: 'Instagram', time: '9am',  score: 0.90 },
+  { day: 2, platform: 'LinkedIn',  time: '10am', score: 0.82 },
+  // Wednesday — Instagram midweek peak, TikTok strong
+  { day: 3, platform: 'Instagram', time: '6pm',  score: 1.00 },
+  { day: 3, platform: 'TikTok',    time: '6pm',  score: 0.92 },
+  { day: 3, platform: 'YouTube',   time: '3pm',  score: 0.74 },
+  // Thursday — Multi-platform strong day
+  { day: 4, platform: 'TikTok',    time: '9pm',  score: 1.00 },
+  { day: 4, platform: 'YouTube',   time: '3pm',  score: 0.95 },
+  { day: 4, platform: 'Instagram', time: '9am',  score: 0.88 },
+  // Friday — Pre-weekend TikTok & Instagram surge
+  { day: 5, platform: 'TikTok',    time: '5pm',  score: 1.00 },
+  { day: 5, platform: 'Instagram', time: '12pm', score: 0.96 },
+  { day: 5, platform: 'YouTube',   time: '7pm',  score: 0.80 },
+  // Saturday — YouTube discovery + casual TikTok
+  { day: 6, platform: 'YouTube',   time: '9pm',  score: 0.98 },
+  { day: 6, platform: 'TikTok',    time: '11am', score: 0.87 },
+  { day: 6, platform: 'Instagram', time: '10am', score: 0.75 },
 ]
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -424,6 +446,38 @@ const PLATFORM_COLORS: Record<string, string> = {
   LinkedIn:  '#60a5fa',
 }
 
+// Day-specific platform health — scores, tips, and statuses rotate with the day
+type DayHealth = { score: number; status: string; tip: string }
+const DAILY_HEALTH: Record<string, DayHealth[]> = {
+  TikTok: [
+    { score: 74, status: 'Weekend wind-down',    tip: 'Sunday TikTok scrolling peaks after 7pm. Post feel-good or entertaining content.' },
+    { score: 88, status: 'Strong week opener',   tip: 'Monday 9pm is prime time. Hook in the first 2 seconds — algorithm rewards completion rate.' },
+    { score: 96, status: 'Peak day — post now',  tip: 'Tuesday is TikTok\'s highest-traffic day. Best for new content — expect 40% more impressions.' },
+    { score: 85, status: 'Midweek momentum',     tip: 'Wednesday 6pm catches the after-work scroll. Use trending sounds to boost discoverability.' },
+    { score: 91, status: 'Trending window open', tip: 'Thursday sees creators going viral before the weekend. Duet or stitch a trending video.' },
+    { score: 94, status: 'Pre-weekend spike',    tip: 'Friday 5pm is the highest-engagement window. Post before 5pm for full evening coverage.' },
+    { score: 80, status: 'Casual browse day',    tip: 'Saturday morning gets lighter traffic — good for evergreen content that builds over time.' },
+  ],
+  Instagram: [
+    { score: 60, status: 'Low engagement day',   tip: 'Sunday Instagram traffic is low. Best to save your best content for weekdays.' },
+    { score: 90, status: 'Monday commute peak',  tip: 'Monday 8am catches morning commuters. Reels get 3× more reach than static posts today.' },
+    { score: 86, status: 'Good engagement zone', tip: 'Tuesday 9am works well. Stories before your Reel warms up your audience first.' },
+    { score: 93, status: 'Peak reach day',       tip: 'Wednesday is Instagram\'s top day. Post Reels at 6pm — algorithm is actively pushing content.' },
+    { score: 82, status: 'Solid for Reels',      tip: 'Thursday morning works for business content. Use 5–10 hashtags in the first comment.' },
+    { score: 88, status: 'TGIF reach boost',     tip: 'Friday 12pm catches lunch breaks. Add a strong CTA — engagement is higher pre-weekend.' },
+    { score: 68, status: 'Leisure browsing',     tip: 'Saturday morning sees casual scrollers. Great for lifestyle or behind-the-scenes content.' },
+  ],
+  YouTube: [
+    { score: 92, status: 'Best day of the week', tip: 'Sunday is YouTube\'s #1 day. Viewers binge-watch in the evening — 8pm is peak upload time.' },
+    { score: 54, status: 'Low discovery day',    tip: 'Monday YouTube traffic is low. Good day to optimize titles/thumbnails on existing videos.' },
+    { score: 62, status: 'Moderate traffic',     tip: 'Tuesday is decent for Shorts. Keep them under 45s for maximum algorithm boost.' },
+    { score: 70, status: 'Midweek opportunity',  tip: 'Wednesday 3pm hits the after-school and lunch crowd. Good for tutorial-style content.' },
+    { score: 88, status: 'Strong upload day',    tip: 'Thursday is YouTube\'s second best day. Upload Thursday afternoon for peak weekend views.' },
+    { score: 78, status: 'Growing into weekend', tip: 'Friday views build through the weekend. Upload before 7pm for algorithm indexing time.' },
+    { score: 95, status: 'Weekend prime time',   tip: 'Saturday evening YouTube traffic spikes. Viewers stay longer — great for longer Shorts series.' },
+  ],
+}
+
 function WeekCalendar() {
   const today = new Date().getDay()
   const [checked, setChecked] = React.useState<Set<string>>(new Set())
@@ -431,25 +485,49 @@ function WeekCalendar() {
   const toggle = (key: string) =>
     setChecked(prev => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next })
 
+  const todaySlots = PLATFORM_SCHEDULE.filter(s => s.day === today).sort((a, b) => b.score - a.score)
+  const todayBest  = todaySlots[0]
+
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div>
           <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Posting Schedule</h2>
-          <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>Optimal days and times based on platform data</p>
+          <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>Best platforms and times · updates every day</p>
         </div>
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
           <Calendar className="w-3 h-3" style={{ color: '#52525B' }} />
-          <span style={{ fontSize: 11, color: '#52525B' }}>This week</span>
+          <span style={{ fontSize: 11, color: '#52525B' }}>{WEEK_DAYS[today]}</span>
         </div>
       </div>
+
+      {/* Today's callout */}
+      {todayBest && (
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+          style={{ background: `${PLATFORM_COLORS[todayBest.platform] ?? '#6366f1'}0d`, border: `0.5px solid ${PLATFORM_COLORS[todayBest.platform] ?? '#6366f1'}35` }}>
+          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PLATFORM_COLORS[todayBest.platform] ?? '#6366f1', boxShadow: `0 0 6px ${PLATFORM_COLORS[todayBest.platform] ?? '#6366f1'}80` }} />
+          <div className="flex-1 min-w-0">
+            <span style={{ fontSize: 12, fontWeight: 700, color: PLATFORM_COLORS[todayBest.platform] ?? '#a5b4fc' }}>
+              Post on {todayBest.platform} at {todayBest.time} today
+            </span>
+            {todaySlots.length > 1 && (
+              <span style={{ fontSize: 11, color: '#52525B', marginLeft: 8 }}>
+                also {todaySlots.slice(1).map(s => `${s.platform} ${s.time}`).join(' · ')}
+              </span>
+            )}
+          </div>
+          <span style={{ fontSize: 10, fontWeight: 700, color: PLATFORM_COLORS[todayBest.platform] ?? '#a5b4fc', padding: '2px 7px', borderRadius: 5, background: `${PLATFORM_COLORS[todayBest.platform] ?? '#6366f1'}18`, flexShrink: 0 }}>
+            {Math.round(todayBest.score * 100)}% reach
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-7 gap-1.5">
         {WEEK_DAYS.map((day, idx) => {
           const isToday = idx === today
-          const slots = PLATFORM_SCHEDULE.filter(s => s.day === idx)
-          const topSlot = slots.sort((a, b) => b.score - a.score)[0]
-          const isPast = idx < today
+          const slots   = PLATFORM_SCHEDULE.filter(s => s.day === idx).sort((a, b) => b.score - a.score)
+          const topSlot = slots[0]
+          const isPast  = idx < today
           return (
             <div
               key={day}
@@ -457,7 +535,7 @@ function WeekCalendar() {
               style={{
                 background: isToday ? 'rgba(99,102,241,0.08)' : '#111113',
                 border: `0.5px solid ${isToday ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.05)'}`,
-                opacity: isPast ? 0.5 : 1,
+                opacity: isPast ? 0.45 : 1,
               }}
             >
               <div className="flex flex-col items-center gap-0.5">
@@ -467,12 +545,9 @@ function WeekCalendar() {
 
               {topSlot ? (
                 <div className="flex flex-col gap-1">
-                  <div
-                    className="w-full h-1 rounded-full"
-                    style={{ background: PLATFORM_COLORS[topSlot.platform] ?? '#6366f1', opacity: topSlot.score }}
-                  />
+                  <div className="w-full h-1 rounded-full" style={{ background: PLATFORM_COLORS[topSlot.platform] ?? '#6366f1', opacity: topSlot.score }} />
                   <p style={{ fontSize: 9, color: PLATFORM_COLORS[topSlot.platform] ?? '#a5b4fc', fontWeight: 700, textAlign: 'center', lineHeight: 1.2 }}>
-                    {topSlot.platform}
+                    {topSlot.platform.replace('Instagram', 'Insta')}
                   </p>
                   <p style={{ fontSize: 9, color: '#52525B', textAlign: 'center' }}>{topSlot.time}</p>
                   {slots.length > 1 && (
@@ -486,7 +561,7 @@ function WeekCalendar() {
               {topSlot && !isPast && (
                 <button
                   onClick={() => toggle(`${idx}`)}
-                  className="flex items-center justify-center w-full mt-auto transition-opacity duration-150"
+                  className="flex items-center justify-center w-full mt-auto"
                   title={checked.has(`${idx}`) ? 'Mark as not posted' : 'Mark as posted'}
                 >
                   {checked.has(`${idx}`) ? (
@@ -501,7 +576,6 @@ function WeekCalendar() {
         })}
       </div>
 
-      {/* Legend */}
       <div className="flex items-center gap-4 flex-wrap">
         {Object.entries(PLATFORM_COLORS).map(([p, c]) => (
           <div key={p} className="flex items-center gap-1.5">
@@ -540,49 +614,50 @@ function QuickActionsBar() {
 }
 
 /* ─── Platform Health widget ──────────────────────────────────────────────── */
-const PLATFORM_HEALTH = [
-  {
-    name: 'TikTok', color: '#4ADE80', score: 82,
-    tip: 'Post at 9pm on Tue/Thu — your niche peaks during evening scroll sessions.',
-    status: 'Trending window open',
-  },
-  {
-    name: 'Instagram', color: '#a78bfa', score: 71,
-    tip: 'Reels get 3× more reach than static posts. Use Reels for every video.',
-    status: 'Good engagement zone',
-  },
-  {
-    name: 'YouTube', color: '#f87171', score: 58,
-    tip: 'Shorts under 60s indexed fastest. Add keyword-rich titles for search.',
-    status: 'Growth opportunity',
-  },
+const PLATFORM_HEALTH_BASE = [
+  { name: 'TikTok',    color: '#4ADE80' },
+  { name: 'Instagram', color: '#a78bfa' },
+  { name: 'YouTube',   color: '#f87171' },
 ]
 
 function PlatformHealth() {
+  const today = new Date().getDay()
+  const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][today]
+
+  const platforms = PLATFORM_HEALTH_BASE.map(({ name, color }) => {
+    const dayData = DAILY_HEALTH[name]?.[today] ?? { score: 70, status: 'Moderate traffic', tip: 'Post during peak hours for best reach.' }
+    return { name, color, ...dayData }
+  })
+
+  // Sort by today's score so the best platform leads
+  platforms.sort((a, b) => b.score - a.score)
+
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div>
           <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Platform Health</h2>
-          <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>Algorithmic opportunity scores based on current trends</p>
+          <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>Opportunity scores for {dayName} — reorders each day</p>
         </div>
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
           <Activity className="w-3 h-3" style={{ color: '#52525B' }} />
-          <span style={{ fontSize: 11, color: '#52525B' }}>Live data</span>
+          <span style={{ fontSize: 11, color: '#52525B' }}>Today</span>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        {PLATFORM_HEALTH.map(({ name, color, score, tip, status }) => (
+        {platforms.map(({ name, color, score, tip, status }, i) => (
           <div key={name} className="flex flex-col gap-3 p-4 rounded-2xl transition-all duration-200"
-            style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}
+            style={{ background: '#111113', border: `0.5px solid ${i === 0 ? `${color}30` : 'rgba(255,255,255,0.06)'}` }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${color}30` }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = i === 0 ? `${color}30` : 'rgba(255,255,255,0.06)' }}
           >
-            {/* Platform + score */}
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: '#E4E4E7' }}>{name}</p>
+                <div className="flex items-center gap-1.5">
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#E4E4E7' }}>{name}</p>
+                  {i === 0 && <span style={{ fontSize: 8, fontWeight: 800, color, padding: '1px 5px', borderRadius: 3, background: `${color}18`, border: `0.5px solid ${color}40`, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Best today</span>}
+                </div>
                 <p style={{ fontSize: 11, color, marginTop: 1 }}>{status}</p>
               </div>
               <div className="relative w-10 h-10 flex-shrink-0">
@@ -597,15 +672,11 @@ function PlatformHealth() {
               </div>
             </div>
 
-            {/* Score bar */}
-            <div className="flex flex-col gap-1.5">
-              <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                <div className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${score}%`, background: `linear-gradient(90deg,${color}80,${color})` }} />
-              </div>
+            <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+              <div className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${score}%`, background: `linear-gradient(90deg,${color}80,${color})` }} />
             </div>
 
-            {/* Tip */}
             <p style={{ fontSize: 11, color: '#71717A', lineHeight: 1.55 }}>{tip}</p>
           </div>
         ))}

@@ -170,13 +170,14 @@ export function HeroSection() {
   const [showBeta, setShowBeta] = useState(false)
   const [betaInput, setBetaInput] = useState('')
 
-  // Auto-close panel on successful unlock
-  useEffect(() => { if (beta.unlocked) setShowBeta(false) }, [beta.unlocked])
+  // Open re-enter input when reenterOpen is triggered from the hook
+  useEffect(() => { if (beta.reenterOpen) setShowBeta(true) }, [beta.reenterOpen])
 
   const submitBetaCode = async () => {
     if (!betaInput.trim() || beta.loading) return
-    await beta.unlock(betaInput.trim())
-    if (!beta.unlocked) setBetaInput('')
+    const ok = await beta.unlock(betaInput.trim())
+    if (!ok) setBetaInput('')
+    else { setBetaInput(''); setShowBeta(false) }
   }
 
   return (
@@ -330,23 +331,33 @@ export function HeroSection() {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.34, ease: [0.23, 1, 0.32, 1] }}
                 >
-                  {beta.unlocked ? (
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
-                      style={{
-                        background: beta.isOwner ? 'rgba(99,102,241,0.1)' : 'rgba(74,222,128,0.08)',
-                        border: beta.isOwner ? '0.5px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(74,222,128,0.25)',
-                      }}>
-                      <CheckCircle2 className="w-3.5 h-3.5" style={{ color: beta.isOwner ? '#a5b4fc' : '#4ADE80' }} />
-                      {beta.isOwner ? (
-                        <span style={{ fontSize: 12, fontWeight: 600, color: '#a5b4fc' }}>
-                          Welcome back, {beta.ownerName} — Founder access active
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: 12, color: '#4ADE80', fontWeight: 500 }}>Beta access active — 4K &amp; AI Enhancement unlocked</span>
-                      )}
-                      {beta.isOwner && (
-                        <span style={{ fontSize: 9, fontWeight: 800, color: '#6366f1', letterSpacing: '0.1em', padding: '1px 5px', borderRadius: 3, background: 'rgba(99,102,241,0.15)', border: '0.5px solid rgba(99,102,241,0.3)', textTransform: 'uppercase' }}>FOUNDER</span>
-                      )}
+                  {beta.unlocked && !beta.reenterOpen ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
+                        style={{
+                          background: beta.isOwner ? 'rgba(99,102,241,0.1)' : 'rgba(74,222,128,0.08)',
+                          border: beta.isOwner ? '0.5px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(74,222,128,0.25)',
+                        }}>
+                        <CheckCircle2 className="w-3.5 h-3.5" style={{ color: beta.isOwner ? '#a5b4fc' : '#4ADE80' }} />
+                        {beta.isOwner ? (
+                          <span style={{ fontSize: 12, fontWeight: 600, color: '#a5b4fc' }}>
+                            Welcome back, {beta.ownerName} — Founder access active
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 12, color: '#4ADE80', fontWeight: 500 }}>Beta access active — 4K &amp; AI Enhancement unlocked</span>
+                        )}
+                        {beta.isOwner && (
+                          <span style={{ fontSize: 9, fontWeight: 800, color: '#6366f1', letterSpacing: '0.1em', padding: '1px 5px', borderRadius: 3, background: 'rgba(99,102,241,0.15)', border: '0.5px solid rgba(99,102,241,0.3)', textTransform: 'uppercase' }}>FOUNDER</span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => { beta.reenter(); setBetaInput('') }}
+                        style={{ fontSize: 11, color: '#3f3f46', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', width: 'fit-content' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#71717A' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#3f3f46' }}
+                      >
+                        Enter a different code →
+                      </button>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-3">
@@ -369,9 +380,25 @@ export function HeroSection() {
                           className="flex flex-col gap-3 p-4 rounded-xl"
                           style={{ background: 'rgba(14,14,16,0.95)', border: '0.5px solid rgba(99,102,241,0.25)', backdropFilter: 'blur(16px)', maxWidth: 340 }}
                         >
-                          <div>
-                            <p style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA' }}>Enter your access code</p>
-                            <p style={{ fontSize: 12, color: '#71717A', marginTop: 3 }}>Beta or founder code to unlock premium features.</p>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                            <div>
+                              <p style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA' }}>
+                                {beta.reenterOpen ? 'Enter a different code' : 'Enter your access code'}
+                              </p>
+                              <p style={{ fontSize: 12, color: '#71717A', marginTop: 3 }}>
+                                {beta.reenterOpen
+                                  ? 'Your existing access is saved — this will upgrade or replace it.'
+                                  : 'Beta or founder code to unlock premium features.'}
+                              </p>
+                            </div>
+                            {beta.reenterOpen && (
+                              <button onClick={() => { beta.cancelReenter(); setShowBeta(false) }}
+                                style={{ fontSize: 11, color: '#52525B', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0, marginTop: 2 }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA' }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#52525B' }}>
+                                Cancel
+                              </button>
+                            )}
                           </div>
                           <div className="flex gap-2">
                             <input
