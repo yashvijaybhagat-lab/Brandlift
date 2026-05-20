@@ -6,7 +6,7 @@ import { useBetaAccess } from '@/lib/betaAccess'
 import { DEFAULT_SYSTEM } from '@/lib/lyraSystem'
 import { ALLOWED_MODELS, DEFAULT_MODEL } from '@/lib/gemini'
 
-type Tab = 'overview' | 'codes' | 'lyra' | 'health' | 'flags'
+type Tab = 'overview' | 'codes' | 'lyra' | 'health' | 'flags' | 'code'
 
 /* ─── Types ──────────────────────────────────────────────── */
 interface CodeEntry { code: string; source: 'env' | 'dynamic' }
@@ -79,6 +79,7 @@ export default function AdminPage() {
     { id: 'lyra',     label: 'Lyra Config' },
     { id: 'health',   label: 'API Health' },
     { id: 'flags',    label: 'Feature Flags' },
+    { id: 'code',     label: '✦ AI Editor' },
   ]
 
   return (
@@ -119,6 +120,7 @@ export default function AdminPage() {
         {tab === 'lyra'      && <LyraConfigTab headers={founderHeaders} code={beta.code} ownerName={beta.ownerName} showToast={showToast} />}
         {tab === 'health'    && <HealthTab headers={founderHeaders} />}
         {tab === 'flags'     && <FlagsTab />}
+        {tab === 'code'      && <CodeEditorTab headers={founderHeaders} showToast={showToast} />}
       </div>
     </div>
   )
@@ -448,6 +450,246 @@ function HealthTab({ headers }: { headers: Record<string, string> }) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/* ─── AI Code Editor tab ─────────────────────────────────────── */
+interface FileContext { path: string; content: string }
+interface FileChange  { path: string; content: string; isNew?: boolean }
+interface EditorResult { explanation: string; changes: FileChange[] }
+
+function CodeEditorTab({ headers, showToast }: { headers: Record<string, string>; showToast: (m: string, t: 'ok' | 'err') => void }) {
+  const [fileTree,    setFileTree]    = useState<string[]>([])
+  const [treeLoading, setTreeLoading] = useState(false)
+  const [treeSearch,  setTreeSearch]  = useState('')
+  const [selectedFiles, setSelectedFiles] = useState<FileContext[]>([])
+  const [loadingFile, setLoadingFile] = useState<string | null>(null)
+  const [instruction, setInstruction] = useState('')
+  const [generating,  setGenerating]  = useState(false)
+  const [result,      setResult]      = useState<EditorResult | null>(null)
+  const [activeFile,  setActiveFile]  = useState(0)
+  const [viewMode,    setViewMode]    = useState<'after' | 'before'>('after')
+  const [committing,  setCommitting]  = useState(false)
+  const [commitMsg,   setCommitMsg]   = useState('')
+  const [commitUrls,  setCommitUrls]  = useState<{ path: string; url: string }[]>([])
+
+  const loadTree = useCallback(async () => {
+    setTreeLoading(true)
+    try {
+      const res  = await fetch('/api/admin/files', { headers })
+      const data = await res.json()
+      setFileTree(data.files ?? [])
+    } finally { setTreeLoading(false) }
+  }, [headers])
+
+  useEffect(() => { loadTree() }, [loadTree])
+
+  const addFile = async (filePath: string) => {
+    if (selectedFiles.some(f => f.path === filePath)) return
+    setLoadingFile(filePath)
+    try {
+      const res  = await fetch(`/api/admin/files?path=${encodeURIComponent(filePath)}`, { headers })
+      const data = await res.json()
+      if (data.content !== undefined) setSelectedFiles(prev => [...prev, { path: filePath, content: data.content }])
+      else showToast(`Could not read ${filePath}`, 'err')
+    } finally { setLoadingFile(null) }
+  }
+
+  const removeFile = (filePath: string) => setSelectedFiles(prev => prev.filter(f => f.path !== filePath))
+
+  const generate = async () => {
+    if (!instruction.trim() || !selectedFiles.length || generating) return
+    setGenerating(true)
+    setResult(null)
+    setCommitUrls([])
+    try {
+      const res  = await fetch('/api/admin/code-editor', {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({ instruction, files: selectedFiles }),
+      })
+      const data = await res.json()
+      if (data.error) { showToast(data.error, 'err'); return }
+      setResult(data)
+      setActiveFile(0)
+      setViewMode('after')
+      setCommitMsg(`[AI Editor] ${instruction.slice(0, 60)}`)
+    } catch (e) {
+      showToast(String(e), 'err')
+    } finally { setGenerating(false) }
+  }
+
+  const commit = async () => {
+    if (!result?.changes?.length || committing) return
+    setCommitting(true)
+    try {
+      const res  = await fetch('/api/admin/code-editor', {
+        method:  'PUT',
+        headers,
+        body:    JSON.stringify({ changes: result.changes, commitMessage: commitMsg }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        const urls = (data.results ?? []).filter((r: { ok: boolean }) => r.ok).map((r: { path: string; commitUrl: string }) => ({ path: r.path, url: r.commitUrl }))
+        setCommitUrls(urls)
+        showToast(`${data.results.length} file${data.results.length > 1 ? 's' : ''} committed — Vercel is deploying`, 'ok')
+      } else {
+        showToast(data.error ?? 'Commit failed — is GITHUB_TOKEN set?', 'err')
+      }
+    } finally { setCommitting(false) }
+  }
+
+  const filteredTree = treeSearch
+    ? fileTree.filter(f => f.toLowerCase().includes(treeSearch.toLowerCase()))
+    : fileTree
+
+  const QUICK_INSTRUCTIONS = [
+    'Add a new beta feature flag called "hd_download" to the validate route',
+    'Add rate-limit logging so every blocked request logs the IP and route',
+    'Change the Lyra default model to gemini-2.0-flash',
+    'Add a /api/admin/stats route that counts active beta codes',
+  ]
+
+  return (
+    <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+      {/* ── Left: file browser ── */}
+      <div style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={S.card}>
+          <p style={S.label}>File Browser</p>
+          <input style={{ ...S.input, marginBottom: 8 }} placeholder="Search files…" value={treeSearch} onChange={e => setTreeSearch(e.target.value)} />
+          {treeLoading ? (
+            <p style={{ fontSize: 12, color: '#52525B' }}>Loading tree…</p>
+          ) : (
+            <div style={{ maxHeight: 380, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {filteredTree.slice(0, 120).map(f => {
+                const isSelected = selectedFiles.some(s => s.path === f)
+                const isLoading  = loadingFile === f
+                return (
+                  <button key={f} onClick={() => addFile(f)} disabled={isSelected || isLoading}
+                    style={{ textAlign: 'left', padding: '5px 8px', borderRadius: 6, border: 'none', cursor: isSelected ? 'default' : 'pointer', fontFamily: 'monospace', fontSize: 11, background: isSelected ? 'rgba(99,102,241,0.12)' : 'none', color: isSelected ? '#a5b4fc' : '#A1A1AA', transition: 'all 0.1s', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {isLoading ? '⏳ ' : isSelected ? '✓ ' : '+ '}{f}
+                  </button>
+                )
+              })}
+              {filteredTree.length === 0 && <p style={{ fontSize: 11, color: '#52525B' }}>No matches</p>}
+            </div>
+          )}
+        </div>
+
+        {selectedFiles.length > 0 && (
+          <div style={S.card}>
+            <p style={S.label}>Context ({selectedFiles.length} files)</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
+              {selectedFiles.map(f => (
+                <div key={f.path} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ flex: 1, fontSize: 11, fontFamily: 'monospace', color: '#A1A1AA', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.path}</span>
+                  <button onClick={() => removeFile(f.path)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#52525B', fontSize: 14, padding: 0 }}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Right: editor ── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={S.card}>
+          <p style={S.label}>Instruction</p>
+          <p style={{ fontSize: 12, color: '#71717A', marginBottom: 10 }}>Describe the change in plain English. Select the relevant files on the left first.</p>
+          <textarea value={instruction} onChange={e => setInstruction(e.target.value)} rows={4}
+            placeholder="e.g. Add a new admin API route at /api/admin/stats that returns the total number of active beta codes"
+            style={{ ...S.input, resize: 'vertical', lineHeight: 1.6 }} />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+            {QUICK_INSTRUCTIONS.map(q => (
+              <button key={q} onClick={() => setInstruction(q)} style={{ ...S.ghostBtn, fontSize: 11, padding: '4px 10px', textAlign: 'left' }}>
+                {q.slice(0, 48)}…
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
+            <button style={S.btn(!!instruction.trim() && selectedFiles.length > 0 && !generating)} onClick={generate} disabled={!instruction.trim() || selectedFiles.length === 0 || generating}>
+              {generating ? '✦ Generating…' : '✦ Generate Changes'}
+            </button>
+            {selectedFiles.length === 0 && <span style={{ fontSize: 12, color: '#52525B' }}>← Select at least one file</span>}
+          </div>
+        </div>
+
+        {result && (
+          <>
+            <div style={{ ...S.card, borderColor: 'rgba(99,102,241,0.25)', background: 'rgba(99,102,241,0.04)' }}>
+              <p style={S.label}>AI Explanation</p>
+              <p style={{ fontSize: 13, color: '#E4E4E7', lineHeight: 1.65, marginTop: 6 }}>{result.explanation}</p>
+            </div>
+
+            <div style={S.card}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <p style={S.label}>{result.changes.length} file{result.changes.length > 1 ? 's' : ''} changed</p>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {(['after', 'before'] as const).map(v => (
+                    <button key={v} onClick={() => setViewMode(v)}
+                      style={{ ...S.ghostBtn, fontSize: 11, padding: '3px 10px', color: viewMode === v ? '#a5b4fc' : '#52525B', borderColor: viewMode === v ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)' }}>
+                      {v === 'after' ? 'New' : 'Original'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {result.changes.length > 1 && (
+                <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+                  {result.changes.map((c, i) => (
+                    <button key={c.path} onClick={() => setActiveFile(i)}
+                      style={{ padding: '4px 10px', borderRadius: 6, border: `0.5px solid ${activeFile === i ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.08)'}`, background: activeFile === i ? 'rgba(99,102,241,0.15)' : 'none', cursor: 'pointer', fontFamily: 'monospace', fontSize: 11, color: activeFile === i ? '#a5b4fc' : '#71717A' }}>
+                      {c.isNew && <span style={{ color: '#4ADE80', marginRight: 4 }}>+</span>}
+                      {c.path.split('/').pop()}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {result.changes[activeFile] && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <code style={{ fontSize: 11, fontFamily: 'monospace', color: '#71717A' }}>{result.changes[activeFile].path}</code>
+                    {result.changes[activeFile].isNew && <span style={{ fontSize: 10, fontWeight: 700, color: '#4ADE80', background: 'rgba(74,222,128,0.1)', border: '0.5px solid rgba(74,222,128,0.3)', borderRadius: 4, padding: '2px 6px' }}>NEW FILE</span>}
+                    <button onClick={() => navigator.clipboard.writeText(result.changes[activeFile].content)} style={{ ...S.ghostBtn, fontSize: 11, padding: '3px 10px', marginLeft: 'auto' }}>Copy</button>
+                  </div>
+                  <pre style={{ background: '#0A0A0B', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 16, fontSize: 11, fontFamily: 'monospace', lineHeight: 1.7, color: '#E4E4E7', maxHeight: 400, overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0 }}>
+                    {viewMode === 'after'
+                      ? result.changes[activeFile].content
+                      : (selectedFiles.find(f => f.path === result.changes[activeFile].path)?.content ?? '(new file — no original)')
+                    }
+                  </pre>
+                </>
+              )}
+            </div>
+
+            <div style={S.card}>
+              <p style={S.label}>Push to Vercel</p>
+              <p style={{ fontSize: 12, color: '#71717A', marginBottom: 12 }}>
+                Commits to GitHub — Vercel auto-deploys on push. Requires <code style={{ fontFamily: 'monospace', fontSize: 11, color: '#a5b4fc' }}>GITHUB_TOKEN</code> + <code style={{ fontFamily: 'monospace', fontSize: 11, color: '#a5b4fc' }}>GITHUB_REPO</code> env vars.
+              </p>
+              <input style={{ ...S.input, marginBottom: 10 }} value={commitMsg} onChange={e => setCommitMsg(e.target.value)} placeholder="Commit message" />
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <button style={{ ...S.btn(!committing), background: !committing ? 'linear-gradient(135deg,#4ADE80,#22c55e)' : '#18181C' }} onClick={commit} disabled={committing}>
+                  {committing ? 'Pushing…' : `↑ Push ${result.changes.length} file${result.changes.length > 1 ? 's' : ''} to Vercel`}
+                </button>
+                <span style={{ fontSize: 12, color: '#52525B' }}>or copy each file above and apply manually</span>
+              </div>
+              {commitUrls.length > 0 && (
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {commitUrls.map(u => (
+                    <a key={u.path} href={u.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#4ADE80', fontFamily: 'monospace' }}>
+                      ✓ {u.path} → view commit ↗
+                    </a>
+                  ))}
+                  <p style={{ fontSize: 12, color: '#71717A', marginTop: 4 }}>Vercel is deploying — live in ~60 seconds.</p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }
