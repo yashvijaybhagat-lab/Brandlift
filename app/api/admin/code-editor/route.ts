@@ -52,16 +52,50 @@ async function commitFile(filePath: string, content: string, message: string): P
   return data.commit?.html_url ?? `https://github.com/${GITHUB_REPO}/commit/${data.commit?.sha}`
 }
 
-// ── POST: generate changes ────────────────────────────────────
+// ── POST: pick files OR generate changes ──────────────────────
 
 export async function POST(req: NextRequest) {
   const { authorized, ownerName } = founderRequired(req)
   if (!authorized) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { instruction, files }: { instruction: string; files: FileContext[] } = await req.json()
+  const body = await req.json()
+  const { instruction, files, autoPickOnly, fileList }: {
+    instruction:  string
+    files:        FileContext[]
+    autoPickOnly?: boolean
+    fileList?:    string[]
+  } = body
 
   if (!instruction?.trim()) return NextResponse.json({ error: 'instruction is required' }, { status: 400 })
-  if (!files?.length)       return NextResponse.json({ error: 'at least one file is required' }, { status: 400 })
+
+  // ── Mode 1: auto-pick relevant files from the tree ────────────
+  if (autoPickOnly && fileList?.length) {
+    const pickPrompt = `You are a senior Next.js engineer working on the BrandLift codebase.
+
+Given this task or error description:
+"${instruction}"
+
+And this list of files in the project:
+${fileList.join('\n')}
+
+Return ONLY a JSON array (no markdown, no explanation) of the 4-8 most relevant file paths for this task.
+Example: ["app/api/beta/validate/route.ts","lib/betaAccess.ts"]`
+
+    try {
+      const raw     = await geminiGenerate({ messages: [{ role: 'user', parts: [{ text: pickPrompt }] }], maxTokens: 512, model: 'gemini-2.5-flash-lite' })
+      const cleaned = raw.replace(/^```(?:json)?\n?/m, '').replace(/```\s*$/m, '').trim()
+      const filePaths: string[] = JSON.parse(cleaned)
+      return NextResponse.json({ filePaths })
+    } catch {
+      // Fallback: return common files likely to be relevant
+      const fallback = fileList.filter(f =>
+        f.includes('api/') || f.includes('lib/') || f.includes('components/') || f.includes('middleware')
+      ).slice(0, 6)
+      return NextResponse.json({ filePaths: fallback })
+    }
+  }
+
+  if (!files?.length) return NextResponse.json({ error: 'at least one file is required' }, { status: 400 })
 
   const filesBlock = files
     .map(f => `=== ${f.path} ===\n\`\`\`\n${f.content}\n\`\`\``)

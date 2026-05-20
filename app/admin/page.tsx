@@ -1,12 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useBetaAccess } from '@/lib/betaAccess'
 import { DEFAULT_SYSTEM } from '@/lib/lyraSystem'
 import { ALLOWED_MODELS, DEFAULT_MODEL } from '@/lib/gemini'
 
-type Tab = 'overview' | 'codes' | 'lyra' | 'health' | 'flags' | 'code'
+type Tab = 'overview' | 'codes' | 'lyra' | 'health' | 'flags' | 'code' | 'debug'
 
 /* ─── Types ──────────────────────────────────────────────── */
 interface CodeEntry { code: string; source: 'env' | 'dynamic' }
@@ -52,9 +52,10 @@ function Toast({ msg, type }: { msg: string; type: 'ok' | 'err' }) {
 
 /* ─── Main ───────────────────────────────────────────────── */
 export default function AdminPage() {
-  const router = useRouter()
-  const beta   = useBetaAccess()
-  const [tab, setTab]     = useState<Tab>('overview')
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const beta         = useBetaAccess()
+  const [tab, setTab]     = useState<Tab>((searchParams.get('tab') as Tab) ?? 'overview')
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null)
 
   // Auth gate — redirect if not owner
@@ -80,6 +81,7 @@ export default function AdminPage() {
     { id: 'health',   label: 'API Health' },
     { id: 'flags',    label: 'Feature Flags' },
     { id: 'code',     label: '✦ AI Editor' },
+    { id: 'debug',    label: '⬡ AI Debug' },
   ]
 
   return (
@@ -121,6 +123,7 @@ export default function AdminPage() {
         {tab === 'health'    && <HealthTab headers={founderHeaders} />}
         {tab === 'flags'     && <FlagsTab />}
         {tab === 'code'      && <CodeEditorTab headers={founderHeaders} showToast={showToast} />}
+        {tab === 'debug'     && <DebugTab      headers={founderHeaders} showToast={showToast} />}
       </div>
     </div>
   )
@@ -454,242 +457,372 @@ function HealthTab({ headers }: { headers: Record<string, string> }) {
   )
 }
 
-/* ─── AI Code Editor tab ─────────────────────────────────────── */
-interface FileContext { path: string; content: string }
-interface FileChange  { path: string; content: string; isNew?: boolean }
+/* ─── Shared types + commit helper ──────────────────────────── */
+interface FileContext  { path: string; content: string }
+interface FileChange   { path: string; content: string; isNew?: boolean }
 interface EditorResult { explanation: string; changes: FileChange[] }
 
+type CommitUrl = { path: string; url: string }
+
+function ChangesViewer({ result, commitUrls, committing, onCommit, headers, showToast, storageKey }: {
+  result:      EditorResult
+  commitUrls:  CommitUrl[]
+  committing:  boolean
+  onCommit:    (msg: string) => void
+  headers:     Record<string, string>
+  showToast:   (m: string, t: 'ok' | 'err') => void
+  storageKey?: string
+}) {
+  const [activeFile, setActiveFile] = useState(0)
+  const [viewMode,   setViewMode]   = useState<'after' | 'before'>('after')
+  const [commitMsg,  setCommitMsg]  = useState(storageKey ?? '[AI] Code change')
+
+  return (
+    <>
+      <div style={{ ...S.card, borderColor: 'rgba(99,102,241,0.25)', background: 'rgba(99,102,241,0.04)' }}>
+        <p style={S.label}>What changed & why</p>
+        <p style={{ fontSize: 14, color: '#E4E4E7', lineHeight: 1.7, marginTop: 8 }}>{result.explanation}</p>
+      </div>
+
+      <div style={S.card}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <p style={S.label}>{result.changes.length} file{result.changes.length > 1 ? 's' : ''} changed</p>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {(['after', 'before'] as const).map(v => (
+              <button key={v} onClick={() => setViewMode(v)}
+                style={{ ...S.ghostBtn, fontSize: 11, padding: '3px 10px', color: viewMode === v ? '#a5b4fc' : '#52525B', borderColor: viewMode === v ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)' }}>
+                {v === 'after' ? 'New code' : 'Original'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {result.changes.length > 1 && (
+          <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+            {result.changes.map((c, i) => (
+              <button key={c.path} onClick={() => setActiveFile(i)}
+                style={{ padding: '5px 12px', borderRadius: 6, border: `0.5px solid ${activeFile === i ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.08)'}`, background: activeFile === i ? 'rgba(99,102,241,0.15)' : 'none', cursor: 'pointer', fontFamily: 'monospace', fontSize: 11, color: activeFile === i ? '#a5b4fc' : '#71717A' }}>
+                {c.isNew && <span style={{ color: '#4ADE80', marginRight: 4 }}>+</span>}
+                {c.path.split('/').pop()}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {result.changes[activeFile] && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <code style={{ flex: 1, fontSize: 11, fontFamily: 'monospace', color: '#71717A' }}>{result.changes[activeFile].path}</code>
+              {result.changes[activeFile].isNew && <span style={{ fontSize: 10, fontWeight: 700, color: '#4ADE80', background: 'rgba(74,222,128,0.1)', border: '0.5px solid rgba(74,222,128,0.3)', borderRadius: 4, padding: '2px 6px' }}>NEW FILE</span>}
+              <button onClick={() => navigator.clipboard.writeText(result.changes[activeFile].content)} style={{ ...S.ghostBtn, fontSize: 11, padding: '3px 10px' }}>Copy</button>
+            </div>
+            <pre style={{ background: '#0A0A0B', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 16, fontSize: 12, fontFamily: 'monospace', lineHeight: 1.75, color: '#E4E4E7', maxHeight: 500, overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0 }}>
+              {viewMode === 'after' ? result.changes[activeFile].content : '(original not stored in this view)'}
+            </pre>
+          </>
+        )}
+      </div>
+
+      <div style={{ ...S.card, borderColor: 'rgba(74,222,128,0.2)' }}>
+        <p style={S.label}>Push to Vercel</p>
+        <p style={{ fontSize: 12, color: '#71717A', marginBottom: 12 }}>Commits to GitHub → Vercel auto-deploys. Live in ~60 seconds.</p>
+        <input style={{ ...S.input, marginBottom: 10 }} value={commitMsg} onChange={e => setCommitMsg(e.target.value)} placeholder="Commit message" />
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button style={{ ...S.btn(!committing), background: !committing ? 'linear-gradient(135deg,#4ADE80,#22c55e)' : '#18181C', fontSize: 14, padding: '10px 22px' }}
+            onClick={() => onCommit(commitMsg)} disabled={committing}>
+            {committing ? 'Pushing…' : `↑ Push ${result.changes.length} file${result.changes.length > 1 ? 's' : ''} to Vercel`}
+          </button>
+          <span style={{ fontSize: 12, color: '#52525B' }}>or copy each file above and apply manually</span>
+        </div>
+        {commitUrls.length > 0 && (
+          <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {commitUrls.map(u => (
+              <a key={u.path} href={u.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#4ADE80', fontFamily: 'monospace' }}>
+                ✓ {u.path} → view commit ↗
+              </a>
+            ))}
+            <p style={{ fontSize: 12, color: '#71717A', marginTop: 4 }}>Vercel is deploying now.</p>
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
+/* ─── AI Code Editor tab ─────────────────────────────────────── */
 function CodeEditorTab({ headers, showToast }: { headers: Record<string, string>; showToast: (m: string, t: 'ok' | 'err') => void }) {
-  const [fileTree,    setFileTree]    = useState<string[]>([])
-  const [treeLoading, setTreeLoading] = useState(false)
-  const [treeSearch,  setTreeSearch]  = useState('')
-  const [selectedFiles, setSelectedFiles] = useState<FileContext[]>([])
-  const [loadingFile, setLoadingFile] = useState<string | null>(null)
   const [instruction, setInstruction] = useState('')
+  const [status,      setStatus]      = useState('')
   const [generating,  setGenerating]  = useState(false)
   const [result,      setResult]      = useState<EditorResult | null>(null)
-  const [activeFile,  setActiveFile]  = useState(0)
-  const [viewMode,    setViewMode]    = useState<'after' | 'before'>('after')
   const [committing,  setCommitting]  = useState(false)
-  const [commitMsg,   setCommitMsg]   = useState('')
-  const [commitUrls,  setCommitUrls]  = useState<{ path: string; url: string }[]>([])
+  const [commitUrls,  setCommitUrls]  = useState<CommitUrl[]>([])
 
-  const loadTree = useCallback(async () => {
-    setTreeLoading(true)
-    try {
-      const res  = await fetch('/api/admin/files', { headers })
-      const data = await res.json()
-      setFileTree(data.files ?? [])
-    } finally { setTreeLoading(false) }
-  }, [headers])
-
-  useEffect(() => { loadTree() }, [loadTree])
-
-  const addFile = async (filePath: string) => {
-    if (selectedFiles.some(f => f.path === filePath)) return
-    setLoadingFile(filePath)
-    try {
-      const res  = await fetch(`/api/admin/files?path=${encodeURIComponent(filePath)}`, { headers })
-      const data = await res.json()
-      if (data.content !== undefined) setSelectedFiles(prev => [...prev, { path: filePath, content: data.content }])
-      else showToast(`Could not read ${filePath}`, 'err')
-    } finally { setLoadingFile(null) }
-  }
-
-  const removeFile = (filePath: string) => setSelectedFiles(prev => prev.filter(f => f.path !== filePath))
+  const QUICK = [
+    'Add a new beta feature flag called "hd_download" to the validate route',
+    'Add rate-limit logging — log IP and route for every blocked request',
+    'Change the Lyra default model to gemini-2.0-flash',
+    'Add a /api/admin/stats route that returns a count of active beta codes',
+    'Add an email field to the beta code save endpoint',
+    'Make the sign-in error message friendlier when the code is wrong',
+  ]
 
   const generate = async () => {
-    if (!instruction.trim() || !selectedFiles.length || generating) return
-    setGenerating(true)
-    setResult(null)
-    setCommitUrls([])
+    if (!instruction.trim() || generating) return
+    setGenerating(true); setResult(null); setCommitUrls([])
     try {
+      setStatus('Reading project files…')
+      const treeRes  = await fetch('/api/admin/files', { headers })
+      const treeData = await treeRes.json()
+      const allFiles: string[] = treeData.files ?? []
+
+      setStatus('Identifying relevant files…')
+      // Quick Gemini call to pick relevant files
+      const pickRes  = await fetch('/api/admin/code-editor', {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({ instruction, files: [], autoPickOnly: true, fileList: allFiles }),
+      })
+      const pickData = await pickRes.json()
+      const paths: string[] = pickData.filePaths ?? []
+
+      setStatus(`Reading ${paths.length} files…`)
+      const fileContexts: FileContext[] = []
+      for (const p of paths.slice(0, 8)) {
+        const r = await fetch(`/api/admin/files?path=${encodeURIComponent(p)}`, { headers })
+        const d = await r.json()
+        if (d.content) fileContexts.push({ path: p, content: d.content })
+      }
+
+      setStatus('Generating changes…')
       const res  = await fetch('/api/admin/code-editor', {
         method:  'POST',
         headers,
-        body:    JSON.stringify({ instruction, files: selectedFiles }),
+        body:    JSON.stringify({ instruction, files: fileContexts }),
       })
       const data = await res.json()
       if (data.error) { showToast(data.error, 'err'); return }
       setResult(data)
-      setActiveFile(0)
-      setViewMode('after')
-      setCommitMsg(`[AI Editor] ${instruction.slice(0, 60)}`)
-    } catch (e) {
-      showToast(String(e), 'err')
-    } finally { setGenerating(false) }
+    } catch (e) { showToast(String(e), 'err') }
+    finally { setGenerating(false); setStatus('') }
   }
 
-  const commit = async () => {
+  const commit = async (msg: string) => {
     if (!result?.changes?.length || committing) return
     setCommitting(true)
     try {
       const res  = await fetch('/api/admin/code-editor', {
         method:  'PUT',
         headers,
-        body:    JSON.stringify({ changes: result.changes, commitMessage: commitMsg }),
+        body:    JSON.stringify({ changes: result.changes, commitMessage: msg }),
       })
       const data = await res.json()
       if (data.ok) {
-        const urls = (data.results ?? []).filter((r: { ok: boolean }) => r.ok).map((r: { path: string; commitUrl: string }) => ({ path: r.path, url: r.commitUrl }))
-        setCommitUrls(urls)
-        showToast(`${data.results.length} file${data.results.length > 1 ? 's' : ''} committed — Vercel is deploying`, 'ok')
-      } else {
-        showToast(data.error ?? 'Commit failed — is GITHUB_TOKEN set?', 'err')
-      }
+        setCommitUrls(data.results.filter((r: { ok: boolean }) => r.ok).map((r: { path: string; commitUrl: string }) => ({ path: r.path, url: r.commitUrl })))
+        showToast(`${data.results.length} file${data.results.length !== 1 ? 's' : ''} committed — Vercel deploying`, 'ok')
+      } else { showToast(data.error ?? 'Commit failed — check GITHUB_TOKEN env var', 'err') }
     } finally { setCommitting(false) }
   }
 
-  const filteredTree = treeSearch
-    ? fileTree.filter(f => f.toLowerCase().includes(treeSearch.toLowerCase()))
-    : fileTree
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900 }}>
+      <div style={{ ...S.card, padding: '28px 32px' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 6px' }}>AI Code Editor</h2>
+        <p style={{ fontSize: 13, color: '#71717A', marginBottom: 24 }}>Describe what you want to change in plain English. The AI finds the right files, writes the code, and you push it live.</p>
+        <textarea
+          value={instruction}
+          onChange={e => setInstruction(e.target.value)}
+          rows={5}
+          placeholder="e.g. Add a new beta feature flag called 'hd_download' — when it's enabled, show a Download in HD button on the video studio page"
+          style={{ ...S.input, resize: 'vertical', lineHeight: 1.7, fontSize: 14, padding: '14px 16px' }}
+        />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12, marginBottom: 20 }}>
+          {QUICK.map(q => (
+            <button key={q} onClick={() => setInstruction(q)} style={{ ...S.ghostBtn, fontSize: 11, padding: '4px 10px' }}>
+              {q.slice(0, 52)}…
+            </button>
+          ))}
+        </div>
+        <button
+          style={{ ...S.btn(!!instruction.trim() && !generating), fontSize: 15, padding: '12px 28px' }}
+          onClick={generate}
+          disabled={!instruction.trim() || generating}
+        >
+          {generating ? `✦ ${status || 'Working…'}` : '✦ Generate Changes'}
+        </button>
+      </div>
 
-  const QUICK_INSTRUCTIONS = [
-    'Add a new beta feature flag called "hd_download" to the validate route',
-    'Add rate-limit logging so every blocked request logs the IP and route',
-    'Change the Lyra default model to gemini-2.0-flash',
-    'Add a /api/admin/stats route that counts active beta codes',
+      {result && (
+        <ChangesViewer
+          result={result}
+          commitUrls={commitUrls}
+          committing={committing}
+          onCommit={commit}
+          headers={headers}
+          showToast={showToast}
+          storageKey={`[AI Editor] ${instruction.slice(0, 60)}`}
+        />
+      )}
+    </div>
+  )
+}
+
+/* ─── AI Debug tab ───────────────────────────────────────────── */
+interface DebugResult { rootCause: string; explanation: string; affectedFiles: string[]; changes: FileChange[] }
+
+function DebugTab({ headers, showToast }: { headers: Record<string, string>; showToast: (m: string, t: 'ok' | 'err') => void }) {
+  const [errorDesc,  setErrorDesc]  = useState('')
+  const [stackTrace, setStackTrace] = useState('')
+  const [status,     setStatus]     = useState('')
+  const [analysing,  setAnalysing]  = useState(false)
+  const [result,     setResult]     = useState<DebugResult | null>(null)
+  const [committing, setCommitting] = useState(false)
+  const [commitUrls, setCommitUrls] = useState<CommitUrl[]>([])
+
+  const EXAMPLES = [
+    'The Lyra chat stops streaming mid-response sometimes',
+    'Beta code validation returns 500 errors intermittently',
+    'The admin panel health tab shows all APIs as offline',
+    'Debug mode toggle in the FounderBar doesn\'t persist on page reload',
+    'Video upload fails silently when the file is over 100MB',
   ]
 
+  const analyse = async () => {
+    if (!errorDesc.trim() || analysing) return
+    setAnalysing(true); setResult(null); setCommitUrls([])
+    try {
+      setStatus('Reading project files…')
+      const treeRes  = await fetch('/api/admin/files', { headers })
+      const treeData = await treeRes.json()
+      const allFiles: string[] = treeData.files ?? []
+
+      setStatus('Finding relevant files…')
+      const pickRes  = await fetch('/api/admin/code-editor', {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({ instruction: errorDesc + ' ' + stackTrace, files: [], autoPickOnly: true, fileList: allFiles }),
+      })
+      const pickData = await pickRes.json()
+      const paths: string[] = pickData.filePaths ?? []
+
+      setStatus(`Reading ${paths.length} files…`)
+      const fileContexts: FileContext[] = []
+      for (const p of paths.slice(0, 8)) {
+        const r = await fetch(`/api/admin/files?path=${encodeURIComponent(p)}`, { headers })
+        const d = await r.json()
+        if (d.content) fileContexts.push({ path: p, content: d.content })
+      }
+
+      setStatus('Diagnosing bug…')
+      const res  = await fetch('/api/admin/debug', {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({ errorDesc, stackTrace, files: fileContexts }),
+      })
+      const data = await res.json()
+      if (data.error) { showToast(data.error, 'err'); return }
+      setResult(data)
+    } catch (e) { showToast(String(e), 'err') }
+    finally { setAnalysing(false); setStatus('') }
+  }
+
+  const commit = async (msg: string) => {
+    if (!result?.changes?.length || committing) return
+    setCommitting(true)
+    try {
+      const res  = await fetch('/api/admin/code-editor', {
+        method:  'PUT',
+        headers,
+        body:    JSON.stringify({ changes: result.changes, commitMessage: msg }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setCommitUrls(data.results.filter((r: { ok: boolean }) => r.ok).map((r: { path: string; commitUrl: string }) => ({ path: r.path, url: r.commitUrl })))
+        showToast('Fix pushed — Vercel deploying', 'ok')
+      } else { showToast(data.error ?? 'Commit failed', 'err') }
+    } finally { setCommitting(false) }
+  }
+
   return (
-    <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-      {/* ── Left: file browser ── */}
-      <div style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={S.card}>
-          <p style={S.label}>File Browser</p>
-          <input style={{ ...S.input, marginBottom: 8 }} placeholder="Search files…" value={treeSearch} onChange={e => setTreeSearch(e.target.value)} />
-          {treeLoading ? (
-            <p style={{ fontSize: 12, color: '#52525B' }}>Loading tree…</p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900 }}>
+      <div style={{ ...S.card, padding: '28px 32px' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 6px' }}>AI Debugger</h2>
+        <p style={{ fontSize: 13, color: '#71717A', marginBottom: 24 }}>Describe the bug. The AI reads the codebase, finds the root cause, and generates a fix you can push directly to production.</p>
+
+        <p style={{ ...S.label, marginBottom: 8 }}>What's broken?</p>
+        <textarea
+          value={errorDesc}
+          onChange={e => setErrorDesc(e.target.value)}
+          rows={4}
+          placeholder="e.g. The Lyra chat stops streaming halfway through a response — it just cuts off and the spinner keeps spinning"
+          style={{ ...S.input, resize: 'vertical', lineHeight: 1.7, fontSize: 14, padding: '14px 16px', marginBottom: 16 }}
+        />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
+          {EXAMPLES.map(e => (
+            <button key={e} onClick={() => setErrorDesc(e)} style={{ ...S.ghostBtn, fontSize: 11, padding: '4px 10px' }}>
+              {e.slice(0, 52)}{e.length > 52 ? '…' : ''}
+            </button>
+          ))}
+        </div>
+
+        <p style={{ ...S.label, marginBottom: 8 }}>Stack trace / error output <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#3f3f46' }}>(optional)</span></p>
+        <textarea
+          value={stackTrace}
+          onChange={e => setStackTrace(e.target.value)}
+          rows={5}
+          placeholder="Paste the full error from your browser console, Vercel logs, or terminal here…"
+          style={{ ...S.input, resize: 'vertical', lineHeight: 1.65, fontSize: 12, fontFamily: 'monospace', padding: '12px 16px', marginBottom: 20 }}
+        />
+
+        <button
+          style={{ ...S.btn(!!errorDesc.trim() && !analysing), fontSize: 15, padding: '12px 28px', background: !!errorDesc.trim() && !analysing ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : '#18181C' }}
+          onClick={analyse}
+          disabled={!errorDesc.trim() || analysing}
+        >
+          {analysing ? `⬡ ${status || 'Analysing…'}` : '⬡ Debug It'}
+        </button>
+      </div>
+
+      {result && (
+        <>
+          {/* Root cause */}
+          <div style={{ ...S.card, borderColor: 'rgba(248,113,113,0.25)', background: 'rgba(248,113,113,0.04)', padding: '20px 24px' }}>
+            <p style={{ ...S.label, color: '#f87171' }}>Root Cause</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: '#FAFAFA', lineHeight: 1.55, marginTop: 8 }}>{result.rootCause}</p>
+          </div>
+
+          <div style={{ ...S.card, padding: '20px 24px' }}>
+            <p style={S.label}>Full Explanation</p>
+            <p style={{ fontSize: 13, color: '#E4E4E7', lineHeight: 1.75, marginTop: 8 }}>{result.explanation}</p>
+            {result.affectedFiles?.length > 0 && (
+              <div style={{ marginTop: 14 }}>
+                <p style={{ ...S.label, marginBottom: 8 }}>Files involved</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {result.affectedFiles.map(f => (
+                    <code key={f} style={{ fontSize: 11, fontFamily: 'monospace', padding: '3px 8px', borderRadius: 5, background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.25)', color: '#a5b4fc' }}>{f}</code>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {result.changes?.length > 0 ? (
+            <ChangesViewer
+              result={{ explanation: result.explanation, changes: result.changes }}
+              commitUrls={commitUrls}
+              committing={committing}
+              onCommit={commit}
+              headers={headers}
+              showToast={showToast}
+              storageKey={`[AI Debug fix] ${errorDesc.slice(0, 50)}`}
+            />
           ) : (
-            <div style={{ maxHeight: 380, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {filteredTree.slice(0, 120).map(f => {
-                const isSelected = selectedFiles.some(s => s.path === f)
-                const isLoading  = loadingFile === f
-                return (
-                  <button key={f} onClick={() => addFile(f)} disabled={isSelected || isLoading}
-                    style={{ textAlign: 'left', padding: '5px 8px', borderRadius: 6, border: 'none', cursor: isSelected ? 'default' : 'pointer', fontFamily: 'monospace', fontSize: 11, background: isSelected ? 'rgba(99,102,241,0.12)' : 'none', color: isSelected ? '#a5b4fc' : '#A1A1AA', transition: 'all 0.1s', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {isLoading ? '⏳ ' : isSelected ? '✓ ' : '+ '}{f}
-                  </button>
-                )
-              })}
-              {filteredTree.length === 0 && <p style={{ fontSize: 11, color: '#52525B' }}>No matches</p>}
+            <div style={{ ...S.card, borderColor: 'rgba(245,158,11,0.25)', background: 'rgba(245,158,11,0.04)' }}>
+              <p style={{ fontSize: 13, color: '#f59e0b' }}>No code change needed — this is likely a config or environment issue. See the explanation above.</p>
             </div>
           )}
-        </div>
-
-        {selectedFiles.length > 0 && (
-          <div style={S.card}>
-            <p style={S.label}>Context ({selectedFiles.length} files)</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
-              {selectedFiles.map(f => (
-                <div key={f.path} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ flex: 1, fontSize: 11, fontFamily: 'monospace', color: '#A1A1AA', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.path}</span>
-                  <button onClick={() => removeFile(f.path)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#52525B', fontSize: 14, padding: 0 }}>×</button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Right: editor ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div style={S.card}>
-          <p style={S.label}>Instruction</p>
-          <p style={{ fontSize: 12, color: '#71717A', marginBottom: 10 }}>Describe the change in plain English. Select the relevant files on the left first.</p>
-          <textarea value={instruction} onChange={e => setInstruction(e.target.value)} rows={4}
-            placeholder="e.g. Add a new admin API route at /api/admin/stats that returns the total number of active beta codes"
-            style={{ ...S.input, resize: 'vertical', lineHeight: 1.6 }} />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-            {QUICK_INSTRUCTIONS.map(q => (
-              <button key={q} onClick={() => setInstruction(q)} style={{ ...S.ghostBtn, fontSize: 11, padding: '4px 10px', textAlign: 'left' }}>
-                {q.slice(0, 48)}…
-              </button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
-            <button style={S.btn(!!instruction.trim() && selectedFiles.length > 0 && !generating)} onClick={generate} disabled={!instruction.trim() || selectedFiles.length === 0 || generating}>
-              {generating ? '✦ Generating…' : '✦ Generate Changes'}
-            </button>
-            {selectedFiles.length === 0 && <span style={{ fontSize: 12, color: '#52525B' }}>← Select at least one file</span>}
-          </div>
-        </div>
-
-        {result && (
-          <>
-            <div style={{ ...S.card, borderColor: 'rgba(99,102,241,0.25)', background: 'rgba(99,102,241,0.04)' }}>
-              <p style={S.label}>AI Explanation</p>
-              <p style={{ fontSize: 13, color: '#E4E4E7', lineHeight: 1.65, marginTop: 6 }}>{result.explanation}</p>
-            </div>
-
-            <div style={S.card}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <p style={S.label}>{result.changes.length} file{result.changes.length > 1 ? 's' : ''} changed</p>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {(['after', 'before'] as const).map(v => (
-                    <button key={v} onClick={() => setViewMode(v)}
-                      style={{ ...S.ghostBtn, fontSize: 11, padding: '3px 10px', color: viewMode === v ? '#a5b4fc' : '#52525B', borderColor: viewMode === v ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)' }}>
-                      {v === 'after' ? 'New' : 'Original'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {result.changes.length > 1 && (
-                <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-                  {result.changes.map((c, i) => (
-                    <button key={c.path} onClick={() => setActiveFile(i)}
-                      style={{ padding: '4px 10px', borderRadius: 6, border: `0.5px solid ${activeFile === i ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.08)'}`, background: activeFile === i ? 'rgba(99,102,241,0.15)' : 'none', cursor: 'pointer', fontFamily: 'monospace', fontSize: 11, color: activeFile === i ? '#a5b4fc' : '#71717A' }}>
-                      {c.isNew && <span style={{ color: '#4ADE80', marginRight: 4 }}>+</span>}
-                      {c.path.split('/').pop()}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {result.changes[activeFile] && (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <code style={{ fontSize: 11, fontFamily: 'monospace', color: '#71717A' }}>{result.changes[activeFile].path}</code>
-                    {result.changes[activeFile].isNew && <span style={{ fontSize: 10, fontWeight: 700, color: '#4ADE80', background: 'rgba(74,222,128,0.1)', border: '0.5px solid rgba(74,222,128,0.3)', borderRadius: 4, padding: '2px 6px' }}>NEW FILE</span>}
-                    <button onClick={() => navigator.clipboard.writeText(result.changes[activeFile].content)} style={{ ...S.ghostBtn, fontSize: 11, padding: '3px 10px', marginLeft: 'auto' }}>Copy</button>
-                  </div>
-                  <pre style={{ background: '#0A0A0B', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 16, fontSize: 11, fontFamily: 'monospace', lineHeight: 1.7, color: '#E4E4E7', maxHeight: 400, overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0 }}>
-                    {viewMode === 'after'
-                      ? result.changes[activeFile].content
-                      : (selectedFiles.find(f => f.path === result.changes[activeFile].path)?.content ?? '(new file — no original)')
-                    }
-                  </pre>
-                </>
-              )}
-            </div>
-
-            <div style={S.card}>
-              <p style={S.label}>Push to Vercel</p>
-              <p style={{ fontSize: 12, color: '#71717A', marginBottom: 12 }}>
-                Commits to GitHub — Vercel auto-deploys on push. Requires <code style={{ fontFamily: 'monospace', fontSize: 11, color: '#a5b4fc' }}>GITHUB_TOKEN</code> + <code style={{ fontFamily: 'monospace', fontSize: 11, color: '#a5b4fc' }}>GITHUB_REPO</code> env vars.
-              </p>
-              <input style={{ ...S.input, marginBottom: 10 }} value={commitMsg} onChange={e => setCommitMsg(e.target.value)} placeholder="Commit message" />
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <button style={{ ...S.btn(!committing), background: !committing ? 'linear-gradient(135deg,#4ADE80,#22c55e)' : '#18181C' }} onClick={commit} disabled={committing}>
-                  {committing ? 'Pushing…' : `↑ Push ${result.changes.length} file${result.changes.length > 1 ? 's' : ''} to Vercel`}
-                </button>
-                <span style={{ fontSize: 12, color: '#52525B' }}>or copy each file above and apply manually</span>
-              </div>
-              {commitUrls.length > 0 && (
-                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {commitUrls.map(u => (
-                    <a key={u.path} href={u.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#4ADE80', fontFamily: 'monospace' }}>
-                      ✓ {u.path} → view commit ↗
-                    </a>
-                  ))}
-                  <p style={{ fontSize: 12, color: '#71717A', marginTop: 4 }}>Vercel is deploying — live in ~60 seconds.</p>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+        </>
+      )}
     </div>
   )
 }

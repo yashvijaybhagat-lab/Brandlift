@@ -1,15 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useBetaAccess } from '@/lib/betaAccess'
 import { getDebugMode, setDebugMode, subscribeDebug } from '@/lib/debugMode'
 
 const LYRA_SESSION_KEY = 'bl_lyra_session'
 
 export function FounderBar() {
-  const beta = useBetaAccess()
-  const [debug, setDebug] = useState(false)
-  const [model, setModel] = useState<string | null>(null)
+  const beta   = useBetaAccess()
+  const router = useRouter()
+  const [debug,   setDebug]   = useState(false)
+  const [model,   setModel]   = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -22,7 +24,10 @@ export function FounderBar() {
     return subscribeDebug(setDebug)
   }, [])
 
-  const toggleDebug = () => setDebugMode(!debug)
+  const openDebug = () => {
+    setDebugMode(true)
+    router.push('/admin?tab=debug')
+  }
 
   if (!mounted || !beta.isOwner) return null
 
@@ -66,10 +71,10 @@ export function FounderBar() {
           </>
         )}
 
-        {/* Debug toggle */}
+        {/* Debug → opens AI Debug tab */}
         <button
-          onClick={toggleDebug}
-          title={debug ? 'Debug mode ON — click to turn off' : 'Debug mode OFF — click to enable'}
+          onClick={openDebug}
+          title="Open AI Debugger"
           style={{
             display: 'flex', alignItems: 'center', gap: 5,
             padding: '3px 8px', borderRadius: 16,
@@ -79,7 +84,7 @@ export function FounderBar() {
             cursor: 'pointer', fontSize: 10, fontWeight: 600, transition: 'all 0.15s',
           }}
         >
-          <span style={{ fontSize: 10 }}>{debug ? '◉' : '◎'}</span>
+          <span style={{ fontSize: 10 }}>⬡</span>
           Debug
         </button>
 
