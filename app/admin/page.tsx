@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useBetaAccess } from '@/lib/betaAccess'
 import { DEFAULT_SYSTEM } from '@/lib/lyraSystem'
@@ -52,6 +52,14 @@ function Toast({ msg, type }: { msg: string; type: 'ok' | 'err' }) {
 
 /* ─── Main ───────────────────────────────────────────────── */
 export default function AdminPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0A0A0B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ color: '#52525B', fontSize: 13 }}>Loading…</div></div>}>
+      <AdminPageInner />
+    </Suspense>
+  )
+}
+
+function AdminPageInner() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const beta         = useBetaAccess()
