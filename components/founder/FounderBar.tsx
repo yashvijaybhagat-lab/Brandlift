@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useBetaAccess } from '@/lib/betaAccess'
+import { getDebugMode, setDebugMode, subscribeDebug } from '@/lib/debugMode'
 
 const LYRA_SESSION_KEY = 'bl_lyra_session'
 
@@ -13,23 +14,15 @@ export function FounderBar() {
 
   useEffect(() => {
     setMounted(true)
+    setDebug(getDebugMode())
     try {
       const sess = JSON.parse(localStorage.getItem(LYRA_SESSION_KEY) ?? '{}')
       if (sess.model) setModel(sess.model)
     } catch {}
-
-    // Expose debug mode globally so other components can read it
-    const toggle = (e: CustomEvent) => { setDebug(e.detail) }
-    window.addEventListener('bl:debug', toggle as EventListener)
-    return () => window.removeEventListener('bl:debug', toggle as EventListener)
+    return subscribeDebug(setDebug)
   }, [])
 
-  const toggleDebug = () => {
-    const next = !debug
-    setDebug(next)
-    window.dispatchEvent(new CustomEvent('bl:debug', { detail: next }))
-    localStorage.setItem('bl_debug', String(next))
-  }
+  const toggleDebug = () => setDebugMode(!debug)
 
   if (!mounted || !beta.isOwner) return null
 

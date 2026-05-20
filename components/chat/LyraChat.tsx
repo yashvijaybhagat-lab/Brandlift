@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { put } from '@vercel/blob/client'
 import { useBetaAccess } from '@/lib/betaAccess'
+import { getDebugMode, setDebugMode, subscribeDebug } from '@/lib/debugMode'
 
 const LYRA_SESSION_KEY = 'bl_lyra_session'
 
@@ -244,14 +245,11 @@ export function LyraChat() {
   const [pendingAtts, setPendingAtts] = useState<Attachment[]>([])
   const [copied,    setCopied]    = useState<string | null>(null)
   const [hasNewMsg, setHasNewMsg] = useState(false)
-  const [debugMode, setDebugMode] = useState(false)
+  const [debugMode, setDebugModeState] = useState(false)
 
-  // Sync debug mode from FounderBar toggle
   useEffect(() => {
-    try { setDebugMode(localStorage.getItem('bl_debug') === 'true') } catch {}
-    const handler = (e: Event) => setDebugMode((e as CustomEvent).detail)
-    window.addEventListener('bl:debug', handler)
-    return () => window.removeEventListener('bl:debug', handler)
+    setDebugModeState(getDebugMode())
+    return subscribeDebug(setDebugModeState)
   }, [])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -611,6 +609,26 @@ export function LyraChat() {
             </div>
           </div>
 
+          {/* Debug mode banner — only for founders */}
+          {beta.isOwner && debugMode && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 14px', background: 'rgba(99,102,241,0.08)', borderBottom: '0.5px solid rgba(99,102,241,0.2)', flexShrink: 0 }}>
+              <span style={{ fontSize: 9, fontWeight: 800, color: '#6366f1', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '1px 5px', borderRadius: 3, background: 'rgba(99,102,241,0.15)', border: '0.5px solid rgba(99,102,241,0.3)' }}>DEBUG ON</span>
+              <span style={{ fontSize: 10, color: '#52525B', flex: 1 }}>Model · latency · tokens shown per message</span>
+              <button onClick={() => setDebugMode(false)} style={{ fontSize: 10, color: '#52525B', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>✕ off</button>
+            </div>
+          )}
+          {/* Debug toggle for founders when debug is off */}
+          {beta.isOwner && !debugMode && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '4px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
+              <button onClick={() => setDebugMode(true)}
+                style={{ fontSize: 10, color: '#3f3f46', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#52525B' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#3f3f46' }}>
+                ◎ debug
+              </button>
+            </div>
+          )}
+
           {/* Web search toggle */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.05)', background: webSearch ? 'rgba(99,102,241,0.03)' : 'transparent', flexShrink: 0 }}>
             <button onClick={() => setWebSearch(p => !p)}
@@ -677,11 +695,19 @@ export function LyraChat() {
                   )}
                   {msg.role === 'assistant' && msg.content && !streaming && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {debugMode && (msg.model || msg.ms) && (
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          {msg.model && <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#6366f1', padding: '1px 6px', borderRadius: 4, background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}>{msg.model}</span>}
-                          {msg.ms && <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#52525B', padding: '1px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>{msg.ms}ms</span>}
-                          <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#52525B', padding: '1px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>~{Math.ceil(msg.content.length / 4)} tokens</span>
+                      {debugMode && (
+                        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', padding: '4px 8px', borderRadius: 6, background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                          <span style={{ fontSize: 9, fontFamily: 'monospace', fontWeight: 700, color: '#a5b4fc' }}>
+                            {msg.model ?? 'gemini-2.5-flash-lite'}
+                          </span>
+                          <span style={{ fontSize: 9, color: '#3f3f46' }}>·</span>
+                          <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#52525B' }}>
+                            {msg.ms ? `${msg.ms}ms` : '—'}
+                          </span>
+                          <span style={{ fontSize: 9, color: '#3f3f46' }}>·</span>
+                          <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#52525B' }}>
+                            ~{Math.ceil(msg.content.length / 4)} tok out
+                          </span>
                         </div>
                       )}
                       <div className="lyra-hover-actions" style={{ display: 'flex', gap: 6, transition: 'opacity 0.15s' }}>
