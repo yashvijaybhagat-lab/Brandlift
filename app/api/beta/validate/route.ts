@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 import { sanitizeCode } from '@/lib/sanitize'
 
-const BETA_FEATURES  = ['4k', '1440p', 'enhancement', 'ai_captions', 'noise_reduce', 'smart_enhance']
+const BETA_FEATURES  = ['4k', '1440p', 'enhancement', 'ai_captions', 'noise_reduce', 'smart_enhance', 'hd_download']
 const OWNER_FEATURES = [...BETA_FEATURES, 'analytics', 'backend_access', 'priority_support', 'unlimited_exports', 'custom_branding', 'team_access', 'early_access', 'raw_logs']
 
 const COOKIE_OPTS = {
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         if (Array.isArray(data)) blobCodes = data.map(c => String(c).toUpperCase())
       }
     }
-  } catch {}
+  } catch {} // Ignore errors during Blob fetch
 
   if ([...envCodes, ...blobCodes].includes(normalized)) {
     return withSession(normalized, {
