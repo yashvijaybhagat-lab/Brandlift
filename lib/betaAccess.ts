@@ -3,12 +3,14 @@ import { useState, useEffect, useCallback } from 'react'
 const STORAGE_KEY = 'bl_beta_v1'
 
 export interface BetaState {
-  unlocked: boolean
-  features: string[]
-  code:     string
+  unlocked:  boolean
+  role:      'beta' | 'owner' | null
+  ownerName: string | null
+  features:  string[]
+  code:      string
 }
 
-const DEFAULT: BetaState = { unlocked: false, features: [], code: '' }
+const DEFAULT: BetaState = { unlocked: false, role: null, ownerName: null, features: [], code: '' }
 
 export function useBetaAccess() {
   const [state,   setState]   = useState<BetaState>(DEFAULT)
@@ -32,12 +34,17 @@ export function useBetaAccess() {
       })
       const data = await res.json()
       if (data.valid) {
-        const next: BetaState = { unlocked: true, features: data.features ?? [], code }
+        const next: BetaState = {
+          unlocked:  true,
+          role:      data.role ?? 'beta',
+          ownerName: data.ownerName ?? null,
+          features:  data.features ?? [],
+          code,
+        }
         setState(next)
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
         return true
       }
-      // Always coerce to string — unexpected server responses can return non-string message
       const msg = typeof data.message === 'string' ? data.message : (data.error ?? 'Invalid code')
       setError(typeof msg === 'string' ? msg : 'Invalid code')
       return false
@@ -54,8 +61,8 @@ export function useBetaAccess() {
     localStorage.removeItem(STORAGE_KEY)
   }, [])
 
-  // Check if a specific feature is unlocked
-  const has = useCallback((feature: string) => state.features.includes(feature), [state.features])
+  const has     = useCallback((feature: string) => state.features.includes(feature), [state.features])
+  const isOwner = state.role === 'owner'
 
-  return { ...state, loading, error, unlock, revoke, has }
+  return { ...state, isOwner, loading, error, unlock, revoke, has }
 }

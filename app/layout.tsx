@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Providers } from './providers'
 import { LyraChat } from '@/components/chat/LyraChat'
+import { FounderBar } from '@/components/founder/FounderBar'
 import './gloabals.css'
 
 const inter = Inter({
@@ -76,6 +77,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <LyraChat />
+          <FounderBar />
         </Providers>
         <div id="toast-root" aria-live="polite" aria-atomic="false" className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none" />
         <Analytics />

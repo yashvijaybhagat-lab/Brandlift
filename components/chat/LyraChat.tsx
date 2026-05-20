@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { put } from '@vercel/blob/client'
+import { useBetaAccess } from '@/lib/betaAccess'
+
+const LYRA_SESSION_KEY = 'bl_lyra_session'
 
 /* ─── Types ─────────────────────────────────────────────── */
 interface Attachment { name: string; url: string; type: string }
@@ -12,6 +15,8 @@ interface Message {
   attachments?: Attachment[]
   usedSearch?: boolean
   error?: boolean
+  model?: string
+  ms?: number
 }
 
 /* ─── Quick actions ─────────────────────────────────────── */
@@ -171,19 +176,83 @@ function AttachmentCard({ att, onRemove }: { att: Attachment; onRemove?: () => v
   )
 }
 
+/* ─── Video compression ─────────────────────────────────── */
+const VIDEO_COMPRESS_THRESHOLD = 25 * 1024 * 1024 // 25 MB
+
+async function compressVideo(file: File, onStatus: (msg: string) => void): Promise<File> {
+  if (file.size <= VIDEO_COMPRESS_THRESHOLD) return file
+  if (typeof window === 'undefined') return file
+
+  const testEl = document.createElement('video')
+  const hasCaptureStream = 'captureStream' in testEl || 'mozCaptureStream' in testEl
+  if (!hasCaptureStream) return file
+
+  const mimeType = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
+    .find(m => MediaRecorder.isTypeSupported(m))
+  if (!mimeType) return file
+
+  return new Promise<File>(resolve => {
+    const url   = URL.createObjectURL(file)
+    const video = document.createElement('video')
+    video.src     = url
+    video.muted   = false
+    video.preload = 'auto'
+
+    video.onloadedmetadata = () => {
+      onStatus('Compressing…')
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const stream: MediaStream = (video as any).captureStream?.() ?? (video as any).mozCaptureStream?.()
+        const recorder = new MediaRecorder(stream, {
+          mimeType,
+          videoBitsPerSecond: 1_200_000,
+          audioBitsPerSecond: 96_000,
+        })
+        const chunks: Blob[] = []
+        recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data) }
+        recorder.onstop = () => {
+          URL.revokeObjectURL(url)
+          const blob = new Blob(chunks, { type: mimeType })
+          onStatus('')
+          resolve(blob.size > 0 && blob.size < file.size
+            ? new File([blob], file.name.replace(/\.[^.]+$/, '.webm'), { type: mimeType })
+            : file)
+        }
+        recorder.onerror = () => { URL.revokeObjectURL(url); onStatus(''); resolve(file) }
+        recorder.start(200)
+        video.play().catch(() => recorder.stop())
+        video.onended = () => recorder.stop()
+        video.onerror = () => recorder.stop()
+      } catch { URL.revokeObjectURL(url); onStatus(''); resolve(file) }
+    }
+    video.onerror = () => { URL.revokeObjectURL(url); onStatus(''); resolve(file) }
+  })
+}
+
 /* ─── Main component ────────────────────────────────────── */
 export function LyraChat() {
+  const beta = useBetaAccess()
   const [open,      setOpen]      = useState(false)
-  const [visible,   setVisible]   = useState(true)   // false = fully hidden, tab shown
+  const [visible,   setVisible]   = useState(true)
   const [expanded,  setExpanded]  = useState(false)
   const [messages,  setMessages]  = useState<Message[]>([])
   const [input,     setInput]     = useState('')
   const [webSearch, setWebSearch] = useState(false)
   const [streaming, setStreaming] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [compressStatus, setCompressStatus] = useState('')
   const [pendingAtts, setPendingAtts] = useState<Attachment[]>([])
   const [copied,    setCopied]    = useState<string | null>(null)
   const [hasNewMsg, setHasNewMsg] = useState(false)
+  const [debugMode, setDebugMode] = useState(false)
+
+  // Sync debug mode from FounderBar toggle
+  useEffect(() => {
+    try { setDebugMode(localStorage.getItem('bl_debug') === 'true') } catch {}
+    const handler = (e: Event) => setDebugMode((e as CustomEvent).detail)
+    window.addEventListener('bl:debug', handler)
+    return () => window.removeEventListener('bl:debug', handler)
+  }, [])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef       = useRef<HTMLTextAreaElement>(null)
@@ -212,7 +281,10 @@ export function LyraChat() {
     const files = Array.from(e.target.files ?? [])
     e.target.value = ''
     for (const file of files) {
-      const att = await uploadFile(file)
+      const toUpload = file.type.startsWith('video/')
+        ? await compressVideo(file, setCompressStatus)
+        : file
+      const att = await uploadFile(toUpload)
       if (att) setPendingAtts(prev => [...prev, att])
     }
   }, [uploadFile])
@@ -242,31 +314,51 @@ export function LyraChat() {
       else if (path.includes('/sign-in') || path.includes('/sign-up')) pageContext = 'User is on the authentication page'
     }
 
+    // Founder session overrides
+    let founderOverrides: Record<string, unknown> = {}
+    if (beta.isOwner) {
+      try {
+        const sess = JSON.parse(localStorage.getItem(LYRA_SESSION_KEY) ?? '{}')
+        if (sess.model)        founderOverrides.model        = sess.model
+        if (sess.maxTokens)    founderOverrides.maxTokens    = sess.maxTokens
+        if (sess.customSystem) founderOverrides.customSystem = sess.customSystem
+      } catch {}
+    }
+
     const ctrl = new AbortController()
     abortRef.current = ctrl
+    const startMs = Date.now()
 
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (beta.isOwner && beta.code) headers['x-founder-code'] = beta.code
+
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           message: content || `I uploaded: ${pendingAtts.map(a => a.name).join(', ')}`,
           history,
           attachments: userMsg.attachments,
           webSearch,
           pageContext,
+          ...founderOverrides,
         }),
         signal: ctrl.signal,
       })
       if (!res.ok || !res.body) throw new Error('Chat API error')
+
+      const usedModel = res.headers.get('X-Model') ?? undefined
       const reader = res.body.getReader()
       const dec = new TextDecoder()
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         const chunk = dec.decode(value, { stream: true })
-        setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: m.content + chunk } : m))
+        setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: m.content + chunk, model: usedModel } : m))
       }
+      const elapsed = Date.now() - startMs
+      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, ms: elapsed } : m))
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') return
       setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: 'Something went wrong — please try again.', error: true } : m))
@@ -275,7 +367,7 @@ export function LyraChat() {
       abortRef.current = null
       if (!open) setHasNewMsg(true)
     }
-  }, [input, pendingAtts, streaming, messages, webSearch, open])
+  }, [input, pendingAtts, streaming, messages, webSearch, open, beta])
 
   const stop  = () => { abortRef.current?.abort(); setStreaming(false) }
   const clear = () => { setMessages([]); setPendingAtts([]) }
@@ -584,19 +676,28 @@ export function LyraChat() {
                     </div>
                   )}
                   {msg.role === 'assistant' && msg.content && !streaming && (
-                    <div className="lyra-hover-actions" style={{ display: 'flex', gap: 6, transition: 'opacity 0.15s' }}>
-                      <button onClick={() => copyMsg(msg.id, msg.content)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 7px', borderRadius: 6, background: 'none', border: '0.5px solid rgba(255,255,255,0.07)', color: '#52525B', cursor: 'pointer', fontSize: 10 }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA' }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#52525B' }}>
-                        {copied === msg.id ? '✓ Copied' : 'Copy'}
-                      </button>
-                      {msg.error && (
-                        <button onClick={() => retry(idx)}
-                          style={{ padding: '2px 7px', borderRadius: 6, background: 'none', border: '0.5px solid rgba(239,68,68,0.2)', color: '#f87171', cursor: 'pointer', fontSize: 10 }}>
-                          Retry
-                        </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {debugMode && (msg.model || msg.ms) && (
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {msg.model && <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#6366f1', padding: '1px 6px', borderRadius: 4, background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}>{msg.model}</span>}
+                          {msg.ms && <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#52525B', padding: '1px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>{msg.ms}ms</span>}
+                          <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#52525B', padding: '1px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>~{Math.ceil(msg.content.length / 4)} tokens</span>
+                        </div>
                       )}
+                      <div className="lyra-hover-actions" style={{ display: 'flex', gap: 6, transition: 'opacity 0.15s' }}>
+                        <button onClick={() => copyMsg(msg.id, msg.content)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 7px', borderRadius: 6, background: 'none', border: '0.5px solid rgba(255,255,255,0.07)', color: '#52525B', cursor: 'pointer', fontSize: 10 }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA' }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#52525B' }}>
+                          {copied === msg.id ? '✓ Copied' : 'Copy'}
+                        </button>
+                        {msg.error && (
+                          <button onClick={() => retry(idx)}
+                            style={{ padding: '2px 7px', borderRadius: 6, background: 'none', border: '0.5px solid rgba(239,68,68,0.2)', color: '#f87171', cursor: 'pointer', fontSize: 10 }}>
+                            Retry
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -618,15 +719,24 @@ export function LyraChat() {
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, padding: '8px 10px', background: '#111113', border: '0.5px solid rgba(255,255,255,0.09)', borderRadius: 14, transition: 'border-color 0.15s' }}
               onFocusCapture={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(99,102,241,0.4)' }}
               onBlurCapture={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.09)' }}>
-              {/* Attach */}
-              <button onClick={() => fileInputRef.current?.click()} disabled={uploading} title="Attach file"
-                style={{ background: 'none', border: 'none', cursor: uploading ? 'default' : 'pointer', color: uploading ? '#6366f1' : '#3f3f46', padding: '2px 4px', display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'color 0.15s' }}
-                onMouseEnter={e => { if (!uploading) (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA' }}
-                onMouseLeave={e => { if (!uploading) (e.currentTarget as HTMLButtonElement).style.color = '#3f3f46' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation: uploading ? 'lyra-dot 1s ease infinite' : 'none' }}>
-                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                </svg>
-              </button>
+              {/* Attach / compress status */}
+              {compressStatus ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '2px 4px', flexShrink: 0 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2.2" strokeLinecap="round" style={{ animation: 'lyra-dot 1s ease infinite' }}>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  <span style={{ fontSize: 10, color: '#6366f1', fontWeight: 600 }}>{compressStatus}</span>
+                </div>
+              ) : (
+                <button onClick={() => fileInputRef.current?.click()} disabled={uploading} title="Attach file"
+                  style={{ background: 'none', border: 'none', cursor: uploading ? 'default' : 'pointer', color: uploading ? '#6366f1' : '#3f3f46', padding: '2px 4px', display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'color 0.15s' }}
+                  onMouseEnter={e => { if (!uploading) (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA' }}
+                  onMouseLeave={e => { if (!uploading) (e.currentTarget as HTMLButtonElement).style.color = '#3f3f46' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation: uploading ? 'lyra-dot 1s ease infinite' : 'none' }}>
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                  </svg>
+                </button>
+              )}
               {/* Textarea */}
               <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
                 placeholder="Ask Lyra anything…" rows={1}

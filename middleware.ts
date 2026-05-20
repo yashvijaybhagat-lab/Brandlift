@@ -45,11 +45,24 @@ const ROUTE_LIMITS: { pattern: RegExp; limit: number; windowMs: number }[] = [
   { pattern: /^\/api\//,                 limit: 120, windowMs: 60_000       }, // global fallback
 ]
 
+function isFounderCodeEdge(code: string | null): boolean {
+  if (!code) return false
+  const n = code.trim().toUpperCase()
+  const yb = (process.env.OWNER_CODE_YB ?? '').trim().toUpperCase()
+  const an = (process.env.OWNER_CODE_AN ?? '').trim().toUpperCase()
+  return (!!yb && n === yb) || (!!an && n === an)
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   // Skip non-API paths and NextAuth internal routes (OAuth redirects must not be blocked)
   if (!pathname.startsWith('/api/') || pathname.startsWith('/api/auth/')) {
+    return NextResponse.next()
+  }
+
+  // Founders bypass all rate limits
+  if (isFounderCodeEdge(req.headers.get('x-founder-code'))) {
     return NextResponse.next()
   }
 

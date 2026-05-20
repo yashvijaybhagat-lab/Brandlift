@@ -332,9 +332,21 @@ export function HeroSection() {
                 >
                   {beta.unlocked ? (
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
-                      style={{ background: 'rgba(74,222,128,0.08)', border: '0.5px solid rgba(74,222,128,0.25)' }}>
-                      <CheckCircle2 className="w-3.5 h-3.5" style={{ color: '#4ADE80' }} />
-                      <span style={{ fontSize: 12, color: '#4ADE80', fontWeight: 500 }}>Beta access active — 4K &amp; AI Enhancement unlocked</span>
+                      style={{
+                        background: beta.isOwner ? 'rgba(99,102,241,0.1)' : 'rgba(74,222,128,0.08)',
+                        border: beta.isOwner ? '0.5px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(74,222,128,0.25)',
+                      }}>
+                      <CheckCircle2 className="w-3.5 h-3.5" style={{ color: beta.isOwner ? '#a5b4fc' : '#4ADE80' }} />
+                      {beta.isOwner ? (
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#a5b4fc' }}>
+                          Welcome back, {beta.ownerName} — Founder access active
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 12, color: '#4ADE80', fontWeight: 500 }}>Beta access active — 4K &amp; AI Enhancement unlocked</span>
+                      )}
+                      {beta.isOwner && (
+                        <span style={{ fontSize: 9, fontWeight: 800, color: '#6366f1', letterSpacing: '0.1em', padding: '1px 5px', borderRadius: 3, background: 'rgba(99,102,241,0.15)', border: '0.5px solid rgba(99,102,241,0.3)', textTransform: 'uppercase' }}>FOUNDER</span>
+                      )}
                     </div>
                   ) : (
                     <div className="flex flex-col gap-3">
@@ -358,8 +370,8 @@ export function HeroSection() {
                           style={{ background: 'rgba(14,14,16,0.95)', border: '0.5px solid rgba(99,102,241,0.25)', backdropFilter: 'blur(16px)', maxWidth: 340 }}
                         >
                           <div>
-                            <p style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA' }}>Unlock beta features</p>
-                            <p style={{ fontSize: 12, color: '#71717A', marginTop: 3 }}>4K export, AI Enhancement, and early access features.</p>
+                            <p style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA' }}>Enter your access code</p>
+                            <p style={{ fontSize: 12, color: '#71717A', marginTop: 3 }}>Beta or founder code to unlock premium features.</p>
                           </div>
                           <div className="flex gap-2">
                             <input

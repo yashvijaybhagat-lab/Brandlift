@@ -1,5 +1,7 @@
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
-const MODEL = 'gemini-2.5-flash-lite'
+export const DEFAULT_MODEL = 'gemini-2.5-flash-lite'
+export const ALLOWED_MODELS = ['gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'] as const
+export type GeminiModel = typeof ALLOWED_MODELS[number]
 
 function apiKey(): string {
   const k = process.env.GEMINI_API_KEY
@@ -17,10 +19,12 @@ interface GeminiRequest {
   messages: GeminiMessage[]
   maxTokens?: number
   tools?: Record<string, unknown>[]
+  model?: string
 }
 
 /* Non-streaming — returns the full text response */
-export async function geminiGenerate({ system, messages, maxTokens = 1024 }: GeminiRequest): Promise<string> {
+export async function geminiGenerate({ system, messages, maxTokens = 1024, model }: GeminiRequest): Promise<string> {
+  const resolvedModel = ALLOWED_MODELS.includes(model as GeminiModel) ? model! : DEFAULT_MODEL
   const body: Record<string, unknown> = {
     contents: messages,
     generationConfig: { maxOutputTokens: maxTokens },
@@ -30,7 +34,7 @@ export async function geminiGenerate({ system, messages, maxTokens = 1024 }: Gem
   }
 
   const res = await fetch(
-    `${GEMINI_BASE}/${MODEL}:generateContent?key=${apiKey()}`,
+    `${GEMINI_BASE}/${resolvedModel}:generateContent?key=${apiKey()}`,
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
   )
   if (!res.ok) {
@@ -42,7 +46,8 @@ export async function geminiGenerate({ system, messages, maxTokens = 1024 }: Gem
 }
 
 /* Streaming — returns a ReadableStream that emits text chunks */
-export function geminiStream({ system, messages, maxTokens = 512, tools }: GeminiRequest): ReadableStream<Uint8Array> {
+export function geminiStream({ system, messages, maxTokens = 512, tools, model }: GeminiRequest): ReadableStream<Uint8Array> {
+  const resolvedModel = ALLOWED_MODELS.includes(model as GeminiModel) ? model! : DEFAULT_MODEL
   const body: Record<string, unknown> = {
     contents: messages,
     generationConfig: { maxOutputTokens: maxTokens },
@@ -60,7 +65,7 @@ export function geminiStream({ system, messages, maxTokens = 512, tools }: Gemin
     async start(controller) {
       try {
         const res = await fetch(
-          `${GEMINI_BASE}/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey()}`,
+          `${GEMINI_BASE}/${resolvedModel}:streamGenerateContent?alt=sse&key=${apiKey()}`,
           { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
         )
         if (!res.ok || !res.body) {
