@@ -3,6 +3,7 @@ import { geminiStream, ALLOWED_MODELS } from '@/lib/gemini'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 import { isFounderCode } from '@/lib/founderAuth'
 import { DEFAULT_SYSTEM } from '@/lib/lyraSystem'
+import { detectPromptInjection, sanitizeText } from '@/lib/sanitize'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +38,18 @@ export async function POST(req: NextRequest) {
 
   const { message, history = [], attachments = [], webSearch = false, pageContext = '', customSystem, model, maxTokens } = body
   if (!message?.trim()) return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+
+  // Sanitize message — reject SQLi / command injection in input
+  const sanitized = sanitizeText(message, 8000)
+  if (!sanitized.clean) return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+
+  // Prompt injection detection (non-founders only — founders can legitimately test prompts)
+  if (!founder.valid) {
+    const allMessages = [...(history ?? []), { role: 'user', content: message }]
+    if (detectPromptInjection(allMessages)) {
+      return NextResponse.json({ error: 'That kind of message isn\'t supported.' }, { status: 400 })
+    }
+  }
 
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 503 })
