@@ -1,6 +1,7 @@
 import { HeroSection } from '@/components/blocks/hero-section-5'
 import { AnimatedBackground } from '@/components/marketing/AnimatedBackground'
 import SocialProof from '@/components/marketing/SocialProof'
+import GlobalReach from '@/components/marketing/GlobalReach'
 import Features from '@/components/marketing/Features'
 import Pricing from '@/components/marketing/Pricing'
 import Footer from '@/components/marketing/Footer'
@@ -21,6 +22,7 @@ export default function LandingPage() {
       <div className="relative z-10">
         <HeroSection />
         <SocialProof />
+        <GlobalReach />
         <Features />
         <Pricing />
         <Footer />

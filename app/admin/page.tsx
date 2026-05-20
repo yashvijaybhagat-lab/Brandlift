@@ -125,7 +125,7 @@ function AdminPageInner() {
 
       {/* Content */}
       <div style={{ padding: '28px 32px', maxWidth: 900 }}>
-        {tab === 'overview'  && <OverviewTab beta={beta} />}
+        {tab === 'overview'  && <OverviewTab beta={beta} headers={founderHeaders} />}
         {tab === 'codes'     && <CodesTab headers={founderHeaders} showToast={showToast} />}
         {tab === 'lyra'      && <LyraConfigTab headers={founderHeaders} code={beta.code} ownerName={beta.ownerName} showToast={showToast} />}
         {tab === 'health'    && <HealthTab headers={founderHeaders} />}
@@ -137,8 +137,107 @@ function AdminPageInner() {
   )
 }
 
+/* ─── Country stats widget ───────────────────────────────── */
+interface CountryRow { code: string; name: string; flag: string; visitors: number }
+interface ReachFull  { configured: boolean; totalCountries?: number; totalVisitors?: number; countries?: CountryRow[]; updatedAt?: string }
+
+function CountryStatsWidget({ headers }: { headers: Record<string, string> }) {
+  const [data, setData]       = useState<ReachFull | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [lastPoll, setLastPoll] = useState<string>('')
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch('/api/analytics/countries', { headers })
+      const json: ReachFull = await res.json()
+      setData(json)
+      setLastPoll(new Date().toLocaleTimeString())
+    } catch {}
+    finally { setLoading(false) }
+  }, [headers])
+
+  useEffect(() => {
+    load()
+    const id = setInterval(load, 5 * 60 * 1000)
+    return () => clearInterval(id)
+  }, [load])
+
+  if (loading) return (
+    <div style={S.card}>
+      <p style={S.label}>User Geography</p>
+      <p style={{ color: '#52525B', fontSize: 13, marginTop: 8 }}>Loading analytics…</p>
+    </div>
+  )
+
+  if (!data?.configured) return (
+    <div style={S.card}>
+      <p style={S.label}>User Geography</p>
+      <p style={{ color: '#52525B', fontSize: 13, marginTop: 8 }}>
+        Not configured — add{' '}
+        <code style={{ background: 'rgba(255,255,255,0.05)', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace' }}>VERCEL_TOKEN</code>{' '}
+        and{' '}
+        <code style={{ background: 'rgba(255,255,255,0.05)', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace' }}>VERCEL_PROJECT_ID</code>{' '}
+        to Vercel environment variables.
+      </p>
+    </div>
+  )
+
+  const countries  = data.countries ?? []
+  const topCountry = countries[0]
+  const maxVisits  = topCountry?.visitors ?? 1
+
+  return (
+    <div style={S.card}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <p style={S.label}>User Geography — Last 30 Days</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80', display: 'inline-block', boxShadow: '0 0 6px rgba(74,222,128,0.6)' }} />
+          <span style={{ fontSize: 10, color: '#52525B' }}>Live · refreshed {lastPoll}</span>
+          <button onClick={load} style={{ ...S.ghostBtn, padding: '3px 8px', fontSize: 11 }}>↻</button>
+        </div>
+      </div>
+
+      {/* Summary row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+        <div style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.15)', borderRadius: 10, padding: '12px 16px' }}>
+          <p style={{ fontSize: 11, color: '#52525B', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>Countries</p>
+          <p style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.05em', color: '#a5b4fc' }}>{data.totalCountries}</p>
+        </div>
+        <div style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.15)', borderRadius: 10, padding: '12px 16px' }}>
+          <p style={{ fontSize: 11, color: '#52525B', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>Total Visitors</p>
+          <p style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.05em', color: '#a5b4fc' }}>{(data.totalVisitors ?? 0).toLocaleString()}</p>
+        </div>
+      </div>
+
+      {/* Country rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {countries.slice(0, 15).map(c => {
+          const pct = Math.round((c.visitors / maxVisits) * 100)
+          const sharePct = data.totalVisitors ? Math.round((c.visitors / data.totalVisitors) * 100) : 0
+          return (
+            <div key={c.code} style={{ display: 'grid', gridTemplateColumns: '2rem 1fr 80px 44px', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 20, textAlign: 'center' }}>{c.flag}</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#FAFAFA', marginBottom: 3 }}>{c.name}</div>
+                <div style={{ height: 3, borderRadius: 99, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: 'linear-gradient(90deg,#6366f1,#8b5cf6)', transition: 'width 0.6s ease' }} />
+                </div>
+              </div>
+              <span style={{ fontSize: 12, color: '#A1A1AA', textAlign: 'right' }}>{c.visitors.toLocaleString()}</span>
+              <span style={{ fontSize: 11, color: '#52525B', textAlign: 'right' }}>{sharePct}%</span>
+            </div>
+          )
+        })}
+        {countries.length > 15 && (
+          <p style={{ fontSize: 11, color: '#52525B', marginTop: 4 }}>+{countries.length - 15} more countries</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ─── Overview tab ───────────────────────────────────────── */
-function OverviewTab({ beta }: { beta: ReturnType<typeof useBetaAccess> }) {
+function OverviewTab({ beta, headers }: { beta: ReturnType<typeof useBetaAccess>; headers: Record<string, string> }) {
   const ALL_FEATURES = ['4k', '1440p', 'enhancement', 'ai_captions', 'noise_reduce', 'smart_enhance', 'analytics', 'backend_access', 'priority_support', 'unlimited_exports', 'custom_branding', 'team_access', 'early_access', 'raw_logs']
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -155,6 +254,9 @@ function OverviewTab({ beta }: { beta: ReturnType<typeof useBetaAccess> }) {
           </div>
         ))}
       </div>
+
+      {/* Live country stats */}
+      <CountryStatsWidget headers={headers} />
 
       <div style={S.card}>
         <p style={S.label}>Your Features</p>
