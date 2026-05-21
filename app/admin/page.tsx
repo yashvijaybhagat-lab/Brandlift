@@ -552,6 +552,53 @@ function AnalyticsTab({ headers }: { headers: Record<string, string> }) {
 }
 
 /* ─── Beta codes tab ─────────────────────────────────────────── */
+function CodesAnalyticsBanner({ headers }: { headers: Record<string, string> }) {
+  const [summary, setSummary] = useState<{ configured: boolean; totalViews?: number; topPages?: { key: string; total: number }[] } | null>(null)
+  const [reach,   setReach]   = useState<{ configured: boolean; totalCountries?: number; totalVisitors?: number } | null>(null)
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/analytics/summary',   { headers }).then(r => r.json()).catch(() => ({ configured: false })),
+      fetch('/api/analytics/countries', { headers }).then(r => r.json()).catch(() => ({ configured: false })),
+    ]).then(([s, r]) => { setSummary(s); setReach(r) })
+  }, [headers])
+
+  if (!summary?.configured) return null
+
+  const topPage = summary.topPages?.[0]
+
+  return (
+    <div style={{ ...card(), background: `${C.primary}06`, borderColor: `${C.primary}20`, marginBottom: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <p style={label}>Vercel Analytics — Last 30 Days</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Dot pulse />
+          <span style={{ fontSize: 10, color: C.subtle }}>Live</span>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+        {[
+          { lbl: 'Page Views',   val: (summary.totalViews ?? 0).toLocaleString(), color: C.primary },
+          { lbl: 'Countries',    val: reach?.totalCountries ?? '—',                color: C.accent  },
+          { lbl: 'Unique Visitors', val: (reach?.totalVisitors ?? 0).toLocaleString(), color: '#4ADE80' },
+        ].map(s => (
+          <div key={s.lbl} style={{ background: `${s.color}08`, border: `0.5px solid ${s.color}20`, borderRadius: 10, padding: '10px 14px' }}>
+            <p style={{ ...label, marginBottom: 3, color: C.subtle }}>{s.lbl}</p>
+            <p style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.04em', color: s.color }}>{s.val}</p>
+          </div>
+        ))}
+      </div>
+      {topPage && (
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 11, color: C.subtle }}>Top page:</span>
+          <code style={{ fontSize: 11, fontFamily: 'monospace', color: '#a5b4fc', background: `${C.primary}10`, padding: '2px 7px', borderRadius: 4 }}>{topPage.key || '/'}</code>
+          <span style={{ fontSize: 11, color: C.subtle }}>{topPage.total.toLocaleString()} views</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function CodesTab({ headers, showToast }: { headers: Record<string, string>; showToast: (m: string, t: 'ok' | 'err') => void }) {
   const [codes,   setCodes]   = useState<{ env: CodeEntry[]; dynamic: CodeEntry[] } | null>(null)
   const [newCode, setNewCode] = useState('')
@@ -588,6 +635,8 @@ function CodesTab({ headers, showToast }: { headers: Record<string, string>; sho
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <CodesAnalyticsBanner headers={headers} />
+
       <div style={card()}>
         <p style={label}>Add Beta Code</p>
         <p style={{ fontSize: 12, color: C.subtle, marginBottom: 14 }}>Codes activate immediately — no redeploy needed.</p>
