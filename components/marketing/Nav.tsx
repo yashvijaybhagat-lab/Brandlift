@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const { data: session } = useSession()
 
   useEffect(() => {
     // Animate in on mount
@@ -54,11 +56,12 @@ export default function Nav() {
 
         {/* Nav links */}
         <div className="hidden md:flex items-center gap-7">
-          {[
+          {[              
             { label: 'Features', href: '#features' },
             { label: 'Pricing', href: '#pricing' },
             { label: 'Examples', href: '#examples' },
-          ].map(({ label, href }) => (
+            session && session.user.email === 'yash@brandlift.app' && { label: 'Admin', href: '/admin' },
+          ].filter(Boolean).map(({ label, href }: any) => (
             <a
               key={label}
               href={href}
