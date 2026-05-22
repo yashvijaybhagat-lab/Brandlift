@@ -732,7 +732,6 @@ function VideosInner() {
     setClips([clip]); setActiveClipId(clip.id)
     setVideos(prev => { const next = [record, ...prev]; saveVideos(next); return next })
     setStage('done')
-    if (beta.has('enhancement')) runEnhancementInBackground(clip.url, clip.id)
     // Auto-transcribe from actual audio (fires in bg; falls back to script if no speech)
     setTimeout(() => transcribeFromAudio(clip.url), 400)
   }, [uploadClip, scriptText, saveVideos, runEnhancementInBackground, transcribeFromAudio])
