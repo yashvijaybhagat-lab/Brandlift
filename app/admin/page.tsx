@@ -869,10 +869,10 @@ interface FileChange   { path: string; content: string; isNew?: boolean }
 interface EditorResult { explanation: string; changes: FileChange[] }
 type CommitUrl = { path: string; url: string }
 
-function ChangesViewer({ result, commitUrls, committing, onCommit, headers, showToast, storageKey }: {
+function ChangesViewer({ result, commitUrls, committing, onCommit, headers, showToast, storageKey, localMode }: {
   result:     EditorResult; commitUrls: CommitUrl[]; committing: boolean
   onCommit:   (msg: string) => void; headers: Record<string, string>
-  showToast:  (m: string, t: 'ok' | 'err') => void; storageKey?: string
+  showToast:  (m: string, t: 'ok' | 'err') => void; storageKey?: string; localMode?: boolean
 }) {
   const [activeFile, setActiveFile] = useState(0)
   const [viewMode,   setViewMode]   = useState<'after' | 'before'>('after')
@@ -925,24 +925,41 @@ function ChangesViewer({ result, commitUrls, committing, onCommit, headers, show
       </div>
 
       <div style={{ ...card(), borderColor: 'rgba(74,222,128,0.2)', background: 'rgba(74,222,128,0.02)' }}>
-        <p style={label}>Push to Vercel</p>
-        <p style={{ fontSize: 12, color: C.subtle, marginBottom: 12 }}>Commits to GitHub → Vercel auto-deploys. Live in ~60 seconds.</p>
+        <p style={label}>{localMode ? 'Apply Locally' : 'Push to Vercel'}</p>
+        <p style={{ fontSize: 12, color: C.subtle, marginBottom: 12 }}>
+          {localMode
+            ? 'Writes files directly to disk. Restart dev server (or let Next.js hot-reload) to see changes.'
+            : 'Commits to GitHub → Vercel auto-deploys. Live in ~60 seconds.'}
+        </p>
+        {localMode && (
+          <div style={{ padding: '8px 12px', borderRadius: 7, background: 'rgba(245,158,11,0.08)', border: '0.5px solid rgba(245,158,11,0.25)', marginBottom: 12 }}>
+            <p style={{ fontSize: 12, color: C.warning, margin: 0 }}>
+              GITHUB_TOKEN / GITHUB_REPO not set — fixes will be written to the local filesystem only. Add them to Vercel env vars to enable live deploys.
+            </p>
+          </div>
+        )}
         <input style={{ ...input, marginBottom: 10 }} value={commitMsg} onChange={e => setCommitMsg(e.target.value)} placeholder="Commit message" />
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <button style={{ ...btn(!committing, 'success'), fontSize: 14, padding: '10px 24px' }}
             onClick={() => onCommit(commitMsg)} disabled={committing}>
-            {committing ? 'Pushing…' : `↑ Push ${result.changes.length} file${result.changes.length > 1 ? 's' : ''} to Vercel`}
+            {committing
+              ? (localMode ? 'Writing…' : 'Pushing…')
+              : (localMode
+                  ? `↓ Apply ${result.changes.length} file${result.changes.length > 1 ? 's' : ''} locally`
+                  : `↑ Push ${result.changes.length} file${result.changes.length > 1 ? 's' : ''} to Vercel`)}
           </button>
           <span style={{ fontSize: 12, color: C.subtle }}>or copy each file above and apply manually</span>
         </div>
         {commitUrls.length > 0 && (
           <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
             {commitUrls.map(u => (
-              <a key={u.path} href={u.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: C.success, fontFamily: 'monospace' }}>
-                ✓ {u.path} → view commit ↗
-              </a>
+              u.url
+                ? <a key={u.path} href={u.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: C.success, fontFamily: 'monospace' }}>✓ {u.path} → view commit ↗</a>
+                : <span key={u.path} style={{ fontSize: 12, color: C.success, fontFamily: 'monospace' }}>✓ {u.path} — written to disk</span>
             ))}
-            <p style={{ fontSize: 12, color: C.subtle, marginTop: 4 }}>Vercel is deploying now.</p>
+            <p style={{ fontSize: 12, color: C.subtle, marginTop: 4 }}>
+              {localMode ? 'Files saved. Next.js will hot-reload the changes.' : 'Vercel is deploying now.'}
+            </p>
           </div>
         )}
       </div>
@@ -958,6 +975,7 @@ function CodeEditorTab({ headers, showToast }: { headers: Record<string, string>
   const [result,      setResult]      = useState<EditorResult | null>(null)
   const [committing,  setCommitting]  = useState(false)
   const [commitUrls,  setCommitUrls]  = useState<CommitUrl[]>([])
+  const [localMode,   setLocalMode]   = useState(false)
 
   const QUICK = [
     'Add a new beta feature flag called "hd_download" to the validate route',
@@ -1009,9 +1027,10 @@ function CodeEditorTab({ headers, showToast }: { headers: Record<string, string>
         body: JSON.stringify({ changes: result.changes, commitMessage: msg }),
       }).then(r => r.json())
       if (data.ok) {
+        setLocalMode(!!data.local)
         setCommitUrls(data.results.filter((r: { ok: boolean }) => r.ok).map((r: { path: string; commitUrl: string }) => ({ path: r.path, url: r.commitUrl })))
-        showToast(`${data.results.length} file${data.results.length !== 1 ? 's' : ''} committed`, 'ok')
-      } else { showToast(data.error ?? 'Commit failed — check GITHUB_TOKEN env var', 'err') }
+        showToast(data.local ? `${data.results.length} file(s) written locally` : `${data.results.length} file${data.results.length !== 1 ? 's' : ''} committed`, 'ok')
+      } else { showToast(data.error ?? 'Failed to apply changes', 'err') }
     } finally { setCommitting(false) }
   }
 
@@ -1035,7 +1054,7 @@ function CodeEditorTab({ headers, showToast }: { headers: Record<string, string>
           {generating ? `✦ ${status || 'Working…'}` : '✦ Generate Changes'}
         </button>
       </div>
-      {result && <ChangesViewer result={result} commitUrls={commitUrls} committing={committing} onCommit={commit} headers={headers} showToast={showToast} storageKey={`[AI Editor] ${instruction.slice(0, 60)}`} />}
+      {result && <ChangesViewer result={result} commitUrls={commitUrls} committing={committing} onCommit={commit} headers={headers} showToast={showToast} storageKey={`[AI Editor] ${instruction.slice(0, 60)}`} localMode={localMode} />}
     </div>
   )
 }
@@ -1051,6 +1070,7 @@ function DebugTab({ headers, showToast }: { headers: Record<string, string>; sho
   const [result,     setResult]     = useState<DebugResult | null>(null)
   const [committing, setCommitting] = useState(false)
   const [commitUrls, setCommitUrls] = useState<CommitUrl[]>([])
+  const [localMode,  setLocalMode]  = useState(false)
 
   const EXAMPLES = [
     'The Lyra chat stops streaming mid-response sometimes',
@@ -1101,9 +1121,10 @@ function DebugTab({ headers, showToast }: { headers: Record<string, string>; sho
         body: JSON.stringify({ changes: result.changes, commitMessage: msg }),
       }).then(r => r.json())
       if (data.ok) {
+        setLocalMode(!!data.local)
         setCommitUrls(data.results.filter((r: { ok: boolean }) => r.ok).map((r: { path: string; commitUrl: string }) => ({ path: r.path, url: r.commitUrl })))
-        showToast('Fix pushed — Vercel deploying', 'ok')
-      } else { showToast(data.error ?? 'Commit failed', 'err') }
+        showToast(data.local ? 'Fix applied locally — hot-reload active' : 'Fix pushed — Vercel deploying', 'ok')
+      } else { showToast(data.error ?? 'Failed to apply fix', 'err') }
     } finally { setCommitting(false) }
   }
 
@@ -1157,7 +1178,7 @@ function DebugTab({ headers, showToast }: { headers: Record<string, string>; sho
             )}
           </div>
           {result.changes?.length > 0 ? (
-            <ChangesViewer result={{ explanation: result.explanation, changes: result.changes }} commitUrls={commitUrls} committing={committing} onCommit={commit} headers={headers} showToast={showToast} storageKey={`[AI Debug fix] ${errorDesc.slice(0, 50)}`} />
+            <ChangesViewer result={{ explanation: result.explanation, changes: result.changes }} commitUrls={commitUrls} committing={committing} onCommit={commit} headers={headers} showToast={showToast} storageKey={`[AI Debug fix] ${errorDesc.slice(0, 50)}`} localMode={localMode} />
           ) : (
             <div style={{ ...card(), borderColor: 'rgba(245,158,11,0.25)', background: 'rgba(245,158,11,0.03)' }}>
               <p style={{ fontSize: 13, color: C.warning }}>No code change needed — this is likely a config or environment issue. See the explanation above.</p>

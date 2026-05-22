@@ -697,7 +697,7 @@ function VideosInner() {
       const tokenRes = await fetch(`/api/video/upload?filename=${encodeURIComponent(file.name)}`)
       if (!tokenRes.ok) { const e = await tokenRes.json().catch(() => ({})); throw new Error(e.error ?? `Token request failed (${tokenRes.status})`) }
       const { clientToken, pathname } = await tokenRes.json()
-      const blob = await put(pathname, file, { access: 'public', token: clientToken, onUploadProgress: ({ percentage }) => setUploadProgress(percentage) })
+      const blob = await put(pathname, file, { access: 'public', token: clientToken, multipart: true, onUploadProgress: ({ percentage }) => setUploadProgress(percentage) })
       return { id: Date.now().toString(), name: file.name, url: blob.url, trimStart: 0, trimEnd: 100, duration: 0 }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'Upload failed — check your connection and try again.')
@@ -725,7 +725,7 @@ function VideosInner() {
     try {
       const tokenRes = await fetch(`/api/video/upload?filename=${encodeURIComponent(file.name)}`)
       const { clientToken, pathname } = await tokenRes.json()
-      const blob = await put(pathname, file, { access: 'public', token: clientToken, onUploadProgress: ({ percentage }) => setAddClipProgress(percentage) })
+      const blob = await put(pathname, file, { access: 'public', token: clientToken, multipart: true, onUploadProgress: ({ percentage }) => setAddClipProgress(percentage) })
       const newClip: Clip = { id: Date.now().toString(), name: file.name, url: blob.url, trimStart: 0, trimEnd: 100, duration: 0 }
       setClips(prev => [...prev, newClip]); setActiveClipId(newClip.id)
     } catch {}

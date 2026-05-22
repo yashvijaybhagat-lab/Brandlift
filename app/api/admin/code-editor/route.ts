@@ -1,11 +1,13 @@
 /**
  * Founder-only: AI code editor.
  * POST → generate code changes from natural language instruction.
- * PUT  → commit the approved changes to GitHub.
+ * PUT  → commit the approved changes to GitHub (falls back to local fs in dev).
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { founderRequired } from '@/lib/founderAuth'
 import { geminiGenerate } from '@/lib/gemini'
+import fs from 'fs'
+import path from 'path'
 
 export const dynamic = 'force-dynamic'
 
@@ -149,15 +151,19 @@ Rules:
   }
 }
 
-// ── PUT: commit approved changes to GitHub ────────────────────
+// ── Local fs write helper (dev fallback) ─────────────────────
+
+function writeFileLocal(filePath: string, content: string): void {
+  const abs = path.join(process.cwd(), filePath)
+  fs.mkdirSync(path.dirname(abs), { recursive: true })
+  fs.writeFileSync(abs, content, 'utf-8')
+}
+
+// ── PUT: commit approved changes to GitHub (or write locally) ─
 
 export async function PUT(req: NextRequest) {
   const { authorized, ownerName } = founderRequired(req)
   if (!authorized) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  if (!GITHUB_TOKEN || !GITHUB_REPO) {
-    return NextResponse.json({ error: 'GITHUB_TOKEN and GITHUB_REPO env vars must be set to commit changes.' }, { status: 400 })
-  }
 
   const { changes, commitMessage }: { changes: FileChange[]; commitMessage: string } = await req.json()
 
@@ -166,15 +172,27 @@ export async function PUT(req: NextRequest) {
   const message = commitMessage?.trim() || `[Admin AI] ${ownerName ?? 'Founder'} code edit`
   const results: { path: string; commitUrl: string; ok: boolean; error?: string }[] = []
 
-  for (const change of changes) {
-    try {
-      const commitUrl = await commitFile(change.path, change.content, message)
-      results.push({ path: change.path, commitUrl, ok: true })
-    } catch (e) {
-      results.push({ path: change.path, commitUrl: '', ok: false, error: String(e) })
+  // If GitHub is configured, commit there. Otherwise write to local filesystem.
+  if (GITHUB_TOKEN && GITHUB_REPO) {
+    for (const change of changes) {
+      try {
+        const commitUrl = await commitFile(change.path, change.content, message)
+        results.push({ path: change.path, commitUrl, ok: true })
+      } catch (e) {
+        results.push({ path: change.path, commitUrl: '', ok: false, error: String(e) })
+      }
+    }
+  } else {
+    for (const change of changes) {
+      try {
+        writeFileLocal(change.path, change.content)
+        results.push({ path: change.path, commitUrl: '', ok: true })
+      } catch (e) {
+        results.push({ path: change.path, commitUrl: '', ok: false, error: String(e) })
+      }
     }
   }
 
   const allOk = results.every(r => r.ok)
-  return NextResponse.json({ ok: allOk, results }, { status: allOk ? 200 : 207 })
+  return NextResponse.json({ ok: allOk, results, local: !(GITHUB_TOKEN && GITHUB_REPO) }, { status: allOk ? 200 : 207 })
 }
