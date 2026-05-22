@@ -692,19 +692,37 @@ function VideosInner() {
     } catch { setEnhancementStatus('failed') }
   }, [saveVideos])
 
+  const uploadProgressRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const startProgressAnimation = useCallback(() => {
+    let pct = 0
+    uploadProgressRef.current = setInterval(() => {
+      pct = Math.min(pct + (90 - pct) * 0.06, 90)
+      setUploadProgress(Math.round(pct))
+    }, 200)
+  }, [])
+
+  const stopProgressAnimation = useCallback((final: number) => {
+    if (uploadProgressRef.current) clearInterval(uploadProgressRef.current)
+    setUploadProgress(final)
+  }, [])
+
   const uploadClip = useCallback(async (file: File): Promise<Clip | null> => {
     try {
       const tokenRes = await fetch(`/api/video/upload?filename=${encodeURIComponent(file.name)}`)
       if (!tokenRes.ok) { const e = await tokenRes.json().catch(() => ({})); throw new Error(e.error ?? `Token request failed (${tokenRes.status})`) }
       const { clientToken, pathname } = await tokenRes.json()
-      const blob = await put(pathname, file, { access: 'public', token: clientToken, multipart: true, onUploadProgress: ({ percentage }) => setUploadProgress(percentage) })
+      startProgressAnimation()
+      const blob = await put(pathname, file, { access: 'public', token: clientToken })
+      stopProgressAnimation(100)
       return { id: Date.now().toString(), name: file.name, url: blob.url, trimStart: 0, trimEnd: 100, duration: 0 }
     } catch (err: unknown) {
+      stopProgressAnimation(0)
       setErrorMsg(err instanceof Error ? err.message : 'Upload failed — check your connection and try again.')
       setStage('error')
       return null
     }
-  }, [])
+  }, [startProgressAnimation, stopProgressAnimation])
 
   const startUpload = useCallback(async (file: File) => {
     setUploadProgress(0); setErrorMsg(''); setStage('uploading')
@@ -725,7 +743,7 @@ function VideosInner() {
     try {
       const tokenRes = await fetch(`/api/video/upload?filename=${encodeURIComponent(file.name)}`)
       const { clientToken, pathname } = await tokenRes.json()
-      const blob = await put(pathname, file, { access: 'public', token: clientToken, multipart: true, onUploadProgress: ({ percentage }) => setAddClipProgress(percentage) })
+      const blob = await put(pathname, file, { access: 'public', token: clientToken })
       const newClip: Clip = { id: Date.now().toString(), name: file.name, url: blob.url, trimStart: 0, trimEnd: 100, duration: 0 }
       setClips(prev => [...prev, newClip]); setActiveClipId(newClip.id)
     } catch {}
