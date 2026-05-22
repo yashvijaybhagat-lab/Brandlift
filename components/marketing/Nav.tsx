@@ -60,7 +60,7 @@ export default function Nav() {
             { label: 'Features', href: '#features' },
             { label: 'Pricing', href: '#pricing' },
             { label: 'Examples', href: '#examples' },
-            session && session.user.email === 'yash@brandlift.app' && { label: 'Admin', href: '/admin' },
+            session && session.user?.email === 'yash@brandlift.app' && { label: 'Admin', href: '/admin' },
           ].filter(Boolean).map(({ label, href }: any) => (
             <a
               key={label}
