@@ -65,7 +65,7 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
               </span>
             )}
             {statusText && (
-              <span className="text-[12px] text-brand-text-muted ml-auto">
+              <span className={`text-[12px] ml-auto ${variant === 'error' ? 'text-brand-error' : 'text-brand-text-muted'}`}>
                 {statusText}
               </span>
             )}
