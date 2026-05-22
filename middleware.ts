@@ -148,7 +148,7 @@ const SEC_HEADERS: [string, string][] = [
     "font-src 'self' https://fonts.gstatic.com; " +
     "img-src 'self' data: blob: https:; " +
     "media-src 'self' blob: https:; " +
-    "connect-src 'self' https://generativelanguage.googleapis.com https://api.replicate.com https://api.pexels.com https://api.github.com https://blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
+    "connect-src 'self' https://generativelanguage.googleapis.com https://api.replicate.com https://api.pexels.com https://api.github.com https://vercel.com https://blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
     "frame-ancestors 'none'; " +
     "base-uri 'self'; " +
     "form-action 'self';",
