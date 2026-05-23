@@ -29,9 +29,10 @@ const Logo = ({ className }: { className?: string }) => (
 
 /* ─── Nav ─────────────────────────────────────────────────────────────────── */
 const menuItems = [
+  { name: 'How it works', href: '#how-it-works' },
   { name: 'Features', href: '#features' },
   { name: 'Pricing', href: '#pricing' },
-  { name: 'About', href: '#' },
+  { name: 'FAQ', href: '#faq' },
 ]
 
 const HeroHeader = () => {
@@ -456,7 +457,8 @@ export function HeroSection() {
                   </p>
                   <div className="flex gap-3 flex-wrap">
                     <StatBadge value="10x" label="Faster editing" />
-                    <StatBadge value="8 min" label="Avg. setup time" />
+                    <StatBadge value="3 min" label="Video ready" />
+                    <StatBadge value="500+" label="Businesses" />
                   </div>
                 </motion.div>
               </div>
