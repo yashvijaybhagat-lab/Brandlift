@@ -6,7 +6,7 @@ import { TopBar } from '@/components/dashboard/TopBar'
 import {
   Heart, MessageCircle, Send, Play, Pause, VolumeX, Volume2,
   Users, Rss, ArrowLeft, MoreVertical, Trash2, Search, ChevronRight,
-  ChevronDown,
+  ChevronUp, ChevronDown,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -81,7 +81,7 @@ function Avatar({ src, name, size = 36 }: { src?: string; name: string; size?: n
 /* ─── TikTok Video Slide ─────────────────────────────── */
 
 function VideoSlide({
-  post, currentUserEmail, onLike, onMessage, onDelete, index, total,
+  post, currentUserEmail, onLike, onMessage, onDelete, index, total, scrollRef,
 }: {
   post: CommunityPost
   currentUserEmail: string
@@ -90,8 +90,9 @@ function VideoSlide({
   onDelete: (id: string) => void
   index: number
   total: number
+  scrollRef: React.RefObject<HTMLDivElement>
 }) {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const slideRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [playing, setPlaying] = useState(false)
   const [muted, setMuted] = useState(true)
@@ -102,10 +103,9 @@ function VideoSlide({
 
   // Auto-play when scrolled into view
   useEffect(() => {
-    const container = containerRef.current
+    const slide = slideRef.current
     const video = videoRef.current
-    if (!container || !video) return
-
+    if (!slide || !video) return
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -117,7 +117,7 @@ function VideoSlide({
       },
       { threshold: 0.6 }
     )
-    observer.observe(container)
+    observer.observe(slide)
     return () => observer.disconnect()
   }, [])
 
@@ -128,107 +128,141 @@ function VideoSlide({
     else { v.play().catch(() => {}); setPlaying(true) }
   }
 
+  const scrollTo = (dir: 'up' | 'down') => {
+    const container = scrollRef.current
+    if (!container) return
+    const h = container.clientHeight
+    container.scrollBy({ top: dir === 'down' ? h : -h, behavior: 'smooth' })
+  }
+
   const caption = post.caption || post.script || ''
 
   return (
     <div
-      ref={containerRef}
+      ref={slideRef}
       style={{
         height: '100%',
         flexShrink: 0,
         scrollSnapAlign: 'start',
-        position: 'relative',
         background: '#000',
-        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0,
+        position: 'relative',
       }}
     >
-      {/* Video */}
-      <video
-        ref={videoRef}
-        src={post.videoUrl}
-        muted={muted}
-        loop
-        playsInline
-        onClick={togglePlay}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', cursor: 'pointer' }}
-      />
+      {/* ── Centered 9:16 video column ── */}
+      <div style={{
+        height: '100%',
+        aspectRatio: '9 / 16',
+        maxWidth: 420,
+        minWidth: 0,
+        position: 'relative',
+        overflow: 'hidden',
+        background: '#111',
+        flexShrink: 0,
+      }}>
+        <video
+          ref={videoRef}
+          src={post.videoUrl}
+          muted={muted}
+          loop
+          playsInline
+          onClick={togglePlay}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', cursor: 'pointer' }}
+        />
 
-      {/* Gradient overlays */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 40%, transparent 65%)' }} />
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 80, pointerEvents: 'none', background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%)' }} />
+        {/* Bottom gradient */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.05) 45%, transparent 65%)' }} />
 
-      {/* Play/Pause tap indicator */}
-      <AnimatePresence>
-        {!playing && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.15 }}
-            style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}
-          >
-            <div style={{ width: 68, height: 68, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid rgba(255,255,255,0.2)' }}>
-              <Play className="w-8 h-8 fill-white text-white" style={{ marginLeft: 4 }} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        {/* Play indicator */}
+        <AnimatePresence>
+          {!playing && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.15 }}
+              style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}
+            >
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid rgba(255,255,255,0.2)' }}>
+                <Play className="w-7 h-7 fill-white text-white" style={{ marginLeft: 4 }} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Right action bar */}
-      <div style={{ position: 'absolute', right: 12, bottom: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-        {/* Author avatar */}
-        <div style={{ position: 'relative', marginBottom: 4 }}>
-          <Avatar src={post.userAvatar} name={post.userName} size={46} />
-          <div style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', width: 20, height: 20, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #000' }}>
-            <span style={{ fontSize: 11, color: '#fff', fontWeight: 700 }}>+</span>
+        {/* Bottom info overlaid on video */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 14px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <Avatar src={post.userAvatar} name={post.userName} size={28} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}>
+              @{post.userName.replace(/\s+/g, '').toLowerCase()}
+            </span>
+            {post.businessName && (
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>· {post.businessName}</span>
+            )}
           </div>
+          {caption && (
+            <p
+              onClick={() => setCaptionExpanded(e => !e)}
+              style={{
+                fontSize: 13, color: 'rgba(255,255,255,0.92)', lineHeight: 1.5, cursor: 'pointer',
+                textShadow: '0 1px 3px rgba(0,0,0,0.6)',
+                display: '-webkit-box', WebkitLineClamp: captionExpanded ? undefined : 2,
+                WebkitBoxOrient: 'vertical', overflow: captionExpanded ? 'visible' : 'hidden',
+              }}
+            >
+              {caption}
+              {!captionExpanded && caption.length > 90 && (
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}> more</span>
+              )}
+            </p>
+          )}
         </div>
+      </div>
 
+      {/* ── Action sidebar (right of video) ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: '0 16px 60px 16px', minWidth: 72 }}>
         {/* Like */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
           <motion.button
-            whileTap={{ scale: 1.3 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+            whileTap={{ scale: 1.3 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}
             onClick={() => onLike(post.id)}
-            style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
-            <Heart
-              className="w-5 h-5"
-              style={{ color: liked ? '#ef4444' : '#fff', fill: liked ? '#ef4444' : 'none', transition: 'all 0.2s' }}
-            />
+            <Heart className="w-5 h-5" style={{ color: liked ? '#ef4444' : '#fff', fill: liked ? '#ef4444' : 'none', transition: 'all 0.2s' }} />
           </motion.button>
-          <span style={{ fontSize: 12, color: '#fff', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{post.likeCount}</span>
+          <span style={{ fontSize: 11, color: '#fff', fontWeight: 600 }}>{post.likeCount}</span>
         </div>
 
         {/* Message */}
         {!isOwn && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
             <button
               onClick={() => onMessage(post.userId, post.userName)}
-              style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             >
               <MessageCircle className="w-5 h-5 text-white" />
             </button>
-            <span style={{ fontSize: 12, color: '#fff', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>DM</span>
+            <span style={{ fontSize: 11, color: '#fff', fontWeight: 600 }}>DM</span>
           </div>
         )}
 
         {/* Mute */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
           <button
             onClick={() => setMuted(m => !m)}
-            style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
             {muted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
           </button>
-          <span style={{ fontSize: 12, color: '#fff', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{muted ? 'Muted' : 'Live'}</span>
+          <span style={{ fontSize: 11, color: '#fff', fontWeight: 600 }}>{muted ? 'Muted' : 'Sound'}</span>
         </div>
 
-        {/* More menu */}
+        {/* More */}
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setShowMenu(s => !s)}
-            style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
             <MoreVertical className="w-5 h-5 text-white" />
           </button>
@@ -236,22 +270,17 @@ function VideoSlide({
             {showMenu && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, x: 8 }} animate={{ opacity: 1, scale: 1, x: 0 }} exit={{ opacity: 0, scale: 0.9 }}
-                style={{ position: 'absolute', right: '110%', bottom: 0, background: 'rgba(20,20,28,0.95)', backdropFilter: 'blur(16px)', border: '0.5px solid rgba(255,255,255,0.12)', borderRadius: 14, padding: 6, minWidth: 150, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 20 }}
+                style={{ position: 'absolute', left: '110%', top: 0, background: 'rgba(18,18,24,0.97)', backdropFilter: 'blur(16px)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: 6, minWidth: 155, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', zIndex: 20 }}
                 onMouseLeave={() => setShowMenu(false)}
               >
-                {isOwn && (
-                  <button
-                    onClick={() => { onDelete(post.id); setShowMenu(false) }}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 9, background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 13, fontWeight: 500 }}
-                  >
+                {isOwn ? (
+                  <button onClick={() => { onDelete(post.id); setShowMenu(false) }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 9, background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 13, fontWeight: 500 }}>
                     <Trash2 className="w-4 h-4" /> Remove post
                   </button>
-                )}
-                {!isOwn && (
-                  <button
-                    onClick={() => { onMessage(post.userId, post.userName); setShowMenu(false) }}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 9, background: 'none', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 13, fontWeight: 500 }}
-                  >
+                ) : (
+                  <button onClick={() => { onMessage(post.userId, post.userName); setShowMenu(false) }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 9, background: 'none', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 13, fontWeight: 500 }}>
                     <MessageCircle className="w-4 h-4" /> Send message
                   </button>
                 )}
@@ -259,57 +288,33 @@ function VideoSlide({
             )}
           </AnimatePresence>
         </div>
+
+        {/* Timestamp */}
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 8, textAlign: 'center' }}>{timeAgo(post.sharedAt)}</span>
       </div>
 
-      {/* Bottom info overlay */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 72, padding: '0 16px 20px' }}>
-        {/* User info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}>@{post.userName.replace(/\s+/g, '').toLowerCase()}</span>
-          {post.businessName && (
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>· {post.businessName}</span>
-          )}
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginLeft: 'auto' }}>{timeAgo(post.sharedAt)}</span>
-        </div>
-
-        {/* Caption */}
-        {caption && (
-          <div>
-            <p
-              onClick={() => setCaptionExpanded(e => !e)}
-              style={{
-                fontSize: 13, color: 'rgba(255,255,255,0.9)', lineHeight: 1.55,
-                display: '-webkit-box', WebkitLineClamp: captionExpanded ? undefined : 2,
-                WebkitBoxOrient: 'vertical', overflow: captionExpanded ? 'visible' : 'hidden',
-                cursor: 'pointer', textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-              }}
-            >
-              {caption}
-              {!captionExpanded && caption.length > 80 && (
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}> more</span>
-              )}
-            </p>
-          </div>
-        )}
-
-        {/* Scroll hint for first video */}
-        {index === 0 && total > 1 && (
-          <motion.div
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 12, opacity: 0.6 }}
+      {/* ── Up/Down nav arrows (far right, like TikTok web) ── */}
+      <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {index > 0 && (
+          <button
+            onClick={() => scrollTo('up')}
+            style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
           >
-            <ChevronDown className="w-4 h-4 text-white" />
-            <span style={{ fontSize: 11, color: '#fff', fontWeight: 500 }}>Scroll for more</span>
-          </motion.div>
+            <ChevronUp className="w-5 h-5 text-white" />
+          </button>
         )}
-      </div>
-
-      {/* Progress dots (top-right) */}
-      <div style={{ position: 'absolute', top: 16, right: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {Array.from({ length: Math.min(total, 8) }).map((_, i) => (
-          <div key={i} style={{ width: 3, height: i === Math.min(index, 7) ? 16 : 6, borderRadius: 2, background: i === Math.min(index, 7) ? '#fff' : 'rgba(255,255,255,0.3)', transition: 'all 0.3s' }} />
-        ))}
+        {index < total - 1 && (
+          <button
+            onClick={() => scrollTo('down')}
+            style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+          >
+            <ChevronDown className="w-5 h-5 text-white" />
+          </button>
+        )}
       </div>
     </div>
   )
@@ -539,6 +544,7 @@ export default function CommunityPage() {
   const [feedLoading, setFeedLoading] = useState(true)
   const [msgUserId, setMsgUserId] = useState<string | undefined>()
   const [msgUserName, setMsgUserName] = useState<string | undefined>()
+  const feedScrollRef = useRef<HTMLDivElement>(null)
 
   const currentEmail = session?.user?.email ?? ''
   const currentName = session?.user?.name ?? currentEmail.split('@')[0]
@@ -657,7 +663,7 @@ export default function CommunityPage() {
                 </div>
               ) : (
                 /* TikTok scroll feed */
-                <div style={{ height: '100%', overflowY: 'scroll', scrollSnapType: 'y mandatory', scrollBehavior: 'smooth' }}>
+                <div ref={feedScrollRef} style={{ height: '100%', overflowY: 'scroll', scrollSnapType: 'y mandatory', scrollBehavior: 'smooth' }}>
                   {posts.map((post, i) => (
                     <VideoSlide
                       key={post.id}
@@ -668,6 +674,7 @@ export default function CommunityPage() {
                       onDelete={handleDelete}
                       index={i}
                       total={posts.length}
+                      scrollRef={feedScrollRef as React.RefObject<HTMLDivElement>}
                     />
                   ))}
                 </div>
