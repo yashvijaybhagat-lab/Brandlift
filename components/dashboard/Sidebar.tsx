@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Zap,
   Users,
+  Repeat2,
+  CalendarDays,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
@@ -39,11 +41,14 @@ interface SidebarProps {
 // ─────────────────────────────────────────────
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Home', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'My Videos', href: '/dashboard/videos', icon: Video },
-  { label: 'My Website', href: '/dashboard/website', icon: Globe },
-  { label: 'Feed', href: '/dashboard/feed', icon: Users },
-  { label: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { label: 'Home',         href: '/dashboard',            icon: LayoutDashboard },
+  { label: 'My Videos',   href: '/dashboard/videos',     icon: Video },
+  { label: 'My Website',  href: '/dashboard/website',    icon: Globe },
+  { label: 'Feed',        href: '/dashboard/feed',       icon: Users },
+  { label: 'Repurpose',   href: '/dashboard/repurpose',  icon: Repeat2 },
+  { label: 'Viral Score', href: '/dashboard/viral-score',icon: Zap },
+  { label: 'Planner',     href: '/dashboard/planner',    icon: CalendarDays },
+  { label: 'Settings',    href: '/dashboard/settings',   icon: Settings },
 ]
 
 // ─────────────────────────────────────────────

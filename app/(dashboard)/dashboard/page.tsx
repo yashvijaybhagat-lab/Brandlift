@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { TrendingUp, Eye, Video, Lightbulb, BarChart2, X, Clock, Calendar, CheckCircle2, Circle, Zap, Sparkles, Activity, Globe, Users } from 'lucide-react'
+import { TrendingUp, Eye, Video, Lightbulb, BarChart2, X, Clock, Calendar, CheckCircle2, Circle, Zap, Sparkles, Activity, Globe, Users, Repeat2, CalendarDays } from 'lucide-react'
 import { TopBar } from '@/components/dashboard/TopBar'
 import { ContentIdeasFeed, type ContentIdea } from '@/components/dashboard/ContentIdeasFeed'
 
@@ -590,11 +590,12 @@ function WeekCalendar() {
 
 /* ─── Quick Actions bar ───────────────────────────────────────────────────── */
 const QUICK_ACTIONS = [
-  { label: 'Create Video', href: '/dashboard/videos', Icon: Video, color: '#6366f1', bg: 'rgba(99,102,241,0.1)', border: 'rgba(99,102,241,0.25)' },
-  { label: 'Generate Ideas', href: '#ideas', Icon: Sparkles, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.25)' },
-  { label: 'Analyze Website', href: '/dashboard/website', Icon: Globe, color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)' },
-  { label: 'Feed', href: '/dashboard/feed', Icon: Users, color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)', border: 'rgba(14,165,233,0.25)' },
-  { label: 'Best Time', href: '#schedule', Icon: Zap, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
+  { label: 'Create Video',  href: '/dashboard/videos',      Icon: Video,        color: '#6366f1', bg: 'rgba(99,102,241,0.1)',  border: 'rgba(99,102,241,0.25)' },
+  { label: 'Repurpose',     href: '/dashboard/repurpose',   Icon: Repeat2,      color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.25)' },
+  { label: 'Viral Score',   href: '/dashboard/viral-score', Icon: Zap,          color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
+  { label: '7-Day Planner', href: '/dashboard/planner',     Icon: CalendarDays, color: '#22c55e', bg: 'rgba(34,197,94,0.1)',  border: 'rgba(34,197,94,0.25)'  },
+  { label: 'Feed',          href: '/dashboard/feed',        Icon: Users,        color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)', border: 'rgba(14,165,233,0.25)' },
+  { label: 'Analyze Website', href: '/dashboard/website',   Icon: Globe,        color: '#ef4444', bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.25)'  },
 ]
 
 function QuickActionsBar() {
