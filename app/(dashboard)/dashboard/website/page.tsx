@@ -10,68 +10,44 @@ import {
   RotateCcw, Copy, Check, ChevronRight, Wand2,
   TrendingUp, Shield, MousePointerClick, Layout,
   Search, FileText, Sparkles, Download,
-  GitPullRequest, GitBranch, Loader2,
+  GitPullRequest, GitBranch, Loader2, Monitor,
+  Smartphone, Code2, Eye,
 } from 'lucide-react'
 
 // ─── Types ──────────────────────────────────────────────────
 
 interface CategoryScore { score: number; grade: string; note: string }
-
-interface Issue {
-  severity: 'critical' | 'warning' | 'tip'
-  category: string
-  title: string
-  description: string
-  fix: string
-}
-
-interface PageSection {
-  name: string
-  quality: 'good' | 'needs-work' | 'missing'
-  note: string
-  detectedCopy?: string
-}
-
+interface Issue { severity: 'critical'|'warning'|'tip'; category: string; title: string; description: string; fix: string }
+interface PageSection { name: string; quality: 'good'|'needs-work'|'missing'; note: string; detectedCopy?: string }
 interface Analysis {
-  score: number
-  scoreLabel: string
-  headline: string
-  categories: {
-    seo: CategoryScore
-    content: CategoryScore
-    trust: CategoryScore
-    ctas: CategoryScore
-    structure: CategoryScore
-  }
-  issues: Issue[]
-  sections: PageSection[]
-  quickWins: string[]
-  summary: string
-  redesignBrief: string
+  score: number; scoreLabel: string; headline: string
+  categories: { seo: CategoryScore; content: CategoryScore; trust: CategoryScore; ctas: CategoryScore; structure: CategoryScore }
+  issues: Issue[]; sections: PageSection[]; quickWins: string[]; summary: string; redesignBrief: string
 }
 
-type Phase = 'idle' | 'loading' | 'done' | 'error'
-type ActiveTab = 'issues' | 'sections' | 'brief'
-type SeverityFilter = 'all' | 'critical' | 'warning' | 'tip'
+type Phase          = 'idle'|'loading'|'done'|'error'
+type ActiveTab      = 'issues'|'sections'|'brief'
+type SeverityFilter = 'all'|'critical'|'warning'|'tip'
+type ColorScheme    = 'dark'|'light'|'midnight'|'ocean'
+type DeviceMode     = 'desktop'|'mobile'
 
-interface RedesignState {
-  phase: 'idle' | 'generating' | 'done' | 'error'
-  html: string
-  error: string
-}
+interface RedesignState  { phase:'idle'|'generating'|'done'|'error'; html:string; error:string }
+interface GitHubPushState{ phase:'idle'|'pushing'|'done'|'error'; result:{type:'pr'|'commit';url:string;number?:number}|null; error:string }
 
-interface GitHubPushState {
-  phase: 'idle' | 'pushing' | 'done' | 'error'
-  result: { type: 'pr' | 'commit'; url: string; number?: number } | null
-  error: string
-}
+// ─── Color schemes ───────────────────────────────────────────
+
+const SCHEMES: { id: ColorScheme; label: string; bg: string; accent: string }[] = [
+  { id: 'dark',     label: 'Dark',     bg: '#05050a', accent: '#6366f1' },
+  { id: 'light',    label: 'Light',    bg: '#f8f8fc', accent: '#6366f1' },
+  { id: 'midnight', label: 'Midnight', bg: '#080412', accent: '#8b5cf6' },
+  { id: 'ocean',    label: 'Ocean',    bg: '#020c1b', accent: '#0ea5e9' },
+]
 
 // ─── Score Ring ──────────────────────────────────────────────
 
 function ScoreRing({ score }: { score: number }) {
-  const r = 44
+  const r    = 44
   const circ = 2 * Math.PI * r
-  const offset = circ - (score / 100) * circ
   const color = score >= 70 ? '#22c55e' : score >= 50 ? '#FBBF24' : '#EF4444'
 
   return (
@@ -79,22 +55,16 @@ function ScoreRing({ score }: { score: number }) {
       <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
         <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
         <motion.circle
-          cx="50" cy="50" r={r} fill="none"
-          stroke={color} strokeWidth="7" strokeLinecap="round"
+          cx="50" cy="50" r={r} fill="none" stroke={color} strokeWidth="7" strokeLinecap="round"
           strokeDasharray={circ}
           initial={{ strokeDashoffset: circ }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.2, ease: [0.34, 1.56, 0.64, 1] }}
+          animate={{ strokeDashoffset: circ - (score / 100) * circ }}
+          transition={{ duration: 1.4, ease: [0.34, 1.56, 0.64, 1] }}
         />
       </svg>
       <div className="absolute text-center">
-        <motion.div
-          className="text-[30px] font-bold leading-none"
-          style={{ color }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
+        <motion.div className="text-[30px] font-bold leading-none" style={{ color }}
+          initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }}>
           {score}
         </motion.div>
         <div className="text-[10px] text-[#52525B] mt-0.5">/ 100</div>
@@ -105,59 +75,33 @@ function ScoreRing({ score }: { score: number }) {
 
 // ─── Category Card ───────────────────────────────────────────
 
-const CAT_ICONS = {
-  seo: Search,
-  content: TrendingUp,
-  trust: Shield,
-  ctas: MousePointerClick,
-  structure: Layout,
-}
-const CAT_LABELS = {
-  seo: 'SEO',
-  content: 'Content',
-  trust: 'Trust',
-  ctas: 'CTAs',
-  structure: 'Structure',
-}
+const CAT_ICONS  = { seo: Search, content: TrendingUp, trust: Shield, ctas: MousePointerClick, structure: Layout }
+const CAT_LABELS = { seo: 'SEO', content: 'Content', trust: 'Trust', ctas: 'CTAs', structure: 'Structure' }
 
 function CategoryCard({ name, data, index }: { name: string; data: CategoryScore; index: number }) {
-  const Icon = CAT_ICONS[name as keyof typeof CAT_ICONS]
+  const Icon  = CAT_ICONS[name as keyof typeof CAT_ICONS]
   const label = CAT_LABELS[name as keyof typeof CAT_LABELS]
   const color = data.score >= 70 ? '#22c55e' : data.score >= 50 ? '#FBBF24' : '#EF4444'
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 + index * 0.06 }}
-      className="flex flex-col gap-2.5 p-4 rounded-[12px]"
-      style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}
-    >
+    <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay: 0.08 + index * 0.06 }}
+      className="flex flex-col gap-3 p-4 rounded-[14px]"
+      style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.1)' }}>
-            <Icon className="w-3 h-3 text-[#6366f1]" />
+          <div className="w-7 h-7 rounded-[8px] flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.1)' }}>
+            <Icon className="w-3.5 h-3.5 text-[#6366f1]" />
           </div>
           <span className="text-[12px] font-medium text-[#A1A1AA]">{label}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span
-            className="text-[10px] font-bold px-1.5 py-0.5 rounded-[5px]"
-            style={{ color, background: `${color}1a` }}
-          >
-            {data.grade}
-          </span>
-          <span className="text-[18px] font-semibold leading-none" style={{ color }}>{data.score}</span>
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-[5px]" style={{ color, background: `${color}1a` }}>{data.grade}</span>
+          <span className="text-[20px] font-bold leading-none tabular-nums" style={{ color }}>{data.score}</span>
         </div>
       </div>
       <div className="h-1 rounded-full bg-[#18181C] overflow-hidden">
-        <motion.div
-          className="h-full rounded-full"
-          style={{ background: color }}
-          initial={{ width: 0 }}
-          animate={{ width: `${data.score}%` }}
-          transition={{ duration: 0.9, delay: 0.3 + index * 0.06, ease: 'easeOut' }}
-        />
+        <motion.div className="h-full rounded-full" style={{ background: color }}
+          initial={{ width: 0 }} animate={{ width: `${data.score}%` }}
+          transition={{ duration: 1, delay: 0.3 + index * 0.06, ease: 'easeOut' }} />
       </div>
       <p className="text-[11px] text-[#52525B] leading-relaxed">{data.note}</p>
     </motion.div>
@@ -169,51 +113,37 @@ function CategoryCard({ name, data, index }: { name: string; data: CategoryScore
 function IssueItem({ issue, index }: { issue: Issue; index: number }) {
   const [expanded, setExpanded] = useState(false)
   const cfg = {
-    critical: { Icon: AlertCircle,   color: '#EF4444', bg: 'rgba(239,68,68,0.07)',   label: 'Critical' },
-    warning:  { Icon: AlertTriangle, color: '#FBBF24', bg: 'rgba(251,191,36,0.07)',  label: 'Warning'  },
-    tip:      { Icon: Lightbulb,     color: '#6366f1', bg: 'rgba(99,102,241,0.07)', label: 'Tip'      },
+    critical: { Icon: AlertCircle,   color: '#EF4444', bg: 'rgba(239,68,68,0.07)',   border: 'rgba(239,68,68,0.18)'  },
+    warning:  { Icon: AlertTriangle, color: '#FBBF24', bg: 'rgba(251,191,36,0.07)',  border: 'rgba(251,191,36,0.18)' },
+    tip:      { Icon: Lightbulb,     color: '#6366f1', bg: 'rgba(99,102,241,0.07)', border: 'rgba(99,102,241,0.18)' },
   }[issue.severity]
-
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -8 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.04 }}
-      className="rounded-[10px] border cursor-pointer select-none transition-all"
-      style={{ background: cfg.bg, borderColor: `${cfg.color}22` }}
-      onClick={() => setExpanded(e => !e)}
-    >
+    <motion.div initial={{ opacity:0, x:-6 }} animate={{ opacity:1, x:0 }} transition={{ delay: index * 0.035 }}
+      className="rounded-[10px] border cursor-pointer select-none"
+      style={{ background: cfg.bg, borderColor: cfg.border }}
+      onClick={() => setExpanded(e => !e)}>
       <div className="flex items-start gap-3 p-3.5">
         <cfg.Icon className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: cfg.color }} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[13px] font-medium text-[#FAFAFA]">{issue.title}</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ color: cfg.color, background: `${cfg.color}25` }}>
-              {issue.category}
-            </span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ color: cfg.color, background: `${cfg.color}22` }}>{issue.category}</span>
           </div>
           <AnimatePresence>
             {expanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.18 }}
-                className="overflow-hidden"
-              >
-                <p className="text-[12px] text-[#A1A1AA] mt-1.5 leading-relaxed">{issue.description}</p>
-                <div className="mt-2.5 p-2.5 rounded-[8px]" style={{ background: 'rgba(0,0,0,0.3)' }}>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: cfg.color }}>Fix</p>
+              <motion.div initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }}
+                exit={{ height:0, opacity:0 }} transition={{ duration:0.18 }} className="overflow-hidden">
+                <p className="text-[12px] text-[#A1A1AA] mt-2 leading-relaxed">{issue.description}</p>
+                <div className="mt-2.5 p-3 rounded-[8px]" style={{ background: 'rgba(0,0,0,0.3)' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: cfg.color }}>Fix</p>
                   <p className="text-[12px] text-[#E4E4E7] leading-relaxed">{issue.fix}</p>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
-        <ChevronRight
-          className="w-3.5 h-3.5 flex-shrink-0 text-[#3f3f46] transition-transform duration-150"
-          style={{ transform: expanded ? 'rotate(90deg)' : 'none' }}
-        />
+        <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 text-[#3f3f46] transition-transform duration-150"
+          style={{ transform: expanded ? 'rotate(90deg)' : 'none' }} />
       </div>
     </motion.div>
   )
@@ -221,209 +151,117 @@ function IssueItem({ issue, index }: { issue: Issue; index: number }) {
 
 // ─── Section Card ─────────────────────────────────────────────
 
-function SectionCard({ section, index, onImprove }: {
-  section: PageSection
-  index: number
-  onImprove: (s: PageSection) => void
-}) {
+function SectionCard({ section, index, onImprove }: { section: PageSection; index: number; onImprove: (s: PageSection) => void }) {
   const cfg = {
-    good:        { dot: '#22c55e', label: 'Good',       bg: 'rgba(34,197,94,0.07)'   },
-    'needs-work':{ dot: '#FBBF24', label: 'Needs work', bg: 'rgba(251,191,36,0.07)'  },
-    missing:     { dot: '#EF4444', label: 'Missing',    bg: 'rgba(239,68,68,0.07)'   },
+    good:        { dot:'#22c55e', label:'Good',       bg:'rgba(34,197,94,0.07)'  },
+    'needs-work':{ dot:'#FBBF24', label:'Needs work', bg:'rgba(251,191,36,0.07)' },
+    missing:     { dot:'#EF4444', label:'Missing',    bg:'rgba(239,68,68,0.07)'  },
   }[section.quality]
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.05 + index * 0.05 }}
+    <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay: 0.05 + index * 0.05 }}
       className="flex flex-col gap-2.5 p-4 rounded-[12px]"
-      style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}
-    >
+      style={{ background:'#111113', border:'0.5px solid rgba(255,255,255,0.06)' }}>
       <div className="flex items-center gap-2">
-        <span
-          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-          style={{ background: cfg.dot, boxShadow: `0 0 6px ${cfg.dot}80` }}
-        />
+        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background:cfg.dot, boxShadow:`0 0 6px ${cfg.dot}80` }} />
         <span className="text-[13px] font-medium text-[#FAFAFA]">{section.name}</span>
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full ml-auto" style={{ color: cfg.dot, background: cfg.bg }}>
-          {cfg.label}
-        </span>
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full ml-auto font-medium" style={{ color:cfg.dot, background:cfg.bg }}>{cfg.label}</span>
       </div>
       <p className="text-[12px] text-[#71717A] leading-relaxed">{section.note}</p>
-      {section.detectedCopy && (
-        <p className="text-[11px] text-[#3f3f46] italic truncate">"{section.detectedCopy}"</p>
-      )}
-      {section.quality !== 'missing' && (
-        <button
-          onClick={() => onImprove(section)}
-          className="flex items-center gap-1.5 text-[12px] font-medium text-[#6366f1] hover:text-[#818cf8] transition-colors mt-0.5 w-fit"
-        >
-          <Wand2 className="w-3 h-3" />
-          Improve copy
-        </button>
-      )}
-      {section.quality === 'missing' && (
-        <button
-          onClick={() => onImprove(section)}
-          className="flex items-center gap-1.5 text-[12px] font-medium text-[#6366f1] hover:text-[#818cf8] transition-colors mt-0.5 w-fit"
-        >
-          <Sparkles className="w-3 h-3" />
-          Generate copy
-        </button>
-      )}
+      {section.detectedCopy && <p className="text-[11px] text-[#3f3f46] italic truncate">"{section.detectedCopy}"</p>}
+      <button onClick={() => onImprove(section)}
+        className="flex items-center gap-1.5 text-[12px] font-medium text-[#6366f1] hover:text-[#818cf8] transition-colors mt-0.5 w-fit">
+        {section.quality === 'missing' ? <Sparkles className="w-3 h-3" /> : <Wand2 className="w-3 h-3" />}
+        {section.quality === 'missing' ? 'Generate copy' : 'Improve copy'}
+      </button>
     </motion.div>
   )
 }
 
 // ─── Improve Modal ─────────────────────────────────────────────
 
-function ImproveModal({ section, domain, context, onClose }: {
-  section: PageSection
-  domain: string
-  context: string
-  onClose: () => void
-}) {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done'>('idle')
+function ImproveModal({ section, domain, context, onClose }: { section: PageSection; domain: string; context: string; onClose: () => void }) {
+  const [status, setStatus] = useState<'idle'|'loading'|'done'>('idle')
   const [result, setResult] = useState('')
   const [copied, setCopied] = useState(false)
-  const abortRef = useRef<AbortController | null>(null)
+  const abortRef = useRef<AbortController|null>(null)
 
   const generate = useCallback(async () => {
     if (abortRef.current) abortRef.current.abort()
     const ctrl = new AbortController()
     abortRef.current = ctrl
-    setStatus('loading')
-    setResult('')
-
+    setStatus('loading'); setResult('')
     try {
       const res = await fetch('/api/website/improve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sectionName: section.name,
-          currentCopy: section.detectedCopy ?? '',
-          context,
-          domain,
-        }),
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ sectionName:section.name, currentCopy:section.detectedCopy??'', context, domain }),
         signal: ctrl.signal,
       })
-      if (!res.ok || !res.body) { setStatus('idle'); return }
-
-      const reader = res.body.getReader()
-      const dec = new TextDecoder()
-      let text = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        text += dec.decode(value, { stream: true })
-        setResult(text)
-      }
+      if (!res.ok||!res.body){setStatus('idle');return}
+      const reader=res.body.getReader(), dec=new TextDecoder()
+      let text=''
+      while(true){const{done,value}=await reader.read();if(done)break;text+=dec.decode(value,{stream:true});setResult(text)}
       setStatus('done')
-    } catch (err) {
-      if ((err as Error)?.name !== 'AbortError') setStatus('idle')
-    }
+    } catch(err){if((err as Error)?.name!=='AbortError')setStatus('idle')}
   }, [section, domain, context])
 
-  const copy = useCallback(() => {
-    navigator.clipboard.writeText(result)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }, [result])
+  const copy = useCallback(()=>{navigator.clipboard.writeText(result);setCopied(true);setTimeout(()=>setCopied(false),2000)},[result])
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6"
-      style={{ background: 'rgba(0,0,0,0.75)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 24, scale: 0.97 }}
-        transition={{ duration: 0.18 }}
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6"
+      style={{background:'rgba(0,0,0,0.75)'}} onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
+      <motion.div initial={{opacity:0,y:24,scale:0.97}} animate={{opacity:1,y:0,scale:1}}
+        exit={{opacity:0,y:24,scale:0.97}} transition={{duration:0.18}}
         className="w-full max-w-lg rounded-2xl overflow-hidden"
-        style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.1)' }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+        style={{background:'#111113',border:'0.5px solid rgba(255,255,255,0.1)'}}>
+        <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:'0.5px solid rgba(255,255,255,0.07)'}}>
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.12)' }}>
+            <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{background:'rgba(99,102,241,0.12)'}}>
               <Wand2 className="w-3.5 h-3.5 text-[#6366f1]" />
             </div>
             <div>
-              <p className="text-[14px] font-medium text-[#FAFAFA]">
-                {section.quality === 'missing' ? `Generate ${section.name}` : `Improve ${section.name}`}
-              </p>
+              <p className="text-[14px] font-medium text-[#FAFAFA]">{section.quality==='missing'?`Generate ${section.name}`:`Improve ${section.name}`}</p>
               <p className="text-[11px] text-[#52525B]">{domain}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[#52525B] hover:text-[#A1A1AA] hover:bg-white/[0.05] transition-colors"
-          >
+          <button onClick={onClose} className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[#52525B] hover:text-[#A1A1AA] hover:bg-white/[0.05] transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
-
-        {/* Body */}
         <div className="p-5 flex flex-col gap-4">
-          {section.detectedCopy && section.quality !== 'missing' && (
-            <div className="p-3 rounded-[10px]" style={{ background: 'rgba(18,18,22,0.8)', border: '0.5px solid rgba(255,255,255,0.06)' }}>
-              <p className="text-[10px] text-[#3f3f46] uppercase tracking-wider mb-1.5">Current copy</p>
+          {section.detectedCopy&&section.quality!=='missing'&&(
+            <div className="p-3 rounded-[10px]" style={{background:'rgba(18,18,22,0.8)',border:'0.5px solid rgba(255,255,255,0.06)'}}>
+              <p className="text-[10px] text-[#3f3f46] uppercase tracking-wider mb-1.5">Current</p>
               <p className="text-[12px] text-[#71717A] italic leading-relaxed">"{section.detectedCopy}"</p>
             </div>
           )}
-
-          {status === 'idle' && !result && (
+          {status==='idle'&&!result&&(
             <div className="flex flex-col items-center gap-3 py-6">
               <p className="text-[13px] text-[#71717A] text-center max-w-[30ch] leading-relaxed">
-                {section.quality === 'missing'
-                  ? `AI will write suggested ${section.name} copy tailored to your site.`
-                  : `AI will rewrite your ${section.name} with stronger, more compelling copy.`
-                }
+                {section.quality==='missing'?`AI will write ${section.name} copy tailored to your site.`:`AI rewrites your ${section.name} with stronger copy.`}
               </p>
               <Button variant="primary" size="sm" onClick={generate} className="gap-1.5">
                 <Zap className="w-3.5 h-3.5" />
-                {section.quality === 'missing' ? 'Generate copy' : 'Improve copy'}
+                {section.quality==='missing'?'Generate copy':'Improve copy'}
               </Button>
             </div>
           )}
-
-          {(status === 'loading' || result) && (
-            <div className="rounded-[10px] p-4 min-h-[120px]" style={{ background: 'rgba(99,102,241,0.04)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+          {(status==='loading'||result)&&(
+            <div className="rounded-[10px] p-4 min-h-[120px]" style={{background:'rgba(99,102,241,0.04)',border:'0.5px solid rgba(99,102,241,0.15)'}}>
               <p className="text-[10px] text-[#6366f1] uppercase tracking-wider mb-2.5">
-                {section.quality === 'missing' ? 'Suggested copy' : 'Improved copy'}
+                {section.quality==='missing'?'Suggested copy':'Improved copy'}
               </p>
               <p className="text-[13px] text-[#E4E4E7] leading-relaxed whitespace-pre-wrap">
-                {result}
-                {status === 'loading' && (
-                  <span className="inline-block w-1.5 h-3.5 bg-[#6366f1] animate-pulse ml-0.5 align-middle rounded-sm" />
-                )}
+                {result}{status==='loading'&&<span className="inline-block w-1.5 h-3.5 bg-[#6366f1] animate-pulse ml-0.5 align-middle rounded-sm"/>}
               </p>
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: '0.5px solid rgba(255,255,255,0.07)' }}>
-          <div>
-            {status === 'done' && (
-              <button
-                onClick={generate}
-                className="flex items-center gap-1.5 text-[12px] text-[#52525B] hover:text-[#A1A1AA] transition-colors"
-              >
-                <RotateCcw className="w-3 h-3" />
-                Regenerate
-              </button>
-            )}
-          </div>
+        <div className="flex items-center justify-between px-5 py-3.5" style={{borderTop:'0.5px solid rgba(255,255,255,0.07)'}}>
+          <div>{status==='done'&&<button onClick={generate} className="flex items-center gap-1.5 text-[12px] text-[#52525B] hover:text-[#A1A1AA] transition-colors"><RotateCcw className="w-3 h-3"/>Regenerate</button>}</div>
           <div className="flex gap-2">
-            {status === 'done' && result && (
+            {status==='done'&&result&&(
               <Button variant="ghost" size="sm" onClick={copy} className="gap-1.5">
-                {copied ? <Check className="w-3.5 h-3.5 text-[#22c55e]" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? 'Copied!' : 'Copy'}
+                {copied?<Check className="w-3.5 h-3.5 text-[#22c55e]"/>:<Copy className="w-3.5 h-3.5"/>}{copied?'Copied!':'Copy'}
               </Button>
             )}
             <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
@@ -437,160 +275,271 @@ function ImproveModal({ section, domain, context, onClose }: {
 // ─── Redesign Modal ───────────────────────────────────────────
 
 function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose }: {
-  domain: string
-  analysis: Analysis
-  h1s: string[]
-  bodyPreview: string
-  onClose: () => void
+  domain: string; analysis: Analysis; h1s: string[]; bodyPreview: string; onClose: () => void
 }) {
-  const [state, setState] = useState<RedesignState>({ phase: 'idle', html: '', error: '' })
-  const [githubOpen, setGithubOpen] = useState(false)
-  const [previewBlob, setPreviewBlob] = useState<string | null>(null)
-  const abortRef = useRef<AbortController | null>(null)
+  const [colorScheme, setColorScheme] = useState<ColorScheme>('dark')
+  const [device, setDevice]           = useState<DeviceMode>('desktop')
+  const [viewMode, setViewMode]       = useState<'preview'|'code'>('preview')
+  const [githubOpen, setGithubOpen]   = useState(false)
+  const [state, setState]             = useState<RedesignState>({ phase:'idle', html:'', error:'' })
+  const abortRef = useRef<AbortController|null>(null)
 
-  const generate = useCallback(async () => {
+  const generate = useCallback(async (scheme: ColorScheme) => {
     if (abortRef.current) abortRef.current.abort()
     const ctrl = new AbortController()
     abortRef.current = ctrl
-    setState({ phase: 'generating', html: '', error: '' })
-    setPreviewBlob(null)
+    setState({ phase:'generating', html:'', error:'' })
 
     try {
       const res = await fetch('/api/website/redesign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain, analysis, h1s, bodyPreview }),
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ domain, analysis, h1s, bodyPreview, colorScheme: scheme }),
         signal: ctrl.signal,
       })
-      if (!res.ok || !res.body) {
-        setState({ phase: 'error', html: '', error: 'Generation failed — please try again' })
-        return
-      }
+      if (!res.ok||!res.body){setState({phase:'error',html:'',error:'Generation failed'});return}
 
-      const reader = res.body.getReader()
-      const dec = new TextDecoder()
-      let html = ''
+      const reader=res.body.getReader(), dec=new TextDecoder()
+      let html=''
+      while(true){const{done,value}=await reader.read();if(done)break;html+=dec.decode(value,{stream:true});setState(s=>({...s,html}))}
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        html += dec.decode(value, { stream: true })
-        setState(s => ({ ...s, html }))
-      }
+      // Clean up any markdown artifacts
+      let clean = html.trim()
+      if(clean.startsWith('```')){clean=clean.replace(/^```[a-z]*\n?/i,'').replace(/\n?```$/,'').trim()}
+      const idx = clean.toLowerCase().indexOf('<!doctype')
+      if(idx>0) clean = clean.slice(idx)
 
-      let cleanHtml = html.trim()
-      if (cleanHtml.startsWith('```')) {
-        cleanHtml = cleanHtml.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/, '').trim()
-      }
-
-      const blob = new Blob([cleanHtml], { type: 'text/html' })
-      const url  = URL.createObjectURL(blob)
-      setPreviewBlob(url)
-      setState({ phase: 'done', html: cleanHtml, error: '' })
-    } catch (err) {
-      if ((err as Error)?.name !== 'AbortError') {
-        setState({ phase: 'error', html: '', error: 'Generation failed — please try again' })
-      }
+      setState({phase:'done', html:clean, error:''})
+    } catch(err){
+      if((err as Error)?.name!=='AbortError') setState({phase:'error',html:'',error:'Generation failed — try again'})
     }
   }, [domain, analysis, h1s, bodyPreview])
 
   useEffect(() => {
-    generate()
-    return () => { if (abortRef.current) abortRef.current.abort() }
-  }, [generate])
+    generate(colorScheme)
+    return () => { if(abortRef.current) abortRef.current.abort() }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  useEffect(() => {
-    return () => { if (previewBlob) URL.revokeObjectURL(previewBlob) }
-  }, [previewBlob])
-
-  const download = () => {
-    const a = document.createElement('a')
-    a.href = previewBlob!
-    a.download = `${domain}-redesign.html`
-    a.click()
+  const handleSchemeChange = (s: ColorScheme) => {
+    setColorScheme(s)
+    if (state.phase === 'done' || state.phase === 'error') generate(s)
   }
 
+  const download = () => {
+    const blob = new Blob([state.html], {type:'text/html'})
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href=url; a.download=`${domain}-redesign.html`; a.click()
+    setTimeout(()=>URL.revokeObjectURL(url), 1000)
+  }
+
+  const [copied, setCopied] = useState(false)
+  const copyCode = () => {
+    navigator.clipboard.writeText(state.html)
+    setCopied(true)
+    setTimeout(()=>setCopied(false),2000)
+  }
+
+  const isGenerating = state.phase === 'generating'
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'rgba(0,0,0,0.88)' }}>
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col h-full"
-      >
-        {/* Header bar */}
-        <div
-          className="flex items-center justify-between px-5 py-3.5 flex-shrink-0"
-          style={{ background: '#111113', borderBottom: '0.5px solid rgba(255,255,255,0.08)' }}
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.12)' }}>
-              <Sparkles className="w-3.5 h-3.5 text-[#6366f1]" />
+    <div className="fixed inset-0 z-50 flex flex-col" style={{background:'rgba(0,0,0,0.92)'}}>
+      <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} className="flex flex-col h-full">
+
+        {/* ── Top bar ── */}
+        <div className="flex-shrink-0 flex flex-col"
+          style={{background:'#0d0d10',borderBottom:'0.5px solid rgba(255,255,255,0.08)'}}>
+
+          {/* Row 1: title + scheme picker + device + close */}
+          <div className="flex items-center gap-3 px-5 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{background:'rgba(99,102,241,0.12)'}}>
+                <Sparkles className="w-3.5 h-3.5 text-[#6366f1]" />
+              </div>
+              <div>
+                <p className="text-[13px] font-semibold text-[#FAFAFA] leading-none">Redesigned page</p>
+                <p className="text-[11px] text-[#52525B] mt-0.5">{domain}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-[14px] font-medium text-[#FAFAFA]">Redesigned page</p>
-              <p className="text-[11px] text-[#52525B]">{domain}</p>
+
+            {/* Scheme swatches */}
+            <div className="flex items-center gap-1.5 ml-4">
+              {SCHEMES.map(s => (
+                <button key={s.id} onClick={()=>handleSchemeChange(s.id)}
+                  title={s.label}
+                  className="w-6 h-6 rounded-full transition-all duration-150 flex items-center justify-center"
+                  style={{
+                    background: s.bg,
+                    outline: colorScheme===s.id ? `2px solid ${s.accent}` : '2px solid transparent',
+                    outlineOffset: '2px',
+                    boxShadow: colorScheme===s.id ? `0 0 8px ${s.accent}60` : 'none',
+                  }}>
+                  {colorScheme===s.id&&<span className="w-2 h-2 rounded-full" style={{background:s.accent}}/>}
+                </button>
+              ))}
+              <span className="text-[11px] text-[#3f3f46] ml-1 capitalize hidden sm:inline">{colorScheme}</span>
+            </div>
+
+            <div className="flex items-center gap-1 ml-auto">
+              {/* Device toggle */}
+              <div className="flex rounded-[8px] overflow-hidden p-0.5" style={{background:'rgba(255,255,255,0.04)',border:'0.5px solid rgba(255,255,255,0.08)'}}>
+                <button onClick={()=>setDevice('desktop')}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-[11px] font-medium transition-all"
+                  style={{background:device==='desktop'?'rgba(99,102,241,0.15)':'transparent', color:device==='desktop'?'#818cf8':'#52525B'}}>
+                  <Monitor className="w-3.5 h-3.5"/>
+                  <span className="hidden sm:inline">Desktop</span>
+                </button>
+                <button onClick={()=>setDevice('mobile')}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-[11px] font-medium transition-all"
+                  style={{background:device==='mobile'?'rgba(99,102,241,0.15)':'transparent', color:device==='mobile'?'#818cf8':'#52525B'}}>
+                  <Smartphone className="w-3.5 h-3.5"/>
+                  <span className="hidden sm:inline">Mobile</span>
+                </button>
+              </div>
+
+              {/* View mode toggle */}
+              <div className="flex rounded-[8px] overflow-hidden p-0.5 ml-1" style={{background:'rgba(255,255,255,0.04)',border:'0.5px solid rgba(255,255,255,0.08)'}}>
+                <button onClick={()=>setViewMode('preview')}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-[11px] font-medium transition-all"
+                  style={{background:viewMode==='preview'?'rgba(99,102,241,0.15)':'transparent', color:viewMode==='preview'?'#818cf8':'#52525B'}}>
+                  <Eye className="w-3.5 h-3.5"/>
+                  <span className="hidden sm:inline">Preview</span>
+                </button>
+                <button onClick={()=>setViewMode('code')} disabled={!state.html}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-[11px] font-medium transition-all disabled:opacity-40"
+                  style={{background:viewMode==='code'?'rgba(99,102,241,0.15)':'transparent', color:viewMode==='code'?'#818cf8':'#52525B'}}>
+                  <Code2 className="w-3.5 h-3.5"/>
+                  <span className="hidden sm:inline">Code</span>
+                </button>
+              </div>
+
+              {state.phase==='done'&&(
+                <div className="flex items-center gap-1.5 ml-2">
+                  <Button variant="ghost" size="sm" onClick={()=>setGithubOpen(true)} className="gap-1.5">
+                    <GitBranch className="w-3.5 h-3.5"/>
+                    <span className="hidden sm:inline">Push to GitHub</span>
+                  </Button>
+                  <Button variant="primary" size="sm" onClick={download} className="gap-1.5">
+                    <Download className="w-3.5 h-3.5"/>
+                    <span className="hidden sm:inline">Download</span>
+                  </Button>
+                </div>
+              )}
+
+              <button onClick={onClose}
+                className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#52525B] hover:text-[#A1A1AA] hover:bg-white/[0.05] transition-colors ml-1">
+                <X className="w-4 h-4"/>
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {state.phase === 'done' && (
-              <>
-                <Button variant="ghost" size="sm" onClick={() => setGithubOpen(true)} className="gap-1.5">
-                  <GitBranch className="w-3.5 h-3.5" />
-                  Push to GitHub
-                </Button>
-                <Button variant="primary" size="sm" onClick={download} className="gap-1.5">
-                  <Download className="w-3.5 h-3.5" />
-                  Download HTML
-                </Button>
-              </>
-            )}
-            <button
-              onClick={onClose}
-              className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[#52525B] hover:text-[#A1A1AA] hover:bg-white/[0.05] transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+
+          {/* Progress bar when generating */}
+          {isGenerating && (
+            <div className="h-0.5 w-full" style={{background:'rgba(255,255,255,0.04)'}}>
+              <motion.div className="h-full" style={{background:'linear-gradient(90deg,#6366f1,#8b5cf6)'}}
+                animate={{width:['0%','40%','70%','85%','90%']}}
+                transition={{duration:8, times:[0,0.2,0.5,0.75,1], ease:'easeOut'}} />
+            </div>
+          )}
         </div>
 
-        {/* Preview area */}
-        <div className="flex-1 min-h-0 relative">
-          {state.phase === 'generating' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-              <div className="flex items-center gap-3">
-                <Loader2 className="w-5 h-5 text-[#6366f1] animate-spin" />
-                <span className="text-[14px] text-[#A1A1AA]">Generating your redesigned page…</span>
+        {/* ── Preview / Code area ── */}
+        <div className="flex-1 min-h-0 relative overflow-hidden">
+
+          {/* Generating overlay */}
+          {isGenerating && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 z-10"
+              style={{background:'rgba(5,5,10,0.85)',backdropFilter:'blur(8px)'}}>
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                style={{background:'rgba(99,102,241,0.1)',border:'0.5px solid rgba(99,102,241,0.25)'}}>
+                <Sparkles className="w-8 h-8 text-[#6366f1]"/>
               </div>
-              {state.html.length > 0 && (
-                <p className="text-[12px] text-[#3f3f46]">{state.html.length.toLocaleString()} characters generated</p>
-              )}
+              <div className="text-center">
+                <p className="text-[15px] font-medium text-[#FAFAFA] mb-1">Building your redesign…</p>
+                <p className="text-[12px] text-[#52525B]">{state.html.length>0?`${state.html.length.toLocaleString()} chars generated`:'Starting generation…'}</p>
+              </div>
+              <div className="flex gap-1.5">
+                {[0,1,2].map(i=>(
+                  <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{background:'#6366f1'}}
+                    animate={{opacity:[0.2,1,0.2]}} transition={{duration:1.2,repeat:Infinity,delay:i*0.2}} />
+                ))}
+              </div>
             </div>
           )}
-          {state.phase === 'error' && (
+
+          {/* Error */}
+          {state.phase==='error' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-              <AlertCircle className="w-8 h-8 text-[#EF4444]" />
+              <AlertCircle className="w-8 h-8 text-[#EF4444]"/>
               <p className="text-[14px] text-[#A1A1AA]">{state.error}</p>
-              <Button variant="ghost" size="sm" onClick={generate}>Try again</Button>
+              <Button variant="ghost" size="sm" onClick={()=>generate(colorScheme)}>Try again</Button>
             </div>
           )}
-          {state.phase === 'done' && previewBlob && (
-            <iframe
-              src={previewBlob}
-              className="w-full h-full"
-              sandbox="allow-same-origin allow-scripts"
-              title="Redesigned website preview"
-            />
+
+          {/* Preview */}
+          {viewMode==='preview' && state.html && (
+            <div className="w-full h-full flex items-start justify-center overflow-auto"
+              style={{background:'#18181c', padding: device==='mobile'?'24px 0':'0'}}>
+              <motion.div
+                animate={{ width: device==='mobile'?'390px':'100%' }}
+                transition={{duration:0.3,ease:'easeOut'}}
+                className="h-full relative overflow-hidden"
+                style={{ minHeight:'100%', boxShadow: device==='mobile'?'0 0 0 1px rgba(255,255,255,0.1), 0 8px 40px rgba(0,0,0,0.5)':'none',
+                  borderRadius: device==='mobile'?'20px':'0' }}>
+                <iframe
+                  srcDoc={state.html}
+                  className="w-full border-0"
+                  style={{ height: device==='mobile'?'780px':'100%', minHeight:'100%' }}
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  title="Redesigned website preview"
+                />
+              </motion.div>
+            </div>
+          )}
+
+          {/* Code view */}
+          {viewMode==='code' && state.html && (
+            <div className="w-full h-full overflow-auto" style={{background:'#0a0a0d'}}>
+              <div className="flex items-center justify-between px-4 py-2 sticky top-0"
+                style={{background:'#0d0d10',borderBottom:'0.5px solid rgba(255,255,255,0.06)'}}>
+                <span className="text-[11px] text-[#52525B] font-mono">{domain}-redesign.html · {state.html.length.toLocaleString()} chars</span>
+                <button onClick={copyCode} className="flex items-center gap-1.5 text-[11px] text-[#52525B] hover:text-[#A1A1AA] transition-colors">
+                  {copied?<Check className="w-3 h-3 text-[#22c55e]"/>:<Copy className="w-3 h-3"/>}
+                  {copied?'Copied!':'Copy all'}
+                </button>
+              </div>
+              <pre className="p-5 text-[12px] font-mono leading-relaxed text-[#818cf8] whitespace-pre-wrap break-all">
+                <code>{state.html}</code>
+              </pre>
+            </div>
           )}
         </div>
+
+        {/* ── Bottom regen bar ── */}
+        {(state.phase==='done'||state.phase==='error') && (
+          <div className="flex-shrink-0 flex items-center justify-between px-5 py-3"
+            style={{background:'#0d0d10',borderTop:'0.5px solid rgba(255,255,255,0.06)'}}>
+            <div className="flex items-center gap-3">
+              <button onClick={()=>generate(colorScheme)}
+                className="flex items-center gap-1.5 text-[12px] text-[#52525B] hover:text-[#A1A1AA] transition-colors">
+                <RotateCcw className="w-3.5 h-3.5"/>Regenerate
+              </button>
+              <span className="text-[#27272a]">·</span>
+              <span className="text-[11px] text-[#3f3f46]">Switch color scheme above to generate a different style</span>
+            </div>
+            {state.phase==='done' && (
+              <div className="flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#22c55e]"/>
+                <span className="text-[11px] text-[#22c55e]">Ready</span>
+              </div>
+            )}
+          </div>
+        )}
       </motion.div>
 
       <AnimatePresence>
-        {githubOpen && (
-          <GitHubPushModal
-            domain={domain}
-            html={state.html}
-            onClose={() => setGithubOpen(false)}
-          />
+        {githubOpen&&(
+          <GitHubPushModal domain={domain} html={state.html} onClose={()=>setGithubOpen(false)} />
         )}
       </AnimatePresence>
     </div>
@@ -600,146 +549,90 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose }: {
 // ─── GitHub Push Modal ────────────────────────────────────────
 
 function GitHubPushModal({ domain, html, onClose }: { domain: string; html: string; onClose: () => void }) {
-  const [owner, setOwner]       = useState('')
-  const [repo, setRepo]         = useState('')
-  const [filePath, setFilePath] = useState('index.html')
-  const [branch, setBranch]     = useState('main')
-  const [pat, setPat]           = useState('')
-  const [createPR, setCreatePR] = useState(true)
-  const [state, setState]       = useState<GitHubPushState>({ phase: 'idle', result: null, error: '' })
+  const [owner,setOwner]=useState(''), [repo,setRepo]=useState(''), [filePath,setFilePath]=useState('index.html')
+  const [branch,setBranch]=useState('main'), [pat,setPat]=useState(''), [createPR,setCreatePR]=useState(true)
+  const [state,setState]=useState<GitHubPushState>({phase:'idle',result:null,error:''})
 
   const push = async () => {
-    if (!owner || !repo || !pat) return
-    setState({ phase: 'pushing', result: null, error: '' })
-
+    if(!owner||!repo||!pat)return
+    setState({phase:'pushing',result:null,error:''})
     try {
-      const res = await fetch('/api/website/push-github', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner, repo, filePath, branch, pat, content: html, createPR, domain }),
-      })
-      const data = await res.json() as {
-        success?: boolean; type?: 'pr' | 'commit'; url?: string; number?: number; error?: string
-      }
-      if (!res.ok || !data.success) {
-        setState({ phase: 'error', result: null, error: data.error ?? 'Push failed' })
-        return
-      }
-      setState({ phase: 'done', result: { type: data.type!, url: data.url!, number: data.number }, error: '' })
-    } catch {
-      setState({ phase: 'error', result: null, error: 'Request failed — check your connection' })
-    }
+      const res=await fetch('/api/website/push-github',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({owner,repo,filePath,branch,pat,content:html,createPR,domain})})
+      const data=await res.json() as {success?:boolean;type?:'pr'|'commit';url?:string;number?:number;error?:string}
+      if(!res.ok||!data.success){setState({phase:'error',result:null,error:data.error??'Push failed'});return}
+      setState({phase:'done',result:{type:data.type!,url:data.url!,number:data.number},error:''})
+    }catch{setState({phase:'error',result:null,error:'Request failed'})}
   }
 
-  const inputCls = "w-full px-3.5 py-2.5 rounded-[10px] text-[13px] text-[#FAFAFA] outline-none"
-  const inputStyle = { background: 'rgba(24,24,28,0.8)', border: '0.5px solid rgba(255,255,255,0.1)' }
+  const inp="w-full px-3.5 py-2.5 rounded-[10px] text-[13px] text-[#FAFAFA] outline-none"
+  const inpS={background:'rgba(24,24,28,0.8)',border:'0.5px solid rgba(255,255,255,0.1)'}
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.7)' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 16, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 16, scale: 0.97 }}
-        transition={{ duration: 0.15 }}
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      style={{background:'rgba(0,0,0,0.7)'}} onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
+      <motion.div initial={{opacity:0,y:16,scale:0.97}} animate={{opacity:1,y:0,scale:1}}
+        exit={{opacity:0,y:16,scale:0.97}} transition={{duration:0.15}}
         className="w-full max-w-md rounded-2xl overflow-hidden"
-        style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.1)' }}
-      >
-        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+        style={{background:'#111113',border:'0.5px solid rgba(255,255,255,0.1)'}}>
+        <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:'0.5px solid rgba(255,255,255,0.07)'}}>
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.12)' }}>
-              <GitBranch className="w-3.5 h-3.5 text-[#6366f1]" />
+            <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{background:'rgba(99,102,241,0.12)'}}>
+              <GitBranch className="w-3.5 h-3.5 text-[#6366f1]"/>
             </div>
             <p className="text-[14px] font-medium text-[#FAFAFA]">Push to GitHub</p>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[#52525B] hover:text-[#A1A1AA] hover:bg-white/[0.05] transition-colors">
-            <X className="w-4 h-4" />
-          </button>
+          <button onClick={onClose} className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[#52525B] hover:text-[#A1A1AA] hover:bg-white/[0.05] transition-colors"><X className="w-4 h-4"/></button>
         </div>
-
-        {state.phase === 'done' && state.result ? (
+        {state.phase==='done'&&state.result?(
           <div className="p-6 flex flex-col items-center gap-4 text-center">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.1)', border: '0.5px solid rgba(34,197,94,0.2)' }}>
-              <CheckCircle2 className="w-6 h-6 text-[#22c55e]" />
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{background:'rgba(34,197,94,0.1)',border:'0.5px solid rgba(34,197,94,0.2)'}}>
+              <CheckCircle2 className="w-6 h-6 text-[#22c55e]"/>
             </div>
             <div>
-              <p className="text-[15px] font-medium text-[#FAFAFA] mb-1">
-                {state.result.type === 'pr' ? 'Pull request created!' : 'Pushed to GitHub!'}
-              </p>
-              <p className="text-[13px] text-[#71717A]">
-                {state.result.type === 'pr'
-                  ? `PR #${state.result.number} is ready to review and merge.`
-                  : `Changes pushed to ${branch}.`}
-              </p>
+              <p className="text-[15px] font-medium text-[#FAFAFA] mb-1">{state.result.type==='pr'?'Pull request created!':'Pushed to GitHub!'}</p>
+              <p className="text-[13px] text-[#71717A]">{state.result.type==='pr'?`PR #${state.result.number} is open for review.`:`Changes are live on ${branch}.`}</p>
             </div>
-            <Button variant="primary" size="sm" onClick={() => window.open(state.result!.url, '_blank')} className="gap-1.5">
-              <ExternalLink className="w-3.5 h-3.5" />
-              {state.result.type === 'pr' ? 'View pull request' : 'View commit'}
+            <Button variant="primary" size="sm" onClick={()=>window.open(state.result!.url,'_blank')} className="gap-1.5">
+              <ExternalLink className="w-3.5 h-3.5"/>
+              {state.result.type==='pr'?'View pull request':'View commit'}
             </Button>
           </div>
-        ) : (
+        ):(
           <div className="p-5 flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] text-[#71717A]">GitHub username / org</label>
-                <input value={owner} onChange={e => setOwner(e.target.value)} placeholder="your-username" className={inputCls} style={inputStyle} disabled={state.phase === 'pushing'} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] text-[#71717A]">Repository name</label>
-                <input value={repo} onChange={e => setRepo(e.target.value)} placeholder="my-website" className={inputCls} style={inputStyle} disabled={state.phase === 'pushing'} />
-              </div>
+              <div className="flex flex-col gap-1.5"><label className="text-[11px] text-[#71717A]">GitHub username / org</label><input value={owner} onChange={e=>setOwner(e.target.value)} placeholder="your-username" className={inp} style={inpS} disabled={state.phase==='pushing'}/></div>
+              <div className="flex flex-col gap-1.5"><label className="text-[11px] text-[#71717A]">Repository name</label><input value={repo} onChange={e=>setRepo(e.target.value)} placeholder="my-website" className={inp} style={inpS} disabled={state.phase==='pushing'}/></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] text-[#71717A]">File path</label>
-                <input value={filePath} onChange={e => setFilePath(e.target.value)} placeholder="index.html" className={inputCls} style={inputStyle} disabled={state.phase === 'pushing'} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] text-[#71717A]">Base branch</label>
-                <input value={branch} onChange={e => setBranch(e.target.value)} placeholder="main" className={inputCls} style={inputStyle} disabled={state.phase === 'pushing'} />
-              </div>
+              <div className="flex flex-col gap-1.5"><label className="text-[11px] text-[#71717A]">File path</label><input value={filePath} onChange={e=>setFilePath(e.target.value)} placeholder="index.html" className={inp} style={inpS} disabled={state.phase==='pushing'}/></div>
+              <div className="flex flex-col gap-1.5"><label className="text-[11px] text-[#71717A]">Base branch</label><input value={branch} onChange={e=>setBranch(e.target.value)} placeholder="main" className={inp} style={inpS} disabled={state.phase==='pushing'}/></div>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] text-[#71717A]">Personal access token (repo scope)</label>
-              <input type="password" value={pat} onChange={e => setPat(e.target.value)} placeholder="ghp_xxxxxxxxxxxx" className={inputCls} style={inputStyle} disabled={state.phase === 'pushing'} />
-              <p className="text-[10px] text-[#3f3f46]">Only sent to the GitHub API — never stored by BrandLift.</p>
+              <input type="password" value={pat} onChange={e=>setPat(e.target.value)} placeholder="ghp_xxxxxxxxxxxx" className={inp} style={inpS} disabled={state.phase==='pushing'}/>
+              <p className="text-[10px] text-[#3f3f46]">Only sent to GitHub API — never stored.</p>
             </div>
-            <button
-              onClick={() => setCreatePR(v => !v)}
+            <button onClick={()=>setCreatePR(v=>!v)} disabled={state.phase==='pushing'}
               className="flex items-center gap-2.5 p-3 rounded-[10px] text-left transition-colors"
-              style={{ background: createPR ? 'rgba(99,102,241,0.06)' : 'rgba(255,255,255,0.03)', border: `0.5px solid ${createPR ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.06)'}` }}
-              disabled={state.phase === 'pushing'}
-            >
-              <div className="w-4 h-4 rounded-[4px] flex items-center justify-center flex-shrink-0" style={{ background: createPR ? '#6366f1' : 'transparent', border: `1.5px solid ${createPR ? '#6366f1' : 'rgba(255,255,255,0.2)'}` }}>
-                {createPR && <Check className="w-2.5 h-2.5 text-white" />}
+              style={{background:createPR?'rgba(99,102,241,0.06)':'rgba(255,255,255,0.03)',border:`0.5px solid ${createPR?'rgba(99,102,241,0.2)':'rgba(255,255,255,0.06)'}`}}>
+              <div className="w-4 h-4 rounded-[4px] flex items-center justify-center flex-shrink-0"
+                style={{background:createPR?'#6366f1':'transparent',border:`1.5px solid ${createPR?'#6366f1':'rgba(255,255,255,0.2)'}`}}>
+                {createPR&&<Check className="w-2.5 h-2.5 text-white"/>}
               </div>
               <div>
-                <div className="flex items-center gap-1.5">
-                  <GitPullRequest className="w-3 h-3 text-[#6366f1]" />
-                  <span className="text-[12px] font-medium text-[#FAFAFA]">Create pull request</span>
-                </div>
-                <p className="text-[11px] text-[#52525B] mt-0.5">
-                  {createPR ? 'Pushes to a new branch and opens a PR for review' : 'Pushes directly to the base branch'}
-                </p>
+                <div className="flex items-center gap-1.5"><GitPullRequest className="w-3 h-3 text-[#6366f1]"/><span className="text-[12px] font-medium text-[#FAFAFA]">Create pull request</span></div>
+                <p className="text-[11px] text-[#52525B] mt-0.5">{createPR?'New branch + PR for review':'Push directly to base branch'}</p>
               </div>
             </button>
-            {state.phase === 'error' && (
-              <p className="text-[12px] text-[#EF4444]">{state.error}</p>
-            )}
+            {state.phase==='error'&&<p className="text-[12px] text-[#EF4444]">{state.error}</p>}
           </div>
         )}
-
-        {state.phase !== 'done' && (
-          <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: '0.5px solid rgba(255,255,255,0.07)' }}>
+        {state.phase!=='done'&&(
+          <div className="flex items-center justify-between px-5 py-3.5" style={{borderTop:'0.5px solid rgba(255,255,255,0.07)'}}>
             <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
-            <Button variant="primary" size="sm" onClick={push} disabled={!owner || !repo || !pat || state.phase === 'pushing'} className="gap-1.5">
-              {state.phase === 'pushing'
-                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Pushing…</>
-                : <><GitBranch className="w-3.5 h-3.5" /> {createPR ? 'Create PR' : 'Push to repo'}</>
-              }
+            <Button variant="primary" size="sm" onClick={push} disabled={!owner||!repo||!pat||state.phase==='pushing'} className="gap-1.5">
+              {state.phase==='pushing'?<><Loader2 className="w-3.5 h-3.5 animate-spin"/>Pushing…</>:<><GitBranch className="w-3.5 h-3.5"/>{createPR?'Create PR':'Push to repo'}</>}
             </Button>
           </div>
         )}
@@ -748,56 +641,36 @@ function GitHubPushModal({ domain, html, onClose }: { domain: string; html: stri
   )
 }
 
-// ─── Loading State ────────────────────────────────────────────
+// ─── Loading View ─────────────────────────────────────────────
 
 function LoadingView({ url }: { url: string }) {
-  const steps = ['Fetching website', 'Reading page content', 'Running AI analysis']
+  const steps = ['Fetching website','Reading page content','Running AI analysis']
   const [step, setStep] = useState(0)
-
-  useEffect(() => {
-    const t1 = setTimeout(() => setStep(1), 1800)
-    const t2 = setTimeout(() => setStep(2), 4000)
-    return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [])
-
+  useEffect(()=>{const t1=setTimeout(()=>setStep(1),1800),t2=setTimeout(()=>setStep(2),4000);return()=>{clearTimeout(t1);clearTimeout(t2)}},[])
   return (
     <div className="flex flex-col items-center justify-center text-center py-20 gap-8">
       <div className="relative w-20 h-20">
-        <div
-          className="absolute inset-0 rounded-2xl flex items-center justify-center"
-          style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.2)' }}
-        >
-          <Globe className="w-10 h-10 text-[#6366f1]" />
+        <div className="absolute inset-0 rounded-2xl flex items-center justify-center"
+          style={{background:'rgba(99,102,241,0.08)',border:'0.5px solid rgba(99,102,241,0.2)'}}>
+          <Globe className="w-10 h-10 text-[#6366f1]"/>
         </div>
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(99,102,241,0.15)" strokeWidth="3" />
-          <motion.circle
-            cx="40" cy="40" r="36" fill="none"
-            stroke="#6366f1" strokeWidth="3" strokeLinecap="round"
-            strokeDasharray={`${2 * Math.PI * 36 * 0.22} ${2 * Math.PI * 36 * 0.78}`}
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1.6, ease: 'linear' }}
-            style={{ transformOrigin: '40px 40px' }}
-          />
+          <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(99,102,241,0.15)" strokeWidth="3"/>
+          <motion.circle cx="40" cy="40" r="36" fill="none" stroke="#6366f1" strokeWidth="3" strokeLinecap="round"
+            strokeDasharray={`${2*Math.PI*36*0.22} ${2*Math.PI*36*0.78}`}
+            animate={{rotate:360}} transition={{repeat:Infinity,duration:1.6,ease:'linear'}}
+            style={{transformOrigin:'40px 40px'}}/>
         </svg>
       </div>
-
       <div>
-        <p className="text-[14px] font-medium text-[#FAFAFA] mb-4">
-          {url.replace(/^https?:\/\//, '')}
-        </p>
+        <p className="text-[14px] font-medium text-[#FAFAFA] mb-4">{url.replace(/^https?:\/\//,'')}</p>
         <div className="flex flex-col gap-2 items-start">
-          {steps.map((label, i) => (
+          {steps.map((label,i)=>(
             <div key={i} className="flex items-center gap-2.5">
-              {i < step
-                ? <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
-                : i === step
-                ? <div className="w-4 h-4 rounded-full border-2 border-[#6366f1] border-t-transparent animate-spin" />
-                : <div className="w-4 h-4 rounded-full" style={{ border: '1.5px solid rgba(255,255,255,0.1)' }} />
-              }
-              <span className="text-[13px]" style={{ color: i <= step ? '#A1A1AA' : '#3f3f46' }}>
-                {label}
-              </span>
+              {i<step?<CheckCircle2 className="w-4 h-4 text-[#22c55e]"/>
+                :i===step?<div className="w-4 h-4 rounded-full border-2 border-[#6366f1] border-t-transparent animate-spin"/>
+                :<div className="w-4 h-4 rounded-full" style={{border:'1.5px solid rgba(255,255,255,0.1)'}}/>}
+              <span className="text-[13px]" style={{color:i<=step?'#A1A1AA':'#3f3f46'}}>{label}</span>
             </div>
           ))}
         </div>
@@ -809,200 +682,119 @@ function LoadingView({ url }: { url: string }) {
 // ─── Main Page ────────────────────────────────────────────────
 
 export default function WebsitePage() {
-  const [inputUrl, setInputUrl]         = useState('')
-  const [phase, setPhase]               = useState<Phase>('idle')
-  const [analysis, setAnalysis]           = useState<Analysis | null>(null)
-  const [domain, setDomain]               = useState('')
-  const [h1s, setH1s]                     = useState<string[]>([])
-  const [bodyPreview, setBodyPreview]     = useState('')
-  const [errorMsg, setErrorMsg]           = useState('')
-  const [activeTab, setActiveTab]         = useState<ActiveTab>('issues')
-  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('all')
-  const [improveSection, setImproveSection] = useState<PageSection | null>(null)
-  const [showRedesign, setShowRedesign]   = useState(false)
-
+  const [inputUrl,setInputUrl]       = useState('')
+  const [phase,setPhase]             = useState<Phase>('idle')
+  const [analysis,setAnalysis]       = useState<Analysis|null>(null)
+  const [domain,setDomain]           = useState('')
+  const [h1s,setH1s]                 = useState<string[]>([])
+  const [bodyPreview,setBodyPreview] = useState('')
+  const [errorMsg,setErrorMsg]       = useState('')
+  const [activeTab,setActiveTab]     = useState<ActiveTab>('issues')
+  const [severityFilter,setSeverityFilter] = useState<SeverityFilter>('all')
+  const [improveSection,setImproveSection] = useState<PageSection|null>(null)
+  const [showRedesign,setShowRedesign]     = useState(false)
   const submittedUrlRef = useRef('')
 
   const handleAnalyze = useCallback(async (url: string) => {
-    const clean = url.trim()
-    if (!clean) return
-
-    submittedUrlRef.current = clean
-    setPhase('loading')
-    setAnalysis(null)
-    setH1s([])
-    setBodyPreview('')
-    setErrorMsg('')
-    setActiveTab('issues')
-    setSeverityFilter('all')
-    setShowRedesign(false)
+    const clean=url.trim()
+    if(!clean)return
+    submittedUrlRef.current=clean
+    setPhase('loading'); setAnalysis(null); setH1s([]); setBodyPreview('')
+    setErrorMsg(''); setActiveTab('issues'); setSeverityFilter('all'); setShowRedesign(false)
 
     try {
-      const res = await fetch('/api/website/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: clean }),
-      })
-      const data = await res.json() as {
-        analysis?: Analysis; domain?: string; h1s?: string[]; bodyPreview?: string; error?: string
-      }
-
-      if (!res.ok) {
-        setErrorMsg(data.error ?? 'Analysis failed')
-        setPhase('error')
-        return
-      }
-
-      setAnalysis(data.analysis as Analysis)
-      setDomain(data.domain ?? '')
-      setH1s(data.h1s ?? [])
-      setBodyPreview(data.bodyPreview ?? '')
+      const res=await fetch('/api/website/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:clean})})
+      const data=await res.json() as {analysis?:Analysis;domain?:string;h1s?:string[];bodyPreview?:string;error?:string}
+      if(!res.ok){setErrorMsg(data.error??'Analysis failed');setPhase('error');return}
+      setAnalysis(data.analysis as Analysis); setDomain(data.domain??'')
+      setH1s(data.h1s??[]); setBodyPreview(data.bodyPreview??'')
       setPhase('done')
-    } catch {
-      setErrorMsg('Something went wrong — please try again')
-      setPhase('error')
-    }
+    } catch {setErrorMsg('Something went wrong — please try again');setPhase('error')}
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    handleAnalyze(inputUrl)
-  }
+  const handleSubmit=(e:React.FormEvent)=>{e.preventDefault();handleAnalyze(inputUrl)}
+  const reset=()=>{setPhase('idle');setAnalysis(null);setInputUrl('');setShowRedesign(false)}
 
-  const reset = () => {
-    setPhase('idle')
-    setAnalysis(null)
-    setInputUrl('')
-    setShowRedesign(false)
-  }
-
-  const issueFilterCounts = analysis ? {
+  const counts = analysis ? {
     all: analysis.issues.length,
-    critical: analysis.issues.filter(i => i.severity === 'critical').length,
-    warning: analysis.issues.filter(i => i.severity === 'warning').length,
-    tip: analysis.issues.filter(i => i.severity === 'tip').length,
+    critical: analysis.issues.filter(i=>i.severity==='critical').length,
+    warning:  analysis.issues.filter(i=>i.severity==='warning').length,
+    tip:      analysis.issues.filter(i=>i.severity==='tip').length,
   } : null
 
-  const filteredIssues = analysis?.issues.filter(
-    i => severityFilter === 'all' || i.severity === severityFilter
-  ) ?? []
-
-  const scoreColor = analysis
-    ? (analysis.score >= 70 ? '#22c55e' : analysis.score >= 50 ? '#FBBF24' : '#EF4444')
-    : '#71717A'
-
-  const improveContext = analysis
-    ? `${analysis.summary} ${analysis.headline}`
-    : ''
+  const filteredIssues = analysis?.issues.filter(i=>severityFilter==='all'||i.severity===severityFilter)??[]
+  const scoreColor = analysis ? (analysis.score>=70?'#22c55e':analysis.score>=50?'#FBBF24':'#EF4444') : '#71717A'
+  const improveContext = analysis ? `${analysis.summary} ${analysis.headline}` : ''
 
   return (
     <div className="flex flex-col h-full">
-      <TopBar />
-
+      <TopBar/>
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-3xl mx-auto flex flex-col gap-5">
 
-          {/* ── Page header ── */}
-          <div className="flex items-center justify-between gap-4">
+          {/* Header */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-[20px] font-medium text-[#FAFAFA]">My Website</h1>
               <p className="text-[14px] text-[#71717A] mt-0.5">
-                {phase === 'done' ? 'AI-powered analysis and improvements' : 'Analyze and improve your web presence'}
+                {phase==='done'?'AI analysis · redesign · copy improvements':'Analyze, redesign, and improve your web presence'}
               </p>
             </div>
-            {phase === 'done' && (
+            {phase==='done'&&(
               <div className="flex items-center gap-2 flex-wrap">
-                <Button
-                  variant="primary" size="sm"
-                  onClick={() => setShowRedesign(true)}
-                  className="gap-1.5"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Generate redesign
+                <Button variant="primary" size="sm" onClick={()=>setShowRedesign(true)} className="gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5"/>Generate redesign
                 </Button>
-                <Button
-                  variant="ghost" size="sm"
-                  onClick={() => window.open(`https://${domain}`, '_blank')}
-                  className="gap-1.5"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Open site
+                <Button variant="ghost" size="sm" onClick={()=>window.open(`https://${domain}`,'_blank')} className="gap-1.5">
+                  <ExternalLink className="w-3.5 h-3.5"/>Open site
                 </Button>
                 <Button variant="ghost" size="sm" onClick={reset} className="gap-1.5">
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  New analysis
+                  <RotateCcw className="w-3.5 h-3.5"/>New
                 </Button>
               </div>
             )}
           </div>
 
-          {/* ── Idle: URL input ── */}
-          {phase === 'idle' && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+          {/* ── Idle ── */}
+          {phase==='idle'&&(
+            <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}}
               className="flex flex-col items-center justify-center text-center py-16 rounded-2xl gap-6"
-              style={{ border: '0.5px dashed rgba(255,255,255,0.1)', background: 'rgba(17,17,19,0.5)' }}
-            >
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}
-              >
-                <Globe className="w-7 h-7 text-[#6366f1]" />
+              style={{border:'0.5px dashed rgba(255,255,255,0.1)',background:'rgba(17,17,19,0.5)'}}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{background:'rgba(99,102,241,0.1)',border:'0.5px solid rgba(99,102,241,0.2)'}}>
+                <Globe className="w-7 h-7 text-[#6366f1]"/>
               </div>
               <div>
-                <h2 className="text-[18px] font-semibold text-[#FAFAFA] mb-2" style={{ letterSpacing: '-0.02em' }}>
-                  Analyze your website
-                </h2>
-                <p className="text-[14px] text-[#71717A] max-w-[38ch] mx-auto leading-relaxed">
-                  Get a full AI audit — SEO, content quality, trust signals, CTAs, and a section-by-section improvement plan.
+                <h2 className="text-[18px] font-semibold text-[#FAFAFA] mb-2" style={{letterSpacing:'-0.02em'}}>Analyze your website</h2>
+                <p className="text-[14px] text-[#71717A] max-w-[40ch] mx-auto leading-relaxed">
+                  Full AI audit — SEO, content, trust signals, CTAs — then generate a stunning redesign.
                 </p>
               </div>
               <form onSubmit={handleSubmit} className="flex gap-2 w-full max-w-md">
-                <input
-                  type="text"
-                  value={inputUrl}
-                  onChange={e => setInputUrl(e.target.value)}
+                <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)}
                   placeholder="yourbusiness.com"
                   className="flex-1 min-w-0 px-4 py-2.5 rounded-xl text-[14px] text-[#FAFAFA] outline-none"
-                  style={{ background: 'rgba(24,24,28,0.8)', border: '0.5px solid rgba(255,255,255,0.1)' }}
-                  onFocus={e => {
-                    e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.08)'
-                  }}
-                  onBlur={e => {
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
-                />
+                  style={{background:'rgba(24,24,28,0.8)',border:'0.5px solid rgba(255,255,255,0.1)'}}
+                  onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.08)'}}
+                  onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)';e.currentTarget.style.boxShadow='none'}}/>
                 <Button type="submit" variant="primary" size="sm" className="gap-1.5 flex-shrink-0">
-                  Analyze
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  Analyze<ArrowRight className="w-3.5 h-3.5"/>
                 </Button>
               </form>
-              <p className="text-[12px]" style={{ color: '#3f3f46' }}>
-                Checks SEO, content, trust signals, CTAs, and structure.
-              </p>
+              <p className="text-[12px]" style={{color:'#3f3f46'}}>Checks SEO, content, trust signals, CTAs, and structure.</p>
             </motion.div>
           )}
 
           {/* ── Loading ── */}
-          {phase === 'loading' && (
-            <LoadingView url={submittedUrlRef.current} />
-          )}
+          {phase==='loading'&&<LoadingView url={submittedUrlRef.current}/>}
 
           {/* ── Error ── */}
-          {phase === 'error' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center gap-4 py-14 text-center"
-            >
-              <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                style={{ background: 'rgba(239,68,68,0.1)', border: '0.5px solid rgba(239,68,68,0.2)' }}
-              >
-                <AlertCircle className="w-6 h-6 text-[#EF4444]" />
+          {phase==='error'&&(
+            <motion.div initial={{opacity:0}} animate={{opacity:1}}
+              className="flex flex-col items-center gap-4 py-14 text-center">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{background:'rgba(239,68,68,0.1)',border:'0.5px solid rgba(239,68,68,0.2)'}}>
+                <AlertCircle className="w-6 h-6 text-[#EF4444]"/>
               </div>
               <div>
                 <p className="text-[15px] font-medium text-[#FAFAFA] mb-1">Analysis failed</p>
@@ -1013,35 +805,29 @@ export default function WebsitePage() {
           )}
 
           {/* ── Results ── */}
-          {phase === 'done' && analysis && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col gap-5"
-            >
-              {/* Score header card */}
-              <div
-                className="flex items-center gap-5 p-5 rounded-2xl"
-                style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}
-              >
-                <ScoreRing score={analysis.score} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Globe className="w-4 h-4 text-[#52525B]" />
+          {phase==='done'&&analysis&&(
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="flex flex-col gap-5">
+
+              {/* Score header */}
+              <div className="flex items-center gap-5 p-5 rounded-2xl relative overflow-hidden"
+                style={{background:'#111113',border:'0.5px solid rgba(255,255,255,0.07)'}}>
+                {/* Subtle glow behind ring */}
+                <div className="absolute left-0 top-0 w-40 h-full pointer-events-none"
+                  style={{background:`radial-gradient(ellipse at left center, ${scoreColor}12 0%, transparent 70%)`}}/>
+                <ScoreRing score={analysis.score}/>
+                <div className="flex-1 min-w-0 relative z-10">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Globe className="w-4 h-4 text-[#52525B]"/>
                     <span className="text-[14px] font-medium text-[#FAFAFA] truncate">{domain}</span>
-                    <span
-                      className="text-[11px] px-2 py-0.5 rounded-full font-medium flex-shrink-0"
-                      style={{ color: scoreColor, background: `${scoreColor}18` }}
-                    >
-                      {analysis.scoreLabel}
-                    </span>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold flex-shrink-0"
+                      style={{color:scoreColor,background:`${scoreColor}18`}}>{analysis.scoreLabel}</span>
                   </div>
                   <p className="text-[13px] text-[#A1A1AA] leading-relaxed mb-3">{analysis.headline}</p>
-                  {analysis.quickWins.length > 0 && (
-                    <div className="flex flex-col gap-1">
-                      {analysis.quickWins.map((win, i) => (
+                  {analysis.quickWins.length>0&&(
+                    <div className="flex flex-col gap-1.5">
+                      {analysis.quickWins.map((win,i)=>(
                         <div key={i} className="flex items-start gap-2">
-                          <Zap className="w-3 h-3 text-[#FBBF24] mt-0.5 flex-shrink-0" />
+                          <Zap className="w-3 h-3 text-[#FBBF24] mt-0.5 flex-shrink-0"/>
                           <span className="text-[12px] text-[#71717A] leading-relaxed">{win}</span>
                         </div>
                       ))}
@@ -1050,141 +836,85 @@ export default function WebsitePage() {
                 </div>
               </div>
 
-              {/* Category scores */}
+              {/* Category grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {Object.entries(analysis.categories).map(([key, val], i) => (
-                  <CategoryCard key={key} name={key} data={val} index={i} />
+                {Object.entries(analysis.categories).map(([key,val],i)=>(
+                  <CategoryCard key={key} name={key} data={val} index={i}/>
                 ))}
               </div>
 
               {/* Tabs */}
-              <div className="flex gap-1 p-1 rounded-[10px]" style={{ background: 'rgba(24,24,28,0.8)' }}>
+              <div className="flex gap-1 p-1 rounded-[10px]" style={{background:'rgba(24,24,28,0.8)'}}>
                 {([
-                  { id: 'issues' as ActiveTab,   icon: AlertCircle,  label: `Issues (${analysis.issues.length})`   },
-                  { id: 'sections' as ActiveTab, icon: Layout,        label: `Sections (${analysis.sections.length})` },
-                  { id: 'brief' as ActiveTab,    icon: FileText,      label: 'Redesign Brief'                        },
-                ] as const).map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                  {id:'issues'  as ActiveTab, icon:AlertCircle, label:`Issues (${analysis.issues.length})`},
+                  {id:'sections'as ActiveTab, icon:Layout,      label:`Sections (${analysis.sections.length})`},
+                  {id:'brief'   as ActiveTab, icon:FileText,    label:'Brief'},
+                ] as const).map(tab=>(
+                  <button key={tab.id} onClick={()=>setActiveTab(tab.id)}
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-[8px] text-[12px] font-medium transition-all"
-                    style={{
-                      background: activeTab === tab.id ? 'rgba(99,102,241,0.15)' : 'transparent',
-                      color: activeTab === tab.id ? '#818cf8' : '#52525B',
-                    }}
-                  >
-                    <tab.icon className="w-3.5 h-3.5" />
+                    style={{background:activeTab===tab.id?'rgba(99,102,241,0.15)':'transparent',
+                      color:activeTab===tab.id?'#818cf8':'#52525B'}}>
+                    <tab.icon className="w-3.5 h-3.5"/>
                     <span className="hidden sm:inline">{tab.label}</span>
                     <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                   </button>
                 ))}
               </div>
 
-              {/* Issues tab */}
-              {activeTab === 'issues' && (
-                <motion.div
-                  key="issues"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex flex-col gap-3"
-                >
-                  {/* Severity filter */}
+              {/* Issues */}
+              {activeTab==='issues'&&(
+                <motion.div key="issues" initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} className="flex flex-col gap-3">
                   <div className="flex gap-1.5 flex-wrap">
                     {([
-                      { id: 'all' as SeverityFilter,      label: `All (${issueFilterCounts?.all ?? 0})`,           color: '#A1A1AA' },
-                      { id: 'critical' as SeverityFilter, label: `Critical (${issueFilterCounts?.critical ?? 0})`, color: '#EF4444' },
-                      { id: 'warning' as SeverityFilter,  label: `Warnings (${issueFilterCounts?.warning ?? 0})`,  color: '#FBBF24' },
-                      { id: 'tip' as SeverityFilter,      label: `Tips (${issueFilterCounts?.tip ?? 0})`,          color: '#6366f1' },
-                    ]).map(f => (
-                      <button
-                        key={f.id}
-                        onClick={() => setSeverityFilter(f.id)}
+                      {id:'all'      as SeverityFilter, label:`All (${counts?.all??0})`,           color:'#A1A1AA'},
+                      {id:'critical' as SeverityFilter, label:`Critical (${counts?.critical??0})`, color:'#EF4444'},
+                      {id:'warning'  as SeverityFilter, label:`Warnings (${counts?.warning??0})`,  color:'#FBBF24'},
+                      {id:'tip'      as SeverityFilter, label:`Tips (${counts?.tip??0})`,           color:'#6366f1'},
+                    ]).map(f=>(
+                      <button key={f.id} onClick={()=>setSeverityFilter(f.id)}
                         className="text-[11px] px-2.5 py-1 rounded-full transition-all"
-                        style={{
-                          color: severityFilter === f.id ? f.color : '#52525B',
-                          background: severityFilter === f.id ? `${f.color}18` : 'rgba(255,255,255,0.04)',
-                          border: `0.5px solid ${severityFilter === f.id ? `${f.color}40` : 'rgba(255,255,255,0.06)'}`,
-                        }}
-                      >
+                        style={{color:severityFilter===f.id?f.color:'#52525B',
+                          background:severityFilter===f.id?`${f.color}18`:'rgba(255,255,255,0.04)',
+                          border:`0.5px solid ${severityFilter===f.id?`${f.color}40`:'rgba(255,255,255,0.06)'}`}}>
                         {f.label}
                       </button>
                     ))}
                   </div>
-
-                  {filteredIssues.length === 0 ? (
-                    <p className="text-[13px] text-[#52525B] text-center py-6">No issues in this category.</p>
-                  ) : (
-                    filteredIssues.map((issue, i) => (
-                      <IssueItem key={i} issue={issue} index={i} />
-                    ))
-                  )}
+                  {filteredIssues.length===0
+                    ?<p className="text-[13px] text-[#52525B] text-center py-6">No issues in this category.</p>
+                    :filteredIssues.map((issue,i)=><IssueItem key={i} issue={issue} index={i}/>)
+                  }
                 </motion.div>
               )}
 
-              {/* Sections tab */}
-              {activeTab === 'sections' && (
-                <motion.div
-                  key="sections"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-                >
-                  {analysis.sections.map((section, i) => (
-                    <SectionCard
-                      key={section.name}
-                      section={section}
-                      index={i}
-                      onImprove={setImproveSection}
-                    />
+              {/* Sections */}
+              {activeTab==='sections'&&(
+                <motion.div key="sections" initial={{opacity:0,y:6}} animate={{opacity:1,y:0}}
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {analysis.sections.map((s,i)=>(
+                    <SectionCard key={s.name} section={s} index={i} onImprove={setImproveSection}/>
                   ))}
                 </motion.div>
               )}
 
-              {/* Redesign brief tab */}
-              {activeTab === 'brief' && (
-                <motion.div
-                  key="brief"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex flex-col gap-4"
-                >
-                  <div
-                    className="p-5 rounded-[12px]"
-                    style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-[#6366f1]" />
-                      <span className="text-[13px] font-medium text-[#FAFAFA]">Summary</span>
-                    </div>
+              {/* Brief */}
+              {activeTab==='brief'&&(
+                <motion.div key="brief" initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} className="flex flex-col gap-4">
+                  <div className="p-5 rounded-[12px]" style={{background:'#111113',border:'0.5px solid rgba(255,255,255,0.06)'}}>
+                    <div className="flex items-center gap-2 mb-3"><Sparkles className="w-4 h-4 text-[#6366f1]"/><span className="text-[13px] font-medium text-[#FAFAFA]">Summary</span></div>
                     <p className="text-[14px] text-[#A1A1AA] leading-relaxed">{analysis.summary}</p>
                   </div>
-                  <div
-                    className="p-5 rounded-[12px]"
-                    style={{ background: 'rgba(99,102,241,0.04)', border: '0.5px solid rgba(99,102,241,0.15)' }}
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <Wand2 className="w-4 h-4 text-[#6366f1]" />
-                      <span className="text-[13px] font-medium text-[#FAFAFA]">Redesign brief</span>
-                    </div>
+                  <div className="p-5 rounded-[12px]" style={{background:'rgba(99,102,241,0.04)',border:'0.5px solid rgba(99,102,241,0.15)'}}>
+                    <div className="flex items-center gap-2 mb-3"><Wand2 className="w-4 h-4 text-[#6366f1]"/><span className="text-[13px] font-medium text-[#FAFAFA]">Redesign priorities</span></div>
                     <p className="text-[14px] text-[#A1A1AA] leading-relaxed">{analysis.redesignBrief}</p>
                   </div>
-                  <div
-                    className="p-5 rounded-[12px]"
-                    style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <Zap className="w-4 h-4 text-[#FBBF24]" />
-                      <span className="text-[13px] font-medium text-[#FAFAFA]">Quick wins</span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {analysis.quickWins.map((win, i) => (
+                  <div className="p-5 rounded-[12px]" style={{background:'#111113',border:'0.5px solid rgba(255,255,255,0.06)'}}>
+                    <div className="flex items-center gap-2 mb-3"><Zap className="w-4 h-4 text-[#FBBF24]"/><span className="text-[13px] font-medium text-[#FAFAFA]">Quick wins</span></div>
+                    <div className="flex flex-col gap-2.5">
+                      {analysis.quickWins.map((win,i)=>(
                         <div key={i} className="flex items-start gap-3">
-                          <span
-                            className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold mt-0.5"
-                            style={{ background: 'rgba(251,191,36,0.1)', color: '#FBBF24' }}
-                          >
-                            {i + 1}
-                          </span>
+                          <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold mt-0.5"
+                            style={{background:'rgba(251,191,36,0.1)',color:'#FBBF24'}}>{i+1}</span>
                           <p className="text-[13px] text-[#A1A1AA] leading-relaxed">{win}</p>
                         </div>
                       ))}
@@ -1197,28 +927,15 @@ export default function WebsitePage() {
         </div>
       </div>
 
-      {/* ── Improve Modal ── */}
       <AnimatePresence>
-        {improveSection && (
-          <ImproveModal
-            section={improveSection}
-            domain={domain}
-            context={improveContext}
-            onClose={() => setImproveSection(null)}
-          />
+        {improveSection&&(
+          <ImproveModal section={improveSection} domain={domain} context={improveContext} onClose={()=>setImproveSection(null)}/>
         )}
       </AnimatePresence>
 
-      {/* ── Redesign Modal ── */}
       <AnimatePresence>
-        {showRedesign && analysis && (
-          <RedesignModal
-            domain={domain}
-            analysis={analysis}
-            h1s={h1s}
-            bodyPreview={bodyPreview}
-            onClose={() => setShowRedesign(false)}
-          />
+        {showRedesign&&analysis&&(
+          <RedesignModal domain={domain} analysis={analysis} h1s={h1s} bodyPreview={bodyPreview} onClose={()=>setShowRedesign(false)}/>
         )}
       </AnimatePresence>
     </div>
