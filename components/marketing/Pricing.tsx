@@ -19,34 +19,6 @@ function ScrollReveal({ children, className, delay = 0 }: { children: React.Reac
   )
 }
 
-/* ── Animated spots counter ── */
-function SpotsRemaining() {
-  const [count, setCount] = useState(47)
-  useEffect(() => {
-    // Slowly tick down to create urgency — purely aesthetic
-    const id = setInterval(() => {
-      setCount(c => c > 20 ? c - 1 : c)
-    }, 8000 + Math.random() * 4000)
-    return () => clearInterval(id)
-  }, [])
-  return (
-    <div
-      className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full"
-      style={{
-        background: 'rgba(251,191,36,0.07)',
-        border: '0.5px solid rgba(251,191,36,0.25)',
-      }}
-    >
-      <span className="relative flex h-2 w-2 flex-shrink-0">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#FBBF24' }} />
-        <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#FBBF24' }} />
-      </span>
-      <span className="text-[12px] font-medium" style={{ color: '#FBBF24' }}>
-        <span className="font-bold">{count} founding spots</span> remaining — free forever
-      </span>
-    </div>
-  )
-}
 
 const BETA_FEATURES = [
   { icon: Video,         label: 'AI Script Generation',   desc: 'Gen Z-tuned scripts that actually convert' },
@@ -65,7 +37,7 @@ const VALUE_PROPS = [
   'No credit card',
   'No usage limits',
   'Cancel anytime',
-  'Founding price locked in',
+  'Free during beta',
 ]
 
 export default function Pricing() {
@@ -90,10 +62,8 @@ export default function Pricing() {
             </span>
           </h2>
           <p className="max-w-lg text-[15px] leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-            BrandLift is in private beta. Every feature — AI video, scripts, captions, exports — is completely free.
-            Join now and lock in founding pricing before we launch publicly.
+            BrandLift is in private beta. Every feature — AI video, scripts, captions, website analysis, and exports — is completely free while we build.
           </p>
-          <SpotsRemaining />
         </ScrollReveal>
 
         {/* Features grid */}
