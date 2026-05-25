@@ -146,14 +146,15 @@ const TRANSITION_OPTIONS: { id: TransitionType; label: string; desc: string }[] 
 interface QuickLook {
   id: string; label: string; desc: string; swatch: string
   grade: GradeKey; music: string; captionStyle: CaptionStyle; captionPos: CaptionPos; captions: boolean
+  letterbox?: boolean; halation?: number
 }
 const QUICK_LOOKS: QuickLook[] = [
-  { id: 'viral-tiktok', label: 'Viral TikTok',  desc: 'Teal/orange + hype beat',   swatch: 'linear-gradient(135deg,#003d3d 0%,#7a3000 100%)', grade: 'teal_orange', music: 'hype',      captionStyle: 'bold',    captionPos: 'center', captions: true },
-  { id: 'warm-brand',   label: 'Warm Brand',    desc: 'Golden hour + acoustic',     swatch: 'linear-gradient(135deg,#a0620f 0%,#d48a10 100%)', grade: 'golden',      music: 'acoustic',  captionStyle: 'minimal', captionPos: 'bottom', captions: true },
-  { id: 'cinematic',    label: 'Cinematic',     desc: 'Moody grade + orchestral',   swatch: 'linear-gradient(135deg,#070a18 0%,#150510 100%)', grade: 'moody',       music: 'cinematic', captionStyle: 'film',    captionPos: 'bottom', captions: true },
-  { id: 'clean-pro',    label: 'Clean Pro',     desc: 'No grade + corporate',       swatch: 'linear-gradient(135deg,#3a3a3a 0%,#888 100%)',    grade: 'original',    music: 'corporate', captionStyle: 'bold',    captionPos: 'bottom', captions: false },
-  { id: 'retro',        label: 'Retro',         desc: 'Vintage film + jazz',        swatch: 'linear-gradient(135deg,#5a2a10 0%,#a8703c 100%)', grade: 'vintage',     music: 'jazz',      captionStyle: 'film',    captionPos: 'bottom', captions: true },
-  { id: 'noir-drama',   label: 'Noir Drama',    desc: 'B&W + tension score',        swatch: 'linear-gradient(135deg,#000 0%,#4a4a4a 100%)',    grade: 'noir',        music: 'dark',      captionStyle: 'minimal', captionPos: 'center', captions: true },
+  { id: 'viral-tiktok', label: 'Viral TikTok',  desc: 'Teal/orange + hype beat',        swatch: 'linear-gradient(135deg,#003d3d 0%,#7a3000 100%)', grade: 'teal_orange', music: 'hype',      captionStyle: 'bold',    captionPos: 'center', captions: true  },
+  { id: 'warm-brand',   label: 'Warm Brand',    desc: 'Golden hour + acoustic',          swatch: 'linear-gradient(135deg,#a0620f 0%,#d48a10 100%)', grade: 'golden',      music: 'acoustic',  captionStyle: 'minimal', captionPos: 'bottom', captions: true  },
+  { id: 'cinematic',    label: 'Cinematic',     desc: 'Letterbox · halation · moody',   swatch: 'linear-gradient(135deg,#070a18 0%,#150510 100%)', grade: 'moody',       music: 'cinematic', captionStyle: 'film',    captionPos: 'bottom', captions: true,  letterbox: true, halation: 40 },
+  { id: 'clean-pro',    label: 'Clean Pro',     desc: 'No grade + corporate',            swatch: 'linear-gradient(135deg,#3a3a3a 0%,#888 100%)',    grade: 'original',    music: 'corporate', captionStyle: 'bold',    captionPos: 'bottom', captions: false },
+  { id: 'retro',        label: 'Retro',         desc: 'Vintage film + jazz',             swatch: 'linear-gradient(135deg,#5a2a10 0%,#a8703c 100%)', grade: 'vintage',     music: 'jazz',      captionStyle: 'film',    captionPos: 'bottom', captions: true,  halation: 20 },
+  { id: 'noir-drama',   label: 'Noir Drama',    desc: 'B&W + tension score',             swatch: 'linear-gradient(135deg,#000 0%,#4a4a4a 100%)',    grade: 'noir',        music: 'dark',      captionStyle: 'minimal', captionPos: 'center', captions: true,  letterbox: true },
 ]
 
 const POLL_INTERVAL = 4000
@@ -365,6 +366,10 @@ function VideosInner() {
   const [copyPlatform, setCopyPlatform]       = useState<CopyPlatform>('tiktok')
   const [copyData, setCopyData]               = useState<Partial<Record<CopyPlatform, PostCopy>>>({})
   const [copyLoading, setCopyLoading]         = useState(false)
+
+  // Cinematic FX
+  const [letterbox, setLetterbox]             = useState(false)
+  const [halation, setHalation]               = useState(0)
 
   // Export
   const [exportQuality, setExportQuality]     = useState<ExportQuality>('1080p')
@@ -818,6 +823,8 @@ function VideosInner() {
         colorOverlay:    colorGrade === 'custom' ? undefined : grade.color,
         vignetteOpacity: colorGrade === 'custom' ? 0 : grade.vignette,
         grain,
+        letterbox,
+        halation,
         captionsEnabled, captions,
         captionStyle, captionPos, captionSize,
         showHook, hookText,
@@ -845,6 +852,7 @@ function VideosInner() {
     setCaptionStyle('bold'); setCaptionPos('bottom'); setCaptionSize(1.0)
     setEditingCaption(null); setShowAddCaption(false); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('')
     setExportAspect('16:9'); setEnhancementStatus('idle'); setShowBetaPanel(false); setBetaCodeInput('')
+    setLetterbox(false); setHalation(0)
     setTransition('fade'); setActiveTab('grade'); setTranscribing(false); setTranscribeError('')
     setDisplayedCaption(''); setCaptionOpacity(0); setExporting(false)
     setHashtagsOpen(false); setHashtags([]); setGeneratingHashtags(false)
@@ -863,6 +871,8 @@ function VideosInner() {
     setCaptionStyle(look.captionStyle)
     setCaptionPos(look.captionPos)
     setCaptionsEnabled(look.captions)
+    setLetterbox(look.letterbox ?? false)
+    setHalation(look.halation ?? 0)
     const prev = selectedMusic
     setSelectedMusic(look.music)
     if (look.music !== 'none' && look.music !== prev && audioRef.current) {
@@ -1475,6 +1485,14 @@ function VideosInner() {
                   }} />
                 )}
 
+                {/* Letterbox bars — 2.39:1 cinema ratio preview (~12.8% each side for 16:9 video) */}
+                {letterbox && (
+                  <>
+                    <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: '12.8%', background: '#000000', zIndex: 8 }} />
+                    <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height: '12.8%', background: '#000000', zIndex: 8 }} />
+                  </>
+                )}
+
                 {/* Hook */}
                 {showHook && hookText && (
                   <div className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none" style={{ padding: '6% 10% 0' }}>
@@ -1662,6 +1680,43 @@ function VideosInner() {
                         <input type="range" min={0} max={100} value={grain}
                           onChange={e => setGrain(Number(e.target.value))}
                           className="w-full" style={{ accentColor: '#6366f1', cursor: 'pointer', height: 3 }} />
+                      </div>
+
+                      {/* Cinematic FX */}
+                      <div className="flex flex-col gap-4 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.05)' }}>
+                        <p style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Cinematic FX</p>
+
+                        {/* Letterbox */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA' }}>Letterbox</p>
+                            <p style={{ fontSize: 11, color: '#3f3f46' }}>2.39:1 cinema crop bars</p>
+                          </div>
+                          <Toggle on={letterbox} onToggle={() => setLetterbox(p => !p)} />
+                        </div>
+
+                        {/* Halation / Glow */}
+                        <div className="flex flex-col gap-2.5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA' }}>Halation</p>
+                              <p style={{ fontSize: 11, color: '#3f3f46' }}>Light bloom around highlights</p>
+                            </div>
+                            <span style={{ fontSize: 10, fontFamily: 'monospace', color: halation > 0 ? '#6366f1' : '#3f3f46', minWidth: 26, textAlign: 'right' }}>{halation}</span>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            {[{ label: 'Off', v: 0 }, { label: 'Subtle', v: 25 }, { label: 'Film', v: 55 }, { label: 'Dream', v: 85 }].map(p => (
+                              <button key={p.label} onClick={() => setHalation(p.v)}
+                                className="px-2 py-0.5 rounded text-[10px] font-semibold transition-all duration-150"
+                                style={{ background: halation === p.v ? 'rgba(99,102,241,0.15)' : 'transparent', color: halation === p.v ? '#818cf8' : '#3f3f46', border: halation === p.v ? '0.5px solid rgba(99,102,241,0.3)' : '0.5px solid transparent' }}>
+                                {p.label}
+                              </button>
+                            ))}
+                          </div>
+                          <input type="range" min={0} max={100} value={halation}
+                            onChange={e => setHalation(Number(e.target.value))}
+                            className="w-full" style={{ accentColor: '#6366f1', cursor: 'pointer', height: 3 }} />
+                        </div>
                       </div>
 
                       {/* Custom controls */}
@@ -2219,12 +2274,18 @@ function VideosInner() {
                 {exporting ? (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                      <p style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA' }}>Rendering {exportQuality}…</p>
-                      <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#6366f1' }}>{Math.round(exportProgress)}%</span>
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA' }}>Rendering {exportQuality}…</p>
+                        <p style={{ fontSize: 11, color: '#52525B', marginTop: 2 }}>
+                          Frame-accurate · 30fps · {exportQuality === '4K' ? '100Mbps' : exportQuality === '1440p' ? '60Mbps' : exportQuality === '1080p' ? '25Mbps' : '8Mbps'}
+                          {letterbox ? ' · Letterbox' : ''}{halation > 0 ? ' · Halation' : ''}
+                        </p>
+                      </div>
+                      <span style={{ fontSize: 14, fontFamily: 'monospace', fontWeight: 700, color: '#6366f1' }}>{Math.round(exportProgress)}%</span>
                     </div>
                     <ProgressBar value={exportProgress} label={exportLabel || 'Rendering…'} />
                     <p style={{ fontSize: 11, color: '#3f3f46', textAlign: 'center', letterSpacing: '0.02em' }}>
-                      All effects baked in — don&apos;t close this tab
+                      All effects baked in · don&apos;t close this tab
                     </p>
                   </div>
                 ) : (
@@ -2360,8 +2421,8 @@ function VideosInner() {
 
                     <div className="flex items-center justify-between">
                       <p style={{ fontSize: 10, color: '#27272a', letterSpacing: '0.04em' }}>
-                        {exportQuality === '4K' ? '3840×2160 · 80Mbps' : exportQuality === '1440p' ? '2560×1440 · 50Mbps' : exportQuality === '1080p' ? '1920×1080 · 25Mbps' : '1280×720 · 8Mbps'}
-                        {' '}· WebM
+                        {exportQuality === '4K' ? '3840×2160 · 100Mbps' : exportQuality === '1440p' ? '2560×1440 · 60Mbps' : exportQuality === '1080p' ? '1920×1080 · 25Mbps' : '1280×720 · 8Mbps'}
+                        {' '}· 30fps · WebM{letterbox ? ' · Letterbox' : ''}{halation > 0 ? ' · Halation' : ''}
                       </p>
                       {!beta.unlocked && (
                         <button onClick={() => setShowBetaPanel(p => !p)}
