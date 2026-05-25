@@ -170,7 +170,7 @@ function VideoSlide({
           loop
           playsInline
           onClick={togglePlay}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', cursor: 'pointer' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', cursor: 'pointer' }}
         />
 
         {/* Bottom gradient */}
