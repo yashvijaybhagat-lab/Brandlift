@@ -10,6 +10,7 @@ import {
   Upload, Video, CheckCircle2, AlertCircle, Sparkles, X,
   ChevronRight, PenLine, Music, Type, Palette, MessageSquare,
   Layers, GitMerge, Plus, Trash2, ChevronUp, ChevronDown, Film, Lock,
+  Share2, Users,
 } from 'lucide-react'
 import {
   exportVideo, downloadBlob,
@@ -286,6 +287,8 @@ function VideosInner() {
   const [dragging, setDragging]               = useState(false)
   const [videos, setVideos]                   = useState<VideoRecord[]>([])
   const [videosLoaded, setVideosLoaded]       = useState(false)
+  const [sharingId, setSharingId]             = useState<string | null>(null)
+  const [sharedIds, setSharedIds]             = useState<Set<string>>(new Set())
 
   // Clips
   const [clips, setClips]                     = useState<Clip[]>([])
@@ -514,6 +517,27 @@ function VideosInner() {
       setCurrentCaption(captions.find(c => t >= c.start && t < c.end)?.text ?? '')
     }
   }, [activeClip, captionsEnabled, captions])
+
+  const shareVideo = useCallback(async (v: VideoRecord) => {
+    if (sharingId) return
+    setSharingId(v.id)
+    try {
+      const res = await fetch('/api/community/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          videoUrl: v.enhancedUrl || v.originalUrl,
+          caption: v.script?.slice(0, 280),
+          script: v.script,
+        }),
+      })
+      if (res.ok) {
+        setSharedIds(prev => new Set(prev).add(v.id))
+      }
+    } catch {} finally {
+      setSharingId(null)
+    }
+  }, [sharingId])
 
   const saveVideos = useCallback(async (next: VideoRecord[]) => {
     try { localStorage.setItem('bl_videos_v3', JSON.stringify(next)) } catch {}
@@ -2374,13 +2398,35 @@ function VideosInner() {
                     <p style={{ fontSize: 14, fontWeight: 500, color: '#FAFAFA' }} className="truncate">{v.name}</p>
                     <p style={{ fontSize: 12, color: '#52525B', marginTop: 2 }} className="truncate">{v.script || 'No script'}</p>
                   </div>
-                  <a href={v.enhancedUrl || v.originalUrl} download target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium flex-shrink-0 transition-colors"
-                    style={{ color: '#71717A', border: '0.5px solid rgba(255,255,255,0.08)' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = '#FAFAFA'}
-                    onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = '#71717A'}>
-                    Download
-                  </a>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => shareVideo(v)}
+                      disabled={sharingId === v.id || sharedIds.has(v.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all"
+                      style={{
+                        color: sharedIds.has(v.id) ? '#22c55e' : '#818cf8',
+                        border: `0.5px solid ${sharedIds.has(v.id) ? 'rgba(34,197,94,0.3)' : 'rgba(99,102,241,0.3)'}`,
+                        background: sharedIds.has(v.id) ? 'rgba(34,197,94,0.08)' : 'rgba(99,102,241,0.06)',
+                        opacity: sharingId === v.id ? 0.6 : 1,
+                        cursor: sharingId === v.id || sharedIds.has(v.id) ? 'default' : 'pointer',
+                      }}
+                    >
+                      {sharedIds.has(v.id) ? (
+                        <><Users className="w-3 h-3" /> Shared</>
+                      ) : sharingId === v.id ? (
+                        <><Share2 className="w-3 h-3" /> Sharing…</>
+                      ) : (
+                        <><Share2 className="w-3 h-3" /> Share</>
+                      )}
+                    </button>
+                    <a href={v.enhancedUrl || v.originalUrl} download target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
+                      style={{ color: '#71717A', border: '0.5px solid rgba(255,255,255,0.08)' }}
+                      onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = '#FAFAFA'}
+                      onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = '#71717A'}>
+                      Download
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>
