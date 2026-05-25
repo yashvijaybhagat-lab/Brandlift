@@ -241,5 +241,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Analysis failed — please try again' }, { status: 500 })
   }
 
-  return NextResponse.json({ analysis, domain: parsedUrl.hostname })
+  return NextResponse.json({
+    analysis,
+    domain: parsedUrl.hostname,
+    h1s: extracted.h1s,
+    bodyPreview: extracted.bodyText.slice(0, 2000),
+  })
 }

@@ -9,7 +9,8 @@ import {
   AlertTriangle, Lightbulb, CheckCircle2, Zap,
   RotateCcw, Copy, Check, ChevronRight, Wand2,
   TrendingUp, Shield, MousePointerClick, Layout,
-  Search, FileText, Sparkles,
+  Search, FileText, Sparkles, Download,
+  GitPullRequest, GitBranch, Loader2,
 } from 'lucide-react'
 
 // ─── Types ──────────────────────────────────────────────────
@@ -52,6 +53,18 @@ interface Analysis {
 type Phase = 'idle' | 'loading' | 'done' | 'error'
 type ActiveTab = 'issues' | 'sections' | 'brief'
 type SeverityFilter = 'all' | 'critical' | 'warning' | 'tip'
+
+interface RedesignState {
+  phase: 'idle' | 'generating' | 'done' | 'error'
+  html: string
+  error: string
+}
+
+interface GitHubPushState {
+  phase: 'idle' | 'pushing' | 'done' | 'error'
+  result: { type: 'pr' | 'commit'; url: string; number?: number } | null
+  error: string
+}
 
 // ─── Score Ring ──────────────────────────────────────────────
 
@@ -421,6 +434,320 @@ function ImproveModal({ section, domain, context, onClose }: {
   )
 }
 
+// ─── Redesign Modal ───────────────────────────────────────────
+
+function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose }: {
+  domain: string
+  analysis: Analysis
+  h1s: string[]
+  bodyPreview: string
+  onClose: () => void
+}) {
+  const [state, setState] = useState<RedesignState>({ phase: 'idle', html: '', error: '' })
+  const [githubOpen, setGithubOpen] = useState(false)
+  const [previewBlob, setPreviewBlob] = useState<string | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
+
+  const generate = useCallback(async () => {
+    if (abortRef.current) abortRef.current.abort()
+    const ctrl = new AbortController()
+    abortRef.current = ctrl
+    setState({ phase: 'generating', html: '', error: '' })
+    setPreviewBlob(null)
+
+    try {
+      const res = await fetch('/api/website/redesign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain, analysis, h1s, bodyPreview }),
+        signal: ctrl.signal,
+      })
+      if (!res.ok || !res.body) {
+        setState({ phase: 'error', html: '', error: 'Generation failed — please try again' })
+        return
+      }
+
+      const reader = res.body.getReader()
+      const dec = new TextDecoder()
+      let html = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        html += dec.decode(value, { stream: true })
+        setState(s => ({ ...s, html }))
+      }
+
+      let cleanHtml = html.trim()
+      if (cleanHtml.startsWith('```')) {
+        cleanHtml = cleanHtml.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/, '').trim()
+      }
+
+      const blob = new Blob([cleanHtml], { type: 'text/html' })
+      const url  = URL.createObjectURL(blob)
+      setPreviewBlob(url)
+      setState({ phase: 'done', html: cleanHtml, error: '' })
+    } catch (err) {
+      if ((err as Error)?.name !== 'AbortError') {
+        setState({ phase: 'error', html: '', error: 'Generation failed — please try again' })
+      }
+    }
+  }, [domain, analysis, h1s, bodyPreview])
+
+  useEffect(() => {
+    generate()
+    return () => { if (abortRef.current) abortRef.current.abort() }
+  }, [generate])
+
+  useEffect(() => {
+    return () => { if (previewBlob) URL.revokeObjectURL(previewBlob) }
+  }, [previewBlob])
+
+  const download = () => {
+    const a = document.createElement('a')
+    a.href = previewBlob!
+    a.download = `${domain}-redesign.html`
+    a.click()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'rgba(0,0,0,0.88)' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col h-full"
+      >
+        {/* Header bar */}
+        <div
+          className="flex items-center justify-between px-5 py-3.5 flex-shrink-0"
+          style={{ background: '#111113', borderBottom: '0.5px solid rgba(255,255,255,0.08)' }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.12)' }}>
+              <Sparkles className="w-3.5 h-3.5 text-[#6366f1]" />
+            </div>
+            <div>
+              <p className="text-[14px] font-medium text-[#FAFAFA]">Redesigned page</p>
+              <p className="text-[11px] text-[#52525B]">{domain}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {state.phase === 'done' && (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => setGithubOpen(true)} className="gap-1.5">
+                  <GitBranch className="w-3.5 h-3.5" />
+                  Push to GitHub
+                </Button>
+                <Button variant="primary" size="sm" onClick={download} className="gap-1.5">
+                  <Download className="w-3.5 h-3.5" />
+                  Download HTML
+                </Button>
+              </>
+            )}
+            <button
+              onClick={onClose}
+              className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[#52525B] hover:text-[#A1A1AA] hover:bg-white/[0.05] transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Preview area */}
+        <div className="flex-1 min-h-0 relative">
+          {state.phase === 'generating' && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-5 h-5 text-[#6366f1] animate-spin" />
+                <span className="text-[14px] text-[#A1A1AA]">Generating your redesigned page…</span>
+              </div>
+              {state.html.length > 0 && (
+                <p className="text-[12px] text-[#3f3f46]">{state.html.length.toLocaleString()} characters generated</p>
+              )}
+            </div>
+          )}
+          {state.phase === 'error' && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+              <AlertCircle className="w-8 h-8 text-[#EF4444]" />
+              <p className="text-[14px] text-[#A1A1AA]">{state.error}</p>
+              <Button variant="ghost" size="sm" onClick={generate}>Try again</Button>
+            </div>
+          )}
+          {state.phase === 'done' && previewBlob && (
+            <iframe
+              src={previewBlob}
+              className="w-full h-full"
+              sandbox="allow-same-origin allow-scripts"
+              title="Redesigned website preview"
+            />
+          )}
+        </div>
+      </motion.div>
+
+      <AnimatePresence>
+        {githubOpen && (
+          <GitHubPushModal
+            domain={domain}
+            html={state.html}
+            onClose={() => setGithubOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ─── GitHub Push Modal ────────────────────────────────────────
+
+function GitHubPushModal({ domain, html, onClose }: { domain: string; html: string; onClose: () => void }) {
+  const [owner, setOwner]       = useState('')
+  const [repo, setRepo]         = useState('')
+  const [filePath, setFilePath] = useState('index.html')
+  const [branch, setBranch]     = useState('main')
+  const [pat, setPat]           = useState('')
+  const [createPR, setCreatePR] = useState(true)
+  const [state, setState]       = useState<GitHubPushState>({ phase: 'idle', result: null, error: '' })
+
+  const push = async () => {
+    if (!owner || !repo || !pat) return
+    setState({ phase: 'pushing', result: null, error: '' })
+
+    try {
+      const res = await fetch('/api/website/push-github', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner, repo, filePath, branch, pat, content: html, createPR, domain }),
+      })
+      const data = await res.json() as {
+        success?: boolean; type?: 'pr' | 'commit'; url?: string; number?: number; error?: string
+      }
+      if (!res.ok || !data.success) {
+        setState({ phase: 'error', result: null, error: data.error ?? 'Push failed' })
+        return
+      }
+      setState({ phase: 'done', result: { type: data.type!, url: data.url!, number: data.number }, error: '' })
+    } catch {
+      setState({ phase: 'error', result: null, error: 'Request failed — check your connection' })
+    }
+  }
+
+  const inputCls = "w-full px-3.5 py-2.5 rounded-[10px] text-[13px] text-[#FAFAFA] outline-none"
+  const inputStyle = { background: 'rgba(24,24,28,0.8)', border: '0.5px solid rgba(255,255,255,0.1)' }
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.7)' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 16, scale: 0.97 }}
+        transition={{ duration: 0.15 }}
+        className="w-full max-w-md rounded-2xl overflow-hidden"
+        style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.1)' }}
+      >
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.12)' }}>
+              <GitBranch className="w-3.5 h-3.5 text-[#6366f1]" />
+            </div>
+            <p className="text-[14px] font-medium text-[#FAFAFA]">Push to GitHub</p>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[#52525B] hover:text-[#A1A1AA] hover:bg-white/[0.05] transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {state.phase === 'done' && state.result ? (
+          <div className="p-6 flex flex-col items-center gap-4 text-center">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.1)', border: '0.5px solid rgba(34,197,94,0.2)' }}>
+              <CheckCircle2 className="w-6 h-6 text-[#22c55e]" />
+            </div>
+            <div>
+              <p className="text-[15px] font-medium text-[#FAFAFA] mb-1">
+                {state.result.type === 'pr' ? 'Pull request created!' : 'Pushed to GitHub!'}
+              </p>
+              <p className="text-[13px] text-[#71717A]">
+                {state.result.type === 'pr'
+                  ? `PR #${state.result.number} is ready to review and merge.`
+                  : `Changes pushed to ${branch}.`}
+              </p>
+            </div>
+            <Button variant="primary" size="sm" onClick={() => window.open(state.result!.url, '_blank')} className="gap-1.5">
+              <ExternalLink className="w-3.5 h-3.5" />
+              {state.result.type === 'pr' ? 'View pull request' : 'View commit'}
+            </Button>
+          </div>
+        ) : (
+          <div className="p-5 flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] text-[#71717A]">GitHub username / org</label>
+                <input value={owner} onChange={e => setOwner(e.target.value)} placeholder="your-username" className={inputCls} style={inputStyle} disabled={state.phase === 'pushing'} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] text-[#71717A]">Repository name</label>
+                <input value={repo} onChange={e => setRepo(e.target.value)} placeholder="my-website" className={inputCls} style={inputStyle} disabled={state.phase === 'pushing'} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] text-[#71717A]">File path</label>
+                <input value={filePath} onChange={e => setFilePath(e.target.value)} placeholder="index.html" className={inputCls} style={inputStyle} disabled={state.phase === 'pushing'} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] text-[#71717A]">Base branch</label>
+                <input value={branch} onChange={e => setBranch(e.target.value)} placeholder="main" className={inputCls} style={inputStyle} disabled={state.phase === 'pushing'} />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] text-[#71717A]">Personal access token (repo scope)</label>
+              <input type="password" value={pat} onChange={e => setPat(e.target.value)} placeholder="ghp_xxxxxxxxxxxx" className={inputCls} style={inputStyle} disabled={state.phase === 'pushing'} />
+              <p className="text-[10px] text-[#3f3f46]">Only sent to the GitHub API — never stored by BrandLift.</p>
+            </div>
+            <button
+              onClick={() => setCreatePR(v => !v)}
+              className="flex items-center gap-2.5 p-3 rounded-[10px] text-left transition-colors"
+              style={{ background: createPR ? 'rgba(99,102,241,0.06)' : 'rgba(255,255,255,0.03)', border: `0.5px solid ${createPR ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.06)'}` }}
+              disabled={state.phase === 'pushing'}
+            >
+              <div className="w-4 h-4 rounded-[4px] flex items-center justify-center flex-shrink-0" style={{ background: createPR ? '#6366f1' : 'transparent', border: `1.5px solid ${createPR ? '#6366f1' : 'rgba(255,255,255,0.2)'}` }}>
+                {createPR && <Check className="w-2.5 h-2.5 text-white" />}
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <GitPullRequest className="w-3 h-3 text-[#6366f1]" />
+                  <span className="text-[12px] font-medium text-[#FAFAFA]">Create pull request</span>
+                </div>
+                <p className="text-[11px] text-[#52525B] mt-0.5">
+                  {createPR ? 'Pushes to a new branch and opens a PR for review' : 'Pushes directly to the base branch'}
+                </p>
+              </div>
+            </button>
+            {state.phase === 'error' && (
+              <p className="text-[12px] text-[#EF4444]">{state.error}</p>
+            )}
+          </div>
+        )}
+
+        {state.phase !== 'done' && (
+          <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: '0.5px solid rgba(255,255,255,0.07)' }}>
+            <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+            <Button variant="primary" size="sm" onClick={push} disabled={!owner || !repo || !pat || state.phase === 'pushing'} className="gap-1.5">
+              {state.phase === 'pushing'
+                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Pushing…</>
+                : <><GitBranch className="w-3.5 h-3.5" /> {createPR ? 'Create PR' : 'Push to repo'}</>
+              }
+            </Button>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  )
+}
+
 // ─── Loading State ────────────────────────────────────────────
 
 function LoadingView({ url }: { url: string }) {
@@ -484,12 +811,15 @@ function LoadingView({ url }: { url: string }) {
 export default function WebsitePage() {
   const [inputUrl, setInputUrl]         = useState('')
   const [phase, setPhase]               = useState<Phase>('idle')
-  const [analysis, setAnalysis]         = useState<Analysis | null>(null)
-  const [domain, setDomain]             = useState('')
-  const [errorMsg, setErrorMsg]         = useState('')
-  const [activeTab, setActiveTab]       = useState<ActiveTab>('issues')
+  const [analysis, setAnalysis]           = useState<Analysis | null>(null)
+  const [domain, setDomain]               = useState('')
+  const [h1s, setH1s]                     = useState<string[]>([])
+  const [bodyPreview, setBodyPreview]     = useState('')
+  const [errorMsg, setErrorMsg]           = useState('')
+  const [activeTab, setActiveTab]         = useState<ActiveTab>('issues')
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('all')
   const [improveSection, setImproveSection] = useState<PageSection | null>(null)
+  const [showRedesign, setShowRedesign]   = useState(false)
 
   const submittedUrlRef = useRef('')
 
@@ -500,9 +830,12 @@ export default function WebsitePage() {
     submittedUrlRef.current = clean
     setPhase('loading')
     setAnalysis(null)
+    setH1s([])
+    setBodyPreview('')
     setErrorMsg('')
     setActiveTab('issues')
     setSeverityFilter('all')
+    setShowRedesign(false)
 
     try {
       const res = await fetch('/api/website/analyze', {
@@ -510,7 +843,9 @@ export default function WebsitePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: clean }),
       })
-      const data = await res.json()
+      const data = await res.json() as {
+        analysis?: Analysis; domain?: string; h1s?: string[]; bodyPreview?: string; error?: string
+      }
 
       if (!res.ok) {
         setErrorMsg(data.error ?? 'Analysis failed')
@@ -520,6 +855,8 @@ export default function WebsitePage() {
 
       setAnalysis(data.analysis as Analysis)
       setDomain(data.domain ?? '')
+      setH1s(data.h1s ?? [])
+      setBodyPreview(data.bodyPreview ?? '')
       setPhase('done')
     } catch {
       setErrorMsg('Something went wrong — please try again')
@@ -536,6 +873,7 @@ export default function WebsitePage() {
     setPhase('idle')
     setAnalysis(null)
     setInputUrl('')
+    setShowRedesign(false)
   }
 
   const issueFilterCounts = analysis ? {
@@ -573,7 +911,15 @@ export default function WebsitePage() {
               </p>
             </div>
             {phase === 'done' && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  variant="primary" size="sm"
+                  onClick={() => setShowRedesign(true)}
+                  className="gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Generate redesign
+                </Button>
                 <Button
                   variant="ghost" size="sm"
                   onClick={() => window.open(`https://${domain}`, '_blank')}
@@ -859,6 +1205,19 @@ export default function WebsitePage() {
             domain={domain}
             context={improveContext}
             onClose={() => setImproveSection(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Redesign Modal ── */}
+      <AnimatePresence>
+        {showRedesign && analysis && (
+          <RedesignModal
+            domain={domain}
+            analysis={analysis}
+            h1s={h1s}
+            bodyPreview={bodyPreview}
+            onClose={() => setShowRedesign(false)}
           />
         )}
       </AnimatePresence>
