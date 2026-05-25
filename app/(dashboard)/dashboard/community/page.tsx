@@ -6,6 +6,7 @@ import { TopBar } from '@/components/dashboard/TopBar'
 import {
   Heart, MessageCircle, Send, Play, Pause, VolumeX, Volume2,
   Users, Rss, ArrowLeft, MoreVertical, Trash2, Search, ChevronRight,
+  ChevronDown,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -64,35 +65,61 @@ function Avatar({ src, name, size = 36 }: { src?: string; name: string; size?: n
   const color = colors[name.charCodeAt(0) % colors.length]
   return src ? (
     <img src={src} alt={name} width={size} height={size}
-      style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+      style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid rgba(255,255,255,0.2)' }} />
   ) : (
     <div style={{
       width: size, height: size, borderRadius: '50%', background: color,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: size * 0.36, fontWeight: 700, color: '#fff', flexShrink: 0,
+      border: '2px solid rgba(255,255,255,0.2)',
     }}>
       {initials(name)}
     </div>
   )
 }
 
-/* ─── Video Card ─────────────────────────────────────── */
+/* ─── TikTok Video Slide ─────────────────────────────── */
 
-function VideoCard({
-  post, currentUserEmail, onLike, onMessage, onDelete,
+function VideoSlide({
+  post, currentUserEmail, onLike, onMessage, onDelete, index, total,
 }: {
   post: CommunityPost
   currentUserEmail: string
   onLike: (id: string) => void
   onMessage: (userId: string, userName: string) => void
   onDelete: (id: string) => void
+  index: number
+  total: number
 }) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [playing, setPlaying] = useState(false)
   const [muted, setMuted] = useState(true)
   const [showMenu, setShowMenu] = useState(false)
+  const [captionExpanded, setCaptionExpanded] = useState(false)
   const liked = post.likedBy.includes(currentUserEmail)
   const isOwn = post.userId === currentUserEmail
+
+  // Auto-play when scrolled into view
+  useEffect(() => {
+    const container = containerRef.current
+    const video = videoRef.current
+    if (!container || !video) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().then(() => setPlaying(true)).catch(() => {})
+        } else {
+          video.pause()
+          setPlaying(false)
+        }
+      },
+      { threshold: 0.6 }
+    )
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
 
   const togglePlay = () => {
     const v = videoRef.current
@@ -101,136 +128,190 @@ function VideoCard({
     else { v.play().catch(() => {}); setPlaying(true) }
   }
 
+  const caption = post.caption || post.script || ''
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
+      ref={containerRef}
       style={{
-        background: 'var(--color-surface)',
-        border: '0.5px solid var(--color-border)',
-        borderRadius: 20,
-        overflow: 'hidden',
+        height: '100%',
+        flexShrink: 0,
+        scrollSnapAlign: 'start',
         position: 'relative',
+        background: '#000',
+        overflow: 'hidden',
       }}
     >
       {/* Video */}
-      <div style={{ position: 'relative', background: '#000', aspectRatio: '9/16', maxHeight: 420, cursor: 'pointer' }} onClick={togglePlay}>
-        <video
-          ref={videoRef}
-          src={post.videoUrl}
-          muted={muted}
-          loop
-          playsInline
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          onEnded={() => setPlaying(false)}
-        />
-        {/* Play overlay */}
-        <AnimatePresence>
-          {!playing && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{
-                position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'rgba(0,0,0,0.35)',
-              }}
-            >
-              <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.25)' }}>
-                <Play className="w-6 h-6 fill-white text-white" style={{ marginLeft: 3 }} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        {/* Mute button */}
-        {playing && (
-          <button
-            onClick={e => { e.stopPropagation(); setMuted(m => !m) }}
-            style={{ position: 'absolute', bottom: 12, right: 12, width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            {muted ? <VolumeX className="w-4 h-4 text-white" /> : <Volume2 className="w-4 h-4 text-white" />}
-          </button>
-        )}
-      </div>
+      <video
+        ref={videoRef}
+        src={post.videoUrl}
+        muted={muted}
+        loop
+        playsInline
+        onClick={togglePlay}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', cursor: 'pointer' }}
+      />
 
-      {/* Info */}
-      <div style={{ padding: '14px 16px' }}>
-        {/* User row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <Avatar src={post.userAvatar} name={post.userName} size={34} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.3 }}>{post.userName}</p>
-            {post.businessName && (
-              <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 1 }}>{post.businessName}</p>
-            )}
-          </div>
-          <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{timeAgo(post.sharedAt)}</span>
-          {/* Menu */}
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setShowMenu(s => !s)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 6, display: 'flex' }}>
-              <MoreVertical className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
-            </button>
-            <AnimatePresence>
-              {showMenu && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-                  style={{ position: 'absolute', right: 0, top: '100%', zIndex: 20, background: 'var(--color-surface-elevated)', border: '0.5px solid var(--color-border)', borderRadius: 12, padding: 4, minWidth: 140, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
-                  onMouseLeave={() => setShowMenu(false)}
-                >
-                  {isOwn && (
-                    <button
-                      onClick={() => { onDelete(post.id); setShowMenu(false) }}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 13 }}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" /> Remove post
-                    </button>
-                  )}
-                  {!isOwn && (
-                    <button
-                      onClick={() => { onMessage(post.userId, post.userName); setShowMenu(false) }}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)', fontSize: 13 }}
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" /> Send message
-                    </button>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+      {/* Gradient overlays */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 40%, transparent 65%)' }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 80, pointerEvents: 'none', background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%)' }} />
+
+      {/* Play/Pause tap indicator */}
+      <AnimatePresence>
+        {!playing && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.15 }}
+            style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}
+          >
+            <div style={{ width: 68, height: 68, borderRadius: '50%', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid rgba(255,255,255,0.2)' }}>
+              <Play className="w-8 h-8 fill-white text-white" style={{ marginLeft: 4 }} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Right action bar */}
+      <div style={{ position: 'absolute', right: 12, bottom: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+        {/* Author avatar */}
+        <div style={{ position: 'relative', marginBottom: 4 }}>
+          <Avatar src={post.userAvatar} name={post.userName} size={46} />
+          <div style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', width: 20, height: 20, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #000' }}>
+            <span style={{ fontSize: 11, color: '#fff', fontWeight: 700 }}>+</span>
           </div>
         </div>
 
-        {/* Caption / script */}
-        {(post.caption || post.script) && (
-          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.55, marginBottom: 12 }} className="line-clamp-2">
-            {post.caption || post.script}
-          </p>
-        )}
-
-        {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <button
+        {/* Like */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+          <motion.button
+            whileTap={{ scale: 1.3 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
             onClick={() => onLike(post.id)}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
-            <motion.div whileTap={{ scale: 1.3 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}>
-              <Heart
-                className="w-5 h-5"
-                style={{ color: liked ? '#ef4444' : 'var(--color-text-muted)', fill: liked ? '#ef4444' : 'none', transition: 'all 0.2s' }}
-              />
-            </motion.div>
-            <span style={{ fontSize: 13, color: liked ? '#ef4444' : 'var(--color-text-muted)', fontWeight: 500 }}>{post.likeCount}</span>
-          </button>
+            <Heart
+              className="w-5 h-5"
+              style={{ color: liked ? '#ef4444' : '#fff', fill: liked ? '#ef4444' : 'none', transition: 'all 0.2s' }}
+            />
+          </motion.button>
+          <span style={{ fontSize: 12, color: '#fff', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{post.likeCount}</span>
+        </div>
 
-          {!isOwn && (
+        {/* Message */}
+        {!isOwn && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <button
               onClick={() => onMessage(post.userId, post.userName)}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             >
-              <MessageCircle className="w-5 h-5" style={{ color: 'var(--color-text-muted)' }} />
-              <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 500 }}>Message</span>
+              <MessageCircle className="w-5 h-5 text-white" />
             </button>
-          )}
+            <span style={{ fontSize: 12, color: '#fff', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>DM</span>
+          </div>
+        )}
+
+        {/* Mute */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+          <button
+            onClick={() => setMuted(m => !m)}
+            style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >
+            {muted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
+          </button>
+          <span style={{ fontSize: 12, color: '#fff', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{muted ? 'Muted' : 'Live'}</span>
+        </div>
+
+        {/* More menu */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowMenu(s => !s)}
+            style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >
+            <MoreVertical className="w-5 h-5 text-white" />
+          </button>
+          <AnimatePresence>
+            {showMenu && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, x: 8 }} animate={{ opacity: 1, scale: 1, x: 0 }} exit={{ opacity: 0, scale: 0.9 }}
+                style={{ position: 'absolute', right: '110%', bottom: 0, background: 'rgba(20,20,28,0.95)', backdropFilter: 'blur(16px)', border: '0.5px solid rgba(255,255,255,0.12)', borderRadius: 14, padding: 6, minWidth: 150, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 20 }}
+                onMouseLeave={() => setShowMenu(false)}
+              >
+                {isOwn && (
+                  <button
+                    onClick={() => { onDelete(post.id); setShowMenu(false) }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 9, background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 13, fontWeight: 500 }}
+                  >
+                    <Trash2 className="w-4 h-4" /> Remove post
+                  </button>
+                )}
+                {!isOwn && (
+                  <button
+                    onClick={() => { onMessage(post.userId, post.userName); setShowMenu(false) }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 9, background: 'none', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 13, fontWeight: 500 }}
+                  >
+                    <MessageCircle className="w-4 h-4" /> Send message
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
-    </motion.div>
+
+      {/* Bottom info overlay */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 72, padding: '0 16px 20px' }}>
+        {/* User info */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}>@{post.userName.replace(/\s+/g, '').toLowerCase()}</span>
+          {post.businessName && (
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>· {post.businessName}</span>
+          )}
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginLeft: 'auto' }}>{timeAgo(post.sharedAt)}</span>
+        </div>
+
+        {/* Caption */}
+        {caption && (
+          <div>
+            <p
+              onClick={() => setCaptionExpanded(e => !e)}
+              style={{
+                fontSize: 13, color: 'rgba(255,255,255,0.9)', lineHeight: 1.55,
+                display: '-webkit-box', WebkitLineClamp: captionExpanded ? undefined : 2,
+                WebkitBoxOrient: 'vertical', overflow: captionExpanded ? 'visible' : 'hidden',
+                cursor: 'pointer', textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+              }}
+            >
+              {caption}
+              {!captionExpanded && caption.length > 80 && (
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}> more</span>
+              )}
+            </p>
+          </div>
+        )}
+
+        {/* Scroll hint for first video */}
+        {index === 0 && total > 1 && (
+          <motion.div
+            animate={{ y: [0, 6, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 12, opacity: 0.6 }}
+          >
+            <ChevronDown className="w-4 h-4 text-white" />
+            <span style={{ fontSize: 11, color: '#fff', fontWeight: 500 }}>Scroll for more</span>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Progress dots (top-right) */}
+      <div style={{ position: 'absolute', top: 16, right: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {Array.from({ length: Math.min(total, 8) }).map((_, i) => (
+          <div key={i} style={{ width: 3, height: i === Math.min(index, 7) ? 16 : 6, borderRadius: 2, background: i === Math.min(index, 7) ? '#fff' : 'rgba(255,255,255,0.3)', transition: 'all 0.3s' }} />
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -256,9 +337,7 @@ function ChatWindow({
       if (!res.ok) return
       const { thread } = await res.json()
       setMessages(thread.messages ?? [])
-    } catch {} finally {
-      setLoading(false)
-    }
+    } catch {} finally { setLoading(false) }
   }, [userId])
 
   useEffect(() => {
@@ -267,9 +346,7 @@ function ChatWindow({
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [loadMessages])
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   const send = async () => {
     const text = input.trim()
@@ -288,14 +365,11 @@ function ChatWindow({
         body: JSON.stringify({ content: text, recipientName: userName }),
       })
       await loadMessages()
-    } catch {} finally {
-      setSending(false)
-    }
+    } catch {} finally { setSending(false) }
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Header */}
       <div style={{ padding: '12px 16px', borderBottom: '0.5px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4, borderRadius: 8 }}>
           <ArrowLeft className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
@@ -304,7 +378,6 @@ function ChatWindow({
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>{userName}</p>
       </div>
 
-      {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
@@ -320,51 +393,46 @@ function ChatWindow({
             <MessageCircle className="w-10 h-10" style={{ color: 'var(--color-text-muted)', opacity: 0.4 }} />
             <p style={{ fontSize: 14, color: 'var(--color-text-muted)' }}>Say hello to {userName}</p>
           </div>
-        ) : (
-          messages.map(msg => {
-            const isMine = msg.senderId === currentUserEmail
-            return (
-              <div key={msg.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 8, alignItems: 'flex-end' }}>
-                {!isMine && <Avatar name={msg.senderName} src={msg.senderAvatar} size={26} />}
-                <div style={{ maxWidth: '70%' }}>
-                  <div style={{
-                    padding: '10px 14px', borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                    background: isMine ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'var(--color-surface-elevated)',
-                    border: isMine ? 'none' : '0.5px solid var(--color-border)',
-                    fontSize: 14, color: isMine ? '#fff' : 'var(--color-text)', lineHeight: 1.5,
-                  }}>
-                    {msg.content}
-                  </div>
-                  <p style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 4, textAlign: isMine ? 'right' : 'left' }}>
-                    {timeAgo(msg.sentAt)}
-                  </p>
+        ) : messages.map(msg => {
+          const isMine = msg.senderId === currentUserEmail
+          return (
+            <div key={msg.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 8, alignItems: 'flex-end' }}>
+              {!isMine && <Avatar name={msg.senderName} src={msg.senderAvatar} size={26} />}
+              <div style={{ maxWidth: '70%' }}>
+                <div style={{
+                  padding: '10px 14px', borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                  background: isMine ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'var(--color-surface-elevated)',
+                  border: isMine ? 'none' : '0.5px solid var(--color-border)',
+                  fontSize: 14, color: isMine ? '#fff' : 'var(--color-text)', lineHeight: 1.5,
+                }}>
+                  {msg.content}
                 </div>
+                <p style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 4, textAlign: isMine ? 'right' : 'left' }}>
+                  {timeAgo(msg.sentAt)}
+                </p>
               </div>
-            )
-          })
-        )}
+            </div>
+          )
+        })}
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
       <div style={{ padding: '12px 16px', borderTop: '0.5px solid var(--color-border)', display: 'flex', gap: 8 }}>
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
           placeholder={`Message ${userName}…`}
-          style={{
-            flex: 1, background: 'var(--color-surface-elevated)', border: '0.5px solid var(--color-border)',
-            borderRadius: 12, padding: '10px 14px', fontSize: 14, color: 'var(--color-text)', outline: 'none',
-          }}
+          style={{ flex: 1, background: 'var(--color-surface-elevated)', border: '0.5px solid var(--color-border)', borderRadius: 12, padding: '10px 14px', fontSize: 14, color: 'var(--color-text)', outline: 'none' }}
         />
         <button
           onClick={send}
           disabled={!input.trim() || sending}
           style={{
-            width: 40, height: 40, borderRadius: 12, border: 'none', cursor: input.trim() ? 'pointer' : 'not-allowed',
+            width: 40, height: 40, borderRadius: 12, border: 'none', flexShrink: 0,
+            cursor: input.trim() ? 'pointer' : 'not-allowed',
             background: input.trim() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'var(--color-surface-elevated)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s',
           }}
         >
           <Send className="w-4 h-4" style={{ color: input.trim() ? '#fff' : 'var(--color-text-muted)' }} />
@@ -391,23 +459,18 @@ function MessagesTab({
   useEffect(() => {
     fetch('/api/community/conversations')
       .then(r => r.json())
-      .then(d => { setConversations(d.conversations ?? []) })
+      .then(d => setConversations(d.conversations ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
-  const filtered = conversations.filter(c =>
-    c.userName.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = conversations.filter(c => c.userName.toLowerCase().includes(search.toLowerCase()))
 
   if (activeUserId) {
     return (
       <ChatWindow
-        userId={activeUserId}
-        userName={activeUserName}
-        currentUserEmail={currentUserEmail}
-        currentUserName={currentUserName}
-        currentUserAvatar={currentUserAvatar}
+        userId={activeUserId} userName={activeUserName}
+        currentUserEmail={currentUserEmail} currentUserName={currentUserName} currentUserAvatar={currentUserAvatar}
         onBack={() => { setActiveUserId(null); setActiveUserName('') }}
       />
     )
@@ -415,18 +478,12 @@ function MessagesTab({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
-      {/* Search */}
       <div style={{ padding: '12px 16px' }}>
         <div style={{ position: 'relative' }}>
           <Search className="w-4 h-4" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
           <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search conversations…"
-            style={{
-              width: '100%', background: 'var(--color-surface-elevated)', border: '0.5px solid var(--color-border)',
-              borderRadius: 10, padding: '9px 12px 9px 36px', fontSize: 14, color: 'var(--color-text)', outline: 'none',
-            }}
+            value={search} onChange={e => setSearch(e.target.value)} placeholder="Search conversations…"
+            style={{ width: '100%', background: 'var(--color-surface-elevated)', border: '0.5px solid var(--color-border)', borderRadius: 10, padding: '9px 12px 9px 36px', fontSize: 14, color: 'var(--color-text)', outline: 'none' }}
           />
         </div>
       </div>
@@ -447,36 +504,28 @@ function MessagesTab({
           </div>
           <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)' }}>No messages yet</p>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', maxWidth: 260, lineHeight: 1.6 }}>
-            Go to the Feed tab and click Message on a video to start a conversation.
+            Go to the Feed tab and tap Message on a video to start a conversation.
           </p>
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {filtered.map(conv => (
-            <button
-              key={conv.userId}
-              onClick={() => { setActiveUserId(conv.userId); setActiveUserName(conv.userName) }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-                background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
-                borderBottom: '0.5px solid var(--color-border)', transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-surface-elevated)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-            >
-              <Avatar name={conv.userName} size={40} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 2 }}>{conv.userName}</p>
-                <p style={{ fontSize: 12, color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{conv.lastMessage}</p>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{timeAgo(conv.lastAt)}</span>
-                <ChevronRight className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+      ) : filtered.map(conv => (
+        <button
+          key={conv.userId}
+          onClick={() => { setActiveUserId(conv.userId); setActiveUserName(conv.userName) }}
+          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: '0.5px solid var(--color-border)', transition: 'background 0.15s' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-surface-elevated)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+        >
+          <Avatar name={conv.userName} size={40} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 2 }}>{conv.userName}</p>
+            <p style={{ fontSize: 12, color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{conv.lastMessage}</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+            <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{timeAgo(conv.lastAt)}</span>
+            <ChevronRight className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+          </div>
+        </button>
+      ))}
     </div>
   )
 }
@@ -500,24 +549,17 @@ export default function CommunityPage() {
       const res = await fetch('/api/community/posts')
       const { posts: data } = await res.json()
       setPosts(data ?? [])
-    } catch {} finally {
-      setFeedLoading(false)
-    }
+    } catch {} finally { setFeedLoading(false) }
   }, [])
 
   useEffect(() => { loadFeed() }, [loadFeed])
 
   const handleLike = async (postId: string) => {
     if (!currentEmail) return
-    // Optimistic update
     setPosts(prev => prev.map(p => {
       if (p.id !== postId) return p
       const liked = p.likedBy.includes(currentEmail)
-      return {
-        ...p,
-        likedBy: liked ? p.likedBy.filter(u => u !== currentEmail) : [...p.likedBy, currentEmail],
-        likeCount: liked ? p.likeCount - 1 : p.likeCount + 1,
-      }
+      return { ...p, likedBy: liked ? p.likedBy.filter(u => u !== currentEmail) : [...p.likedBy, currentEmail], likeCount: liked ? p.likeCount - 1 : p.likeCount + 1 }
     }))
     await fetch(`/api/community/posts/${postId}/like`, { method: 'POST' })
   }
@@ -534,107 +576,119 @@ export default function CommunityPage() {
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ background: 'var(--color-bg)' }}>
-      <TopBar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        {/* Header */}
-        <div style={{ padding: '20px 24px 0', borderBottom: '0.5px solid var(--color-border)' }}>
-          <div style={{ maxWidth: 960, margin: '0 auto' }}>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.03em', marginBottom: 16 }}>
-              Community
-            </h1>
-            {/* Tabs */}
-            <div style={{ display: 'flex', gap: 2 }}>
-              {([
-                { id: 'feed', label: 'Feed', Icon: Rss },
-                { id: 'messages', label: 'Messages', Icon: MessageCircle },
-              ] as const).map(({ id, label, Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setTab(id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
-                    borderRadius: '10px 10px 0 0', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600,
-                    background: tab === id ? 'var(--color-surface)' : 'none',
-                    color: tab === id ? 'var(--color-text)' : 'var(--color-text-muted)',
-                    borderBottom: tab === id ? '2px solid #6366f1' : '2px solid transparent',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--color-bg)', overflow: 'hidden' }}>
+      {/* TopBar — hidden on feed tab to maximize video space */}
+      {tab !== 'feed' && <TopBar />}
 
-        {/* Content */}
-        <div style={{ flex: 1, overflowY: tab === 'feed' ? 'auto' : 'hidden', minHeight: 0 }}>
-          <div style={{ maxWidth: 960, margin: '0 auto', padding: tab === 'feed' ? '24px' : 0, height: tab === 'messages' ? '100%' : 'auto' }}>
-            <AnimatePresence mode="wait">
-              {tab === 'feed' ? (
-                <motion.div key="feed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  {feedLoading ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
-                      {[0, 1, 2, 3, 4, 5].map(i => (
-                        <div key={i} style={{ background: 'var(--color-surface)', border: '0.5px solid var(--color-border)', borderRadius: 20, overflow: 'hidden' }}>
-                          <motion.div animate={{ opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }}
-                            style={{ aspectRatio: '9/16', maxHeight: 420, background: 'var(--color-surface-elevated)' }} />
-                          <div style={{ padding: 14 }}>
-                            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                              <motion.div animate={{ opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }}
-                                style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--color-surface-elevated)', flexShrink: 0 }} />
-                              <div style={{ flex: 1 }}>
-                                <motion.div animate={{ opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }}
-                                  style={{ height: 12, width: '60%', borderRadius: 6, background: 'var(--color-surface-elevated)', marginBottom: 6 }} />
-                                <motion.div animate={{ opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }}
-                                  style={{ height: 10, width: '40%', borderRadius: 6, background: 'var(--color-surface-elevated)' }} />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+      {/* Tab bar — overlaid on feed, normal on messages */}
+      <div style={{
+        position: tab === 'feed' ? 'absolute' : 'relative',
+        top: tab === 'feed' ? 0 : 'auto',
+        left: tab === 'feed' ? 0 : 'auto',
+        right: tab === 'feed' ? 0 : 'auto',
+        zIndex: 30,
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 4,
+        padding: tab === 'feed' ? '12px 0 0' : '0 20px',
+        borderBottom: tab === 'feed' ? 'none' : '0.5px solid var(--color-border)',
+        background: tab === 'feed' ? 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)' : 'transparent',
+        backdropFilter: tab === 'feed' ? 'none' : undefined,
+      }}>
+        {([
+          { id: 'feed' as const, label: 'Feed', Icon: Rss },
+          { id: 'messages' as const, label: 'Messages', Icon: MessageCircle },
+        ]).map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: tab === 'feed' ? '6px 14px' : '10px 16px',
+              borderRadius: tab === 'feed' ? 999 : '10px 10px 0 0',
+              border: tab === 'feed' ? `1.5px solid ${id === tab ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)'}` : 'none',
+              cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
+              background: tab === 'feed'
+                ? (id === tab ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.25)')
+                : 'none',
+              color: tab === 'feed'
+                ? (id === tab ? '#fff' : 'rgba(255,255,255,0.6)')
+                : (id === tab ? 'var(--color-text)' : 'var(--color-text-muted)'),
+              backdropFilter: tab === 'feed' ? 'blur(8px)' : undefined,
+              borderBottom: tab !== 'feed' && id === tab ? '2px solid #6366f1' : (tab !== 'feed' ? '2px solid transparent' : undefined),
+            }}
+          >
+            <Icon className="w-3.5 h-3.5" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+        <AnimatePresence mode="wait">
+          {tab === 'feed' ? (
+            <motion.div
+              key="feed"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: 'absolute', inset: 0 }}
+            >
+              {feedLoading ? (
+                <div style={{ height: '100%', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      {[0, 1, 2].map(i => (
+                        <motion.div key={i} animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }}
+                          style={{ width: 10, height: 10, borderRadius: '50%', background: '#6366f1' }} />
                       ))}
                     </div>
-                  ) : posts.length === 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', gap: 16, textAlign: 'center' }}>
-                      <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Users className="w-8 h-8" style={{ color: '#6366f1' }} />
-                      </div>
-                      <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.03em' }}>Be the first to share</h2>
-                      <p style={{ fontSize: 14, color: 'var(--color-text-muted)', maxWidth: 320, lineHeight: 1.65 }}>
-                        No community videos yet. Go to My Videos and click Share to add your first post.
-                      </p>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
-                      {posts.map(post => (
-                        <VideoCard
-                          key={post.id}
-                          post={post}
-                          currentUserEmail={currentEmail}
-                          onLike={handleLike}
-                          onMessage={handleMessage}
-                          onDelete={handleDelete}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
+                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Loading feed…</p>
+                  </div>
+                </div>
+              ) : posts.length === 0 ? (
+                <div style={{ height: '100%', background: 'var(--color-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '0 32px', textAlign: 'center' }}>
+                  <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Users className="w-8 h-8" style={{ color: '#6366f1' }} />
+                  </div>
+                  <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.03em' }}>Be the first to share</h2>
+                  <p style={{ fontSize: 14, color: 'var(--color-text-muted)', maxWidth: 300, lineHeight: 1.65 }}>
+                    No community videos yet. Go to My Videos and click Share to add your first post to the feed.
+                  </p>
+                </div>
               ) : (
-                <motion.div key="messages" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ height: '100%' }}>
-                  <MessagesTab
-                    currentUserEmail={currentEmail}
-                    currentUserName={currentName}
-                    currentUserAvatar={currentAvatar}
-                    initialUserId={msgUserId}
-                    initialUserName={msgUserName}
-                  />
-                </motion.div>
+                /* TikTok scroll feed */
+                <div style={{ height: '100%', overflowY: 'scroll', scrollSnapType: 'y mandatory', scrollBehavior: 'smooth' }}>
+                  {posts.map((post, i) => (
+                    <VideoSlide
+                      key={post.id}
+                      post={post}
+                      currentUserEmail={currentEmail}
+                      onLike={handleLike}
+                      onMessage={handleMessage}
+                      onDelete={handleDelete}
+                      index={i}
+                      total={posts.length}
+                    />
+                  ))}
+                </div>
               )}
-            </AnimatePresence>
-          </div>
-        </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="messages"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: 'absolute', inset: 0 }}
+            >
+              <MessagesTab
+                currentUserEmail={currentEmail}
+                currentUserName={currentName}
+                currentUserAvatar={currentAvatar}
+                initialUserId={msgUserId}
+                initialUserName={msgUserName}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )
