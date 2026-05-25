@@ -593,7 +593,7 @@ const QUICK_ACTIONS = [
   { label: 'Create Video', href: '/dashboard/videos', Icon: Video, color: '#6366f1', bg: 'rgba(99,102,241,0.1)', border: 'rgba(99,102,241,0.25)' },
   { label: 'Generate Ideas', href: '#ideas', Icon: Sparkles, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.25)' },
   { label: 'Analyze Website', href: '/dashboard/website', Icon: Globe, color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)' },
-  { label: 'Community', href: '/dashboard/community', Icon: Users, color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)', border: 'rgba(14,165,233,0.25)' },
+  { label: 'Feed', href: '/dashboard/feed', Icon: Users, color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)', border: 'rgba(14,165,233,0.25)' },
   { label: 'Best Time', href: '#schedule', Icon: Zap, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
 ]
 

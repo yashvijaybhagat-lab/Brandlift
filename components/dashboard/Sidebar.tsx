@@ -42,7 +42,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Home', href: '/dashboard', icon: LayoutDashboard },
   { label: 'My Videos', href: '/dashboard/videos', icon: Video },
   { label: 'My Website', href: '/dashboard/website', icon: Globe },
-  { label: 'Community', href: '/dashboard/community', icon: Users },
+  { label: 'Feed', href: '/dashboard/feed', icon: Users },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
