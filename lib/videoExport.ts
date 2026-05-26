@@ -186,13 +186,14 @@ function drawHalation(
 }
 
 /**
- * Film grain — uses a fixed low-res offscreen canvas blended with 'overlay'.
+ * Film grain — uses a relative-sized offscreen canvas blended with 'overlay'.
+ * Relative sizing (w/3, h/3) keeps grain fine at 4K instead of blocky.
  * The `seed` parameter ensures different grain every frame (organic flicker).
  */
 function drawGrain(ctx: CanvasRenderingContext2D, w: number, h: number, amount: number, seed: number) {
   if (amount <= 0) return
-  const GW = 320, GH = 180
-  const intensity = (amount / 100) * 90
+  const GW = Math.max(320, Math.round(w / 3)), GH = Math.max(180, Math.round(h / 3))
+  const intensity = (amount / 100) * 65
   const gc = document.createElement('canvas')
   gc.width = GW; gc.height = GH
   const gctx = gc.getContext('2d', { willReadFrequently: true })!
@@ -210,7 +211,8 @@ function drawGrain(ctx: CanvasRenderingContext2D, w: number, h: number, amount: 
   ctx.save()
   ctx.globalCompositeOperation = 'overlay'
   ctx.globalAlpha = 0.40
-  ctx.imageSmoothingEnabled = false
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
   ctx.drawImage(gc, 0, 0, w, h)
   ctx.restore()
 }
@@ -563,6 +565,12 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
   const report = opts.onProgress ?? (() => {})
   const FRAME_MS = 1000 / FPS
 
+  // Must be created synchronously before any await — browsers suspend AudioContext
+  // created outside a user-gesture activation window.
+  const audioCtx = new AudioContext({ sampleRate: 48000 })
+  await audioCtx.resume()
+  const dest = audioCtx.createMediaStreamDestination()
+
   report(0, 'Fetching clips…')
   const objectUrls: string[] = []
   const clipBlobUrls = await Promise.all(opts.clips.map(async c => {
@@ -583,10 +591,7 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
   canvas.width = w; canvas.height = h
   const ctx = canvas.getContext('2d', { alpha: false })!
 
-  // Audio routing — all clips + music → single destination stream
-  const audioCtx = new AudioContext({ sampleRate: 48000 })
-  const dest = audioCtx.createMediaStreamDestination()
-
+  // Connect video elements to audio graph
   videoEls.forEach(v => {
     v.muted = false
     try {

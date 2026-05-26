@@ -465,7 +465,10 @@ function VideosInner() {
         body: JSON.stringify({ videoUrl: url }),
       })
       if (res.status === 429) { fallbackToScript(); return }
-      if (!res.ok) throw new Error('Transcription start failed')
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error ?? 'Transcription start failed')
+      }
       const data = await res.json()
 
       // Completed within Replicate's wait window
@@ -490,7 +493,8 @@ function VideosInner() {
         if (s.status === 'failed' || s.error) { fallbackToScript(); return }
       }
       fallbackToScript() // 2.5 min timeout
-    } catch {
+    } catch (err) {
+      setTranscribeError(err instanceof Error ? err.message : 'Transcription failed')
       fallbackToScript()
     } finally {
       setTranscribing(false)
@@ -840,7 +844,7 @@ function VideosInner() {
       console.error('[export]', err)
       alert('Export failed — try a shorter clip or reload the page.')
     } finally { setExporting(false); setExportProgress(0); setExportLabel('') }
-  }, [clips, exporting, colorGrade, customColor, grain, selectedMusic, captionsEnabled, captions, captionStyle, captionPos, captionSize, showHook, hookText, showCta, ctaText, transition, transitionDuration, exportQuality, exportAspect])
+  }, [clips, exporting, colorGrade, customColor, grain, letterbox, halation, selectedMusic, captionsEnabled, captions, captionStyle, captionPos, captionSize, showHook, hookText, showCta, ctaText, transition, transitionDuration, exportQuality, exportAspect])
 
   const reset = () => {
     setStage('script'); setUploadProgress(0); setErrorMsg(''); setClips([]); setActiveClipId(null)
@@ -1466,6 +1470,12 @@ function VideosInner() {
                     if (!videoRef.current || !activeClip) return
                     const dur = videoRef.current.duration
                     setClips(prev => prev.map(c => c.id === activeClip.id ? { ...c, duration: dur } : c))
+                    const vw = videoRef.current.videoWidth
+                    const vh = videoRef.current.videoHeight
+                    if (vw && vh) {
+                      const r = vw / vh
+                      setExportAspect(r < 0.8 ? '9:16' : r > 1.2 ? '16:9' : '1:1')
+                    }
                   }} />
 
                 {/* Color overlay */}

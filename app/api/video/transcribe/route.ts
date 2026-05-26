@@ -8,8 +8,6 @@ import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
-const WHISPER_VERSION = '4d50797290df275329f202e48c76360b3f22b08d28c196cbc54600319435f8d2'
-
 interface WSegment { start: number; end: number; text: string }
 interface WOutput  { segments?: WSegment[]; transcription?: string; text?: string }
 
@@ -58,7 +56,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const res = await fetch('https://api.replicate.com/v1/predictions', {
+    const res = await fetch('https://api.replicate.com/v1/models/openai/whisper/predictions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}`,
@@ -66,7 +64,6 @@ export async function POST(request: NextRequest) {
         'Prefer': 'wait=25',
       },
       body: JSON.stringify({
-        version: WHISPER_VERSION,
         input: { audio: videoUrl, model: 'base', word_timestamps: true, language: 'en' },
       }),
     })

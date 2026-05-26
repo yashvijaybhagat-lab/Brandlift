@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { TrendingUp, Eye, Video, Lightbulb, BarChart2, X, Clock, Calendar, CheckCircle2, Circle, Zap, Sparkles, Activity, Globe, Users, Repeat2, CalendarDays, HelpCircle } from 'lucide-react'
+import { TrendingUp, Eye, Video, Lightbulb, BarChart2, X, Clock, Calendar, CheckCircle2, Circle, Zap, Sparkles, Activity, Globe, Users, Repeat2, CalendarDays, HelpCircle, Wand2 } from 'lucide-react'
 import { TopBar } from '@/components/dashboard/TopBar'
 import { ContentIdeasFeed, type ContentIdea } from '@/components/dashboard/ContentIdeasFeed'
 
@@ -596,7 +596,8 @@ const QUICK_ACTIONS = [
   { label: '7-Day Planner', href: '/dashboard/planner',     Icon: CalendarDays, color: '#22c55e', bg: 'rgba(34,197,94,0.1)',  border: 'rgba(34,197,94,0.25)'  },
   { label: 'Feed',          href: '/dashboard/feed',        Icon: Users,        color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)', border: 'rgba(14,165,233,0.25)' },
   { label: 'Analyze Website', href: '/dashboard/website',   Icon: Globe,        color: '#ef4444', bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.25)'  },
-  { label: 'FAQ',            href: '/dashboard/faq',       Icon: HelpCircle,   color: '#818cf8', bg: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)' },
+  { label: 'AI Studio',      href: '/dashboard/higgsfield', Icon: Wand2,        color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)' },
+  { label: 'FAQ',            href: '/dashboard/faq',        Icon: HelpCircle,   color: '#818cf8', bg: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)' },
 ]
 
 function QuickActionsBar() {

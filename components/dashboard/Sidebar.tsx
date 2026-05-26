@@ -16,6 +16,7 @@ import {
   Repeat2,
   CalendarDays,
   HelpCircle,
+  Wand2,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
@@ -49,6 +50,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Repurpose',   href: '/dashboard/repurpose',  icon: Repeat2 },
   { label: 'Viral Score', href: '/dashboard/viral-score',icon: Zap },
   { label: 'Planner',     href: '/dashboard/planner',    icon: CalendarDays },
+  { label: 'AI Studio',   href: '/dashboard/higgsfield',  icon: Wand2 },
   { label: 'FAQ',         href: '/dashboard/faq',        icon: HelpCircle },
   { label: 'Settings',    href: '/dashboard/settings',   icon: Settings },
 ]
