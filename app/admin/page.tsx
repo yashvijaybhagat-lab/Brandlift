@@ -366,10 +366,11 @@ function OverviewTab({ beta, headers, showToast }: { beta: ReturnType<typeof use
         <p style={label}>Quick Links</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
           {[
-            { href: '/dashboard',         label: '⬒ Dashboard' },
-            { href: '/dashboard/videos',  label: '▶ Video Studio' },
-            { href: '/',                  label: '◇ Homepage' },
-            { href: '/api/admin/health',  label: '◉ Raw Health JSON ↗' },
+            { href: '/dashboard',              label: '⬒ Dashboard' },
+            { href: '/dashboard/videos',       label: '▶ Video Studio' },
+            { href: '/dashboard/higgsfield',   label: '✦ AI Video Studio' },
+            { href: '/',                       label: '◇ Homepage' },
+            { href: '/api/admin/health',       label: '◉ Raw Health JSON ↗' },
           ].map(l => (
             <a key={l.href} href={l.href} style={{ ...btn(true, 'ghost'), textDecoration: 'none', display: 'inline-block', fontSize: 12 }}>{l.label}</a>
           ))}
