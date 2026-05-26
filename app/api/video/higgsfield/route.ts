@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { founderRequired } from '@/lib/founderAuth'
+import { getServerSession } from 'next-auth'
 import { hfStartImage, hfStartVideo } from '@/lib/higgsfield'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const auth = founderRequired(req)
-  if (!auth.authorized) {
-    return NextResponse.json({ error: 'Founder access required' }, { status: 403 })
+  const session = await getServerSession()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Sign in to use AI Video Studio' }, { status: 401 })
   }
   if (!process.env.HIGGSFIELD_CREDENTIALS) {
-    return NextResponse.json({ error: 'Higgsfield not configured — add HIGGSFIELD_CREDENTIALS to env' }, { status: 503 })
+    return NextResponse.json({ error: 'Higgsfield not configured' }, { status: 503 })
   }
 
   const { mode, prompt, imageUrl, aspect = '9:16' } = await req.json()

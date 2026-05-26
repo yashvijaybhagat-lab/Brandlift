@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { founderRequired } from '@/lib/founderAuth'
+import { getServerSession } from 'next-auth'
 import { hfGetStatus } from '@/lib/higgsfield'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const auth = founderRequired(req)
-  if (!auth.authorized) {
-    return NextResponse.json({ error: 'Founder access required' }, { status: 403 })
+  const session = await getServerSession()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {
     const data = await hfGetStatus(params.id)

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
-import { founderRequired } from '@/lib/founderAuth'
+import { getServerSession } from 'next-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const auth = founderRequired(req)
-  if (!auth.authorized) {
-    return NextResponse.json({ error: 'Founder access required' }, { status: 403 })
+  const session = await getServerSession()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json({ error: 'Blob storage not configured' }, { status: 503 })

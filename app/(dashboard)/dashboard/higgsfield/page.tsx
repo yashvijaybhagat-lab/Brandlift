@@ -4,14 +4,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { TopBar } from '@/components/dashboard/TopBar'
 import {
   Wand2, Upload, Download, Loader2, CheckCircle2, AlertCircle,
-  ImageIcon, Film, RefreshCw, Copy, Sparkles, Lock,
+  Film, RefreshCw, Copy, Sparkles,
 } from 'lucide-react'
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
-type Mode       = 'auto' | 'upload'
-type Aspect     = '9:16' | '1:1' | '16:9'
-type StepState  = 'idle' | 'uploading' | 'generating-image' | 'animating' | 'done' | 'error'
+type Mode      = 'auto' | 'upload'
+type Aspect    = '9:16' | '1:1' | '16:9'
+type StepState = 'idle' | 'uploading' | 'generating-image' | 'animating' | 'done' | 'error'
 
 interface HistoryItem {
   id: string
@@ -25,9 +25,9 @@ interface HistoryItem {
 /* ─── Constants ──────────────────────────────────────────────────────── */
 
 const ASPECTS: { id: Aspect; label: string; desc: string }[] = [
-  { id: '9:16',  label: '9:16',  desc: 'TikTok · Reels' },
-  { id: '1:1',   label: '1:1',   desc: 'Instagram' },
-  { id: '16:9',  label: '16:9',  desc: 'YouTube' },
+  { id: '9:16', label: '9:16', desc: 'TikTok · Reels' },
+  { id: '1:1',  label: '1:1',  desc: 'Instagram' },
+  { id: '16:9', label: '16:9', desc: 'YouTube' },
 ]
 
 const MOTION_SUGGESTIONS = [
@@ -50,43 +50,30 @@ const SCENE_EXAMPLES = [
 /* ─── Main component ─────────────────────────────────────────────────── */
 
 export default function HiggsfieldPage() {
-  /* Founder gate */
-  const [founderCode, setFounderCode]       = useState('')
-  const [codeInput,   setCodeInput]         = useState('')
-  const [gateError,   setGateError]         = useState('')
-  const [unlocked,    setUnlocked]          = useState(false)
-
   /* Inputs */
-  const [mode,        setMode]              = useState<Mode>('auto')
-  const [scenePrompt, setScenePrompt]       = useState('')
-  const [motionPrompt,setMotionPrompt]      = useState('')
-  const [aspect,      setAspect]            = useState<Aspect>('9:16')
-  const [uploadFile,  setUploadFile]        = useState<File | null>(null)
-  const [uploadPreview, setUploadPreview]   = useState<string | null>(null)
+  const [mode,          setMode]         = useState<Mode>('auto')
+  const [scenePrompt,   setScenePrompt]  = useState('')
+  const [motionPrompt,  setMotionPrompt] = useState('')
+  const [aspect,        setAspect]       = useState<Aspect>('9:16')
+  const [uploadFile,    setUploadFile]   = useState<File | null>(null)
+  const [uploadPreview, setUploadPreview]= useState<string | null>(null)
 
   /* Generation state */
-  const [step,        setStep]              = useState<StepState>('idle')
-  const [stepLabel,   setStepLabel]         = useState('')
-  const [genImage,    setGenImage]          = useState<string | null>(null)
-  const [genVideo,    setGenVideo]          = useState<string | null>(null)
-  const [errorMsg,    setErrorMsg]          = useState('')
-  const [imageReqId,  setImageReqId]        = useState<string | null>(null)
-  const [videoReqId,  setVideoReqId]        = useState<string | null>(null)
+  const [step,       setStep]      = useState<StepState>('idle')
+  const [stepLabel,  setStepLabel] = useState('')
+  const [genImage,   setGenImage]  = useState<string | null>(null)
+  const [genVideo,   setGenVideo]  = useState<string | null>(null)
+  const [errorMsg,   setErrorMsg]  = useState('')
 
   /* History */
-  const [history,     setHistory]           = useState<HistoryItem[]>([])
+  const [history, setHistory] = useState<HistoryItem[]>([])
 
   const dropRef   = useRef<HTMLDivElement>(null)
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  /* ── Load code from sessionStorage on mount ── */
   useEffect(() => {
-    const saved = sessionStorage.getItem('hf_founder_code')
-    if (saved) { setFounderCode(saved); setUnlocked(true) }
-    const savedHistory = sessionStorage.getItem('hf_history')
-    if (savedHistory) {
-      try { setHistory(JSON.parse(savedHistory)) } catch {}
-    }
+    const saved = sessionStorage.getItem('hf_history')
+    if (saved) { try { setHistory(JSON.parse(saved)) } catch {} }
   }, [])
 
   const saveHistory = (item: HistoryItem) => {
@@ -97,98 +84,68 @@ export default function HiggsfieldPage() {
     })
   }
 
-  /* ── Unlock handler ── */
-  const handleUnlock = () => {
-    const code = codeInput.trim()
-    if (!code) { setGateError('Enter your founder code'); return }
-    setFounderCode(code)
-    setUnlocked(true)
-    sessionStorage.setItem('hf_founder_code', code)
-    setGateError('')
-  }
-
-  /* ── Founder API helper ── */
-  const hfFetch = useCallback((url: string, opts?: RequestInit) => {
-    return fetch(url, {
-      ...opts,
-      headers: {
-        ...(opts?.headers ?? {}),
-        'x-founder-code': founderCode,
-      },
-    })
-  }, [founderCode])
-
   /* ── Poll a job until done ── */
-  const pollJob = useCallback((requestId: string, type: 'image' | 'video', onDone: (url: string) => void, onFail: (err: string) => void) => {
+  const pollJob = useCallback((
+    requestId: string,
+    type: 'image' | 'video',
+    onDone: (url: string) => void,
+    onFail: (err: string) => void,
+  ) => {
     let attempts = 0
-    const maxAttempts = 120 // 6 min at 3s intervals
 
     const tick = async () => {
       try {
-        const res = await hfFetch(`/api/video/higgsfield/status/${requestId}`)
-        if (res.status === 403) { onFail('Invalid founder code'); return }
+        const res  = await fetch(`/api/video/higgsfield/status/${requestId}`)
         const data = await res.json()
-        const status = data.status
 
-        if (status === 'completed') {
-          const url = type === 'image'
-            ? data.images?.[0]?.url
-            : data.video?.url
+        if (data.status === 'completed') {
+          const url = type === 'image' ? data.images?.[0]?.url : data.video?.url
           if (url) { onDone(url); return }
-          onFail('No output URL in response')
-          return
+          onFail('No output URL in response'); return
         }
-        if (status === 'failed' || status === 'nsfw') {
-          onFail(data.error ?? `Generation ${status}`)
-          return
+        if (data.status === 'failed' || data.status === 'nsfw') {
+          onFail(data.error ?? `Generation ${data.status}`); return
         }
-      } catch (e) {
-        // network hiccup — keep polling
-      }
+      } catch { /* network hiccup — keep polling */ }
 
-      attempts++
-      if (attempts >= maxAttempts) { onFail('Timed out after 6 minutes'); return }
+      if (++attempts >= 120) { onFail('Timed out after 6 minutes'); return }
       pollTimer.current = setTimeout(tick, 3000)
     }
 
     pollTimer.current = setTimeout(tick, 3000)
-  }, [hfFetch])
+  }, [])
 
   /* ── Generate ── */
   const handleGenerate = useCallback(async () => {
     if (!scenePrompt.trim()) return
     if (pollTimer.current) clearTimeout(pollTimer.current)
 
-    setStep('idle'); setGenImage(null); setGenVideo(null)
-    setImageReqId(null); setVideoReqId(null); setErrorMsg('')
+    setStep('idle'); setGenImage(null); setGenVideo(null); setErrorMsg('')
 
     const motion = motionPrompt.trim() || 'Cinematic slow push in, shallow depth of field, 4K quality'
     let sourceImageUrl: string | null = null
 
-    /* ── Mode: upload ── */
+    /* Upload mode — upload image first */
     if (mode === 'upload') {
       if (!uploadFile) { setErrorMsg('Upload an image first'); return }
-
       setStep('uploading'); setStepLabel('Uploading image…')
 
       const form = new FormData()
       form.append('file', uploadFile)
-      const upRes = await hfFetch('/api/video/higgsfield/upload', { method: 'POST', body: form })
+      const upRes = await fetch('/api/video/higgsfield/upload', { method: 'POST', body: form })
       if (!upRes.ok) {
         const d = await upRes.json()
-        setStep('error'); setErrorMsg(d.error ?? 'Upload failed')
-        return
+        setStep('error'); setErrorMsg(d.error ?? 'Upload failed'); return
       }
-      const { url } = await upRes.json()
-      sourceImageUrl = url
-      setGenImage(url)
+      sourceImageUrl = (await upRes.json()).url
+      setGenImage(sourceImageUrl)
     }
 
-    /* ── Mode: auto — generate image first ── */
+    /* Auto mode — generate scene image first */
     if (mode === 'auto') {
       setStep('generating-image'); setStepLabel('Generating scene with Flux Pro…')
 
-      const res = await hfFetch('/api/video/higgsfield', {
+      const res  = await fetch('/api/video/higgsfield', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: 'image', prompt: scenePrompt.trim(), aspect }),
@@ -196,28 +153,21 @@ export default function HiggsfieldPage() {
       const data = await res.json()
 
       if (!res.ok || !data.requestId) {
-        if (res.status === 403) setGateError('Invalid founder code — check your code and try again')
-        setStep('error'); setErrorMsg(data.error ?? 'Image generation failed')
-        return
+        setStep('error'); setErrorMsg(data.error ?? 'Image generation failed'); return
       }
-      setImageReqId(data.requestId)
 
-      await new Promise<void>((resolve, reject) => {
-        pollJob(data.requestId, 'image',
-          (url) => { setGenImage(url); sourceImageUrl = url; resolve() },
-          (err) => { reject(new Error(err)) }
-        )
-      }).catch(err => {
-        setStep('error'); setErrorMsg(err.message); return null
+      const imageUrl = await new Promise<string | null>(resolve => {
+        pollJob(data.requestId, 'image', resolve, err => { setStep('error'); setErrorMsg(err); resolve(null) })
       })
-
-      if (!sourceImageUrl) return
+      if (!imageUrl) return
+      setGenImage(imageUrl)
+      sourceImageUrl = imageUrl
     }
 
-    /* ── Animate the image with DoP ── */
+    /* Animate with DoP */
     setStep('animating'); setStepLabel('Animating with Higgsfield DoP…')
 
-    const vidRes = await hfFetch('/api/video/higgsfield', {
+    const vidRes  = await fetch('/api/video/higgsfield', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mode: 'video', prompt: motion, imageUrl: sourceImageUrl, aspect }),
@@ -225,30 +175,16 @@ export default function HiggsfieldPage() {
     const vidData = await vidRes.json()
 
     if (!vidRes.ok || !vidData.requestId) {
-      setStep('error'); setErrorMsg(vidData.error ?? 'Video generation failed')
-      return
+      setStep('error'); setErrorMsg(vidData.error ?? 'Video generation failed'); return
     }
-    setVideoReqId(vidData.requestId)
 
-    pollJob(vidData.requestId, 'video',
-      (url) => {
-        setGenVideo(url)
-        setStep('done')
-        setStepLabel('')
-        if (sourceImageUrl) {
-          saveHistory({
-            id: vidData.requestId,
-            prompt: scenePrompt.trim(),
-            imageUrl: sourceImageUrl,
-            videoUrl: url,
-            aspect,
-            createdAt: Date.now(),
-          })
-        }
-      },
-      (err) => { setStep('error'); setErrorMsg(err) }
-    )
-  }, [mode, scenePrompt, motionPrompt, aspect, uploadFile, hfFetch, pollJob])
+    pollJob(vidData.requestId, 'video', url => {
+      setGenVideo(url); setStep('done'); setStepLabel('')
+      if (sourceImageUrl) {
+        saveHistory({ id: vidData.requestId, prompt: scenePrompt.trim(), imageUrl: sourceImageUrl, videoUrl: url, aspect, createdAt: Date.now() })
+      }
+    }, err => { setStep('error'); setErrorMsg(err) })
+  }, [mode, scenePrompt, motionPrompt, aspect, uploadFile, pollJob])
 
   /* ── File drop ── */
   const handleDrop = (e: React.DragEvent) => {
@@ -256,71 +192,18 @@ export default function HiggsfieldPage() {
     const file = e.dataTransfer.files[0]
     if (file?.type.startsWith('image/')) { setUploadFile(file); setUploadPreview(URL.createObjectURL(file)) }
   }
-
   const handleFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) { setUploadFile(file); setUploadPreview(URL.createObjectURL(file)) }
   }
 
-  const isGenerating = step === 'generating-image' || step === 'animating' || step === 'uploading'
+  const isGenerating = ['uploading', 'generating-image', 'animating'].includes(step)
 
   const reset = () => {
     if (pollTimer.current) clearTimeout(pollTimer.current)
-    setStep('idle'); setGenImage(null); setGenVideo(null)
-    setImageReqId(null); setVideoReqId(null); setErrorMsg('')
-    setStepLabel('')
+    setStep('idle'); setGenImage(null); setGenVideo(null); setErrorMsg(''); setStepLabel('')
   }
 
-  /* ── Founder gate ── */
-  if (!unlocked) {
-    return (
-      <div className="flex flex-col h-screen" style={{ background: '#0c0c0e' }}>
-        <TopBar />
-        <div className="flex flex-1 items-center justify-center p-6">
-          <div className="w-full max-w-sm flex flex-col gap-6"
-            style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 32 }}>
-            <div className="flex flex-col items-center gap-3 text-center">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                style={{ background: 'rgba(99,102,241,0.12)', border: '0.5px solid rgba(99,102,241,0.25)' }}>
-                <Lock className="w-6 h-6 text-[#6366f1]" />
-              </div>
-              <div>
-                <p style={{ fontSize: 18, fontWeight: 700, color: '#FAFAFA' }}>Founder Access Only</p>
-                <p style={{ fontSize: 13, color: '#52525B', marginTop: 4 }}>Enter your founder code to access Higgsfield AI video generation</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <input
-                type="text"
-                placeholder="BL-YB-FOUNDER-XXXX"
-                value={codeInput}
-                onChange={e => { setCodeInput(e.target.value); setGateError('') }}
-                onKeyDown={e => e.key === 'Enter' && handleUnlock()}
-                autoFocus
-                className="w-full px-4 py-3 rounded-xl text-[14px] font-mono outline-none"
-                style={{
-                  background: '#18181C',
-                  border: gateError ? '1px solid rgba(239,68,68,0.5)' : '0.5px solid rgba(255,255,255,0.08)',
-                  color: '#FAFAFA',
-                }}
-              />
-              {gateError && <p style={{ fontSize: 12, color: '#ef4444' }}>{gateError}</p>}
-              <button
-                onClick={handleUnlock}
-                className="w-full py-3 rounded-xl font-semibold text-[14px] transition-opacity hover:opacity-90"
-                style={{ background: '#6366f1', color: '#fff' }}
-              >
-                Unlock Studio
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  /* ── Main UI ── */
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#0c0c0e' }}>
       <TopBar />
@@ -330,7 +213,6 @@ export default function HiggsfieldPage() {
         <div className="w-[380px] flex-shrink-0 flex flex-col gap-4 p-5 overflow-y-auto"
           style={{ borderRight: '0.5px solid rgba(255,255,255,0.06)' }}>
 
-          {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -338,11 +220,10 @@ export default function HiggsfieldPage() {
                 <Sparkles className="w-4 h-4 text-[#6366f1]" />
               </div>
               <div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: '#FAFAFA' }}>Higgsfield Studio</p>
-                <p style={{ fontSize: 11, color: '#52525B' }}>DoP cinematic AI · Founder only</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: '#FAFAFA' }}>AI Video Studio</p>
+                <p style={{ fontSize: 11, color: '#52525B' }}>Higgsfield DoP · cinematic AI</p>
               </div>
             </div>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#6366f1', background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.25)', borderRadius: 6, padding: '2px 8px', letterSpacing: '0.06em' }}>FOUNDER</span>
           </div>
 
           {/* Mode */}
@@ -350,10 +231,7 @@ export default function HiggsfieldPage() {
             {(['auto', 'upload'] as Mode[]).map(m => (
               <button key={m} onClick={() => setMode(m)}
                 className="flex-1 py-2 rounded-lg text-[13px] font-semibold transition-all duration-150"
-                style={{
-                  background: mode === m ? '#6366f1' : 'transparent',
-                  color: mode === m ? '#fff' : '#52525B',
-                }}>
+                style={{ background: mode === m ? '#6366f1' : 'transparent', color: mode === m ? '#fff' : '#52525B' }}>
                 {m === 'auto' ? 'Text → Video' : 'Image → Video'}
               </button>
             ))}
@@ -362,24 +240,15 @@ export default function HiggsfieldPage() {
           {/* Scene prompt */}
           <div className="flex flex-col gap-1.5">
             <label style={{ fontSize: 12, fontWeight: 600, color: '#71717A' }}>
-              {mode === 'auto' ? 'Scene description' : 'Camera motion prompt'}
+              {mode === 'auto' ? 'Scene description' : 'Camera motion'}
             </label>
-            <textarea
-              rows={4}
-              value={scenePrompt}
-              onChange={e => setScenePrompt(e.target.value)}
+            <textarea rows={4} value={scenePrompt} onChange={e => setScenePrompt(e.target.value)}
               placeholder={mode === 'auto'
                 ? SCENE_EXAMPLES[Math.floor(Date.now() / 30000) % SCENE_EXAMPLES.length]
-                : MOTION_SUGGESTIONS[Math.floor(Date.now() / 30000) % MOTION_SUGGESTIONS.length]}
+                : MOTION_SUGGESTIONS[0]}
               className="w-full resize-none px-3.5 py-2.5 rounded-xl text-[13px] outline-none"
-              style={{
-                background: '#18181C',
-                border: '0.5px solid rgba(255,255,255,0.07)',
-                color: '#FAFAFA',
-                lineHeight: 1.5,
-              }}
+              style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)', color: '#FAFAFA', lineHeight: 1.5 }}
             />
-            {/* Quick suggestions */}
             <div className="flex flex-wrap gap-1.5">
               {(mode === 'auto' ? SCENE_EXAMPLES : MOTION_SUGGESTIONS).slice(0, 3).map(s => (
                 <button key={s} onClick={() => setScenePrompt(s)}
@@ -391,60 +260,42 @@ export default function HiggsfieldPage() {
             </div>
           </div>
 
-          {/* Motion prompt (auto mode only) */}
+          {/* Motion prompt (auto mode) */}
           {mode === 'auto' && (
             <div className="flex flex-col gap-1.5">
               <label style={{ fontSize: 12, fontWeight: 600, color: '#71717A' }}>Camera motion <span style={{ fontWeight: 400, color: '#3f3f46' }}>(optional)</span></label>
-              <textarea
-                rows={2}
-                value={motionPrompt}
-                onChange={e => setMotionPrompt(e.target.value)}
+              <textarea rows={2} value={motionPrompt} onChange={e => setMotionPrompt(e.target.value)}
                 placeholder="Slow cinematic push in, shallow depth of field…"
                 className="w-full resize-none px-3.5 py-2.5 rounded-xl text-[13px] outline-none"
-                style={{
-                  background: '#18181C',
-                  border: '0.5px solid rgba(255,255,255,0.07)',
-                  color: '#FAFAFA',
-                  lineHeight: 1.5,
-                }}
+                style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)', color: '#FAFAFA', lineHeight: 1.5 }}
               />
             </div>
           )}
 
-          {/* Image upload (upload mode) */}
+          {/* Image upload */}
           {mode === 'upload' && (
             <div className="flex flex-col gap-1.5">
               <label style={{ fontSize: 12, fontWeight: 600, color: '#71717A' }}>Source image</label>
-              <div
-                ref={dropRef}
-                onDragOver={e => e.preventDefault()}
-                onDrop={handleDrop}
+              <div ref={dropRef} onDragOver={e => e.preventDefault()} onDrop={handleDrop}
                 onClick={() => document.getElementById('hf-img-input')?.click()}
                 className="relative flex flex-col items-center justify-center gap-2 rounded-xl cursor-pointer transition-all"
-                style={{
-                  height: 160,
-                  border: '1.5px dashed rgba(99,102,241,0.3)',
-                  background: uploadPreview ? 'transparent' : 'rgba(99,102,241,0.04)',
-                  overflow: 'hidden',
-                }}>
-                {uploadPreview ? (
+                style={{ height: 160, border: '1.5px dashed rgba(99,102,241,0.3)', background: uploadPreview ? 'transparent' : 'rgba(99,102,241,0.04)', overflow: 'hidden' }}>
+                {uploadPreview
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={uploadPreview} alt="preview" className="w-full h-full object-cover" />
-                ) : (
-                  <>
-                    <Upload className="w-7 h-7 text-[#3f3f46]" />
-                    <p style={{ fontSize: 12, color: '#52525B', textAlign: 'center' }}>
-                      Drop an image or click to browse<br />
-                      <span style={{ color: '#3f3f46' }}>JPEG · PNG · WebP · max 20 MB</span>
-                    </p>
-                  </>
-                )}
+                  ? <img src={uploadPreview} alt="preview" className="w-full h-full object-cover" />
+                  : <>
+                      <Upload className="w-7 h-7 text-[#3f3f46]" />
+                      <p style={{ fontSize: 12, color: '#52525B', textAlign: 'center' }}>
+                        Drop an image or click to browse<br />
+                        <span style={{ color: '#3f3f46' }}>JPEG · PNG · WebP · max 20 MB</span>
+                      </p>
+                    </>}
                 <input id="hf-img-input" type="file" accept="image/*" className="hidden" onChange={handleFilePick} />
               </div>
               {uploadFile && (
                 <button onClick={() => { setUploadFile(null); setUploadPreview(null) }}
                   className="text-[11px] text-[#52525B] hover:text-[#FAFAFA] transition-colors self-end">
-                  Remove image
+                  Remove
                 </button>
               )}
             </div>
@@ -470,8 +321,7 @@ export default function HiggsfieldPage() {
           </div>
 
           {/* Generate button */}
-          <button
-            onClick={isGenerating ? undefined : handleGenerate}
+          <button onClick={isGenerating ? undefined : handleGenerate}
             disabled={isGenerating || !scenePrompt.trim() || (mode === 'upload' && !uploadFile)}
             className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-semibold text-[14px] transition-all"
             style={{
@@ -500,16 +350,14 @@ export default function HiggsfieldPage() {
         {/* ── Right panel: output ── */}
         <div className="flex-1 flex flex-col overflow-y-auto p-6 gap-6">
 
-          {/* Progress steps */}
           {(isGenerating || step === 'done') && (
             <div className="flex items-center gap-3">
-              <StepChip label="Scene" done={!!genImage} active={step === 'generating-image' || step === 'uploading'} skip={mode === 'upload'} />
+              <StepChip label="Scene"   done={!!genImage}    active={step === 'generating-image' || step === 'uploading'} skip={mode === 'upload'} />
               <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
               <StepChip label="Animate" done={step === 'done'} active={step === 'animating'} />
             </div>
           )}
 
-          {/* Result */}
           {step === 'done' && genVideo ? (
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
@@ -520,29 +368,24 @@ export default function HiggsfieldPage() {
               </div>
 
               <div className="flex gap-4 flex-wrap">
-                {/* Video */}
                 <div className="flex flex-col gap-2" style={{ flex: '1 1 320px', maxWidth: 480 }}>
                   <p style={{ fontSize: 11, fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Video</p>
-                  <video
-                    src={genVideo} controls autoPlay loop playsInline
-                    className="rounded-2xl w-full"
-                    style={{ border: '0.5px solid rgba(255,255,255,0.08)', maxHeight: 480, objectFit: 'contain', background: '#0c0c0e' }}
-                  />
+                  <video src={genVideo} controls autoPlay loop playsInline className="rounded-2xl w-full"
+                    style={{ border: '0.5px solid rgba(255,255,255,0.08)', maxHeight: 480, objectFit: 'contain', background: '#0c0c0e' }} />
                   <div className="flex gap-2">
                     <a href={genVideo} download={`brandlift-${Date.now()}.mp4`} target="_blank" rel="noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-opacity hover:opacity-90"
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold hover:opacity-90 transition-opacity"
                       style={{ background: '#6366f1', color: '#fff' }}>
-                      <Download className="w-4 h-4" />Download Video
+                      <Download className="w-4 h-4" />Download
                     </a>
                     <button onClick={() => navigator.clipboard.writeText(genVideo)}
-                      className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-colors hover:bg-[#18181C]"
+                      className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold hover:bg-[#18181C] transition-colors"
                       style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)', color: '#71717A' }}>
                       <Copy className="w-4 h-4" />URL
                     </button>
                   </div>
                 </div>
 
-                {/* Generated image */}
                 {genImage && (
                   <div className="flex flex-col gap-2" style={{ flex: '0 0 auto', width: 200 }}>
                     <p style={{ fontSize: 11, fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Scene frame</p>
@@ -550,7 +393,7 @@ export default function HiggsfieldPage() {
                     <img src={genImage} alt="Generated scene" className="rounded-2xl w-full"
                       style={{ border: '0.5px solid rgba(255,255,255,0.08)', maxHeight: 300, objectFit: 'cover' }} />
                     <a href={genImage} download={`brandlift-scene-${Date.now()}.jpg`} target="_blank" rel="noreferrer"
-                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold transition-colors hover:bg-[#18181C]"
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold hover:bg-[#18181C] transition-colors"
                       style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)', color: '#71717A' }}>
                       <Download className="w-3.5 h-3.5" />Image
                     </a>
@@ -558,8 +401,15 @@ export default function HiggsfieldPage() {
                 )}
               </div>
             </div>
-          ) : step === 'idle' && history.length === 0 ? (
-            /* Empty state */
+          ) : isGenerating ? (
+            <div className="flex flex-1 items-center justify-center">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <Loader2 className="w-10 h-10 text-[#6366f1] animate-spin" />
+                <p style={{ fontSize: 14, color: '#71717A' }}>{stepLabel}</p>
+                <p style={{ fontSize: 12, color: '#3f3f46' }}>This typically takes 1–3 minutes</p>
+              </div>
+            </div>
+          ) : history.length === 0 ? (
             <div className="flex flex-1 items-center justify-center">
               <div className="flex flex-col items-center gap-4 text-center max-w-xs">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
@@ -574,15 +424,6 @@ export default function HiggsfieldPage() {
                 </div>
               </div>
             </div>
-          ) : step !== 'done' && step !== 'idle' ? (
-            /* Generating placeholder */
-            <div className="flex flex-1 items-center justify-center">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <Loader2 className="w-10 h-10 text-[#6366f1] animate-spin" />
-                <p style={{ fontSize: 14, color: '#71717A' }}>{stepLabel}</p>
-                <p style={{ fontSize: 12, color: '#3f3f46' }}>This typically takes 1–3 minutes</p>
-              </div>
-            </div>
           ) : null}
 
           {/* History */}
@@ -593,7 +434,7 @@ export default function HiggsfieldPage() {
                 {history.map(h => (
                   <div key={h.id} className="flex flex-col gap-2 rounded-2xl overflow-hidden"
                     style={{ border: '0.5px solid rgba(255,255,255,0.07)', background: '#111113' }}>
-                    <div className="relative" style={{ aspectRatio: h.aspect === '9:16' ? '9/16' : h.aspect === '1:1' ? '1' : '16/9', maxHeight: 220, overflow: 'hidden' }}>
+                    <div className="relative overflow-hidden" style={{ aspectRatio: h.aspect === '9:16' ? '9/16' : h.aspect === '1:1' ? '1' : '16/9', maxHeight: 220 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={h.imageUrl} alt={h.prompt} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
@@ -627,22 +468,16 @@ function StepChip({ label, done, active, skip }: { label: string; done: boolean;
     <div className="flex items-center gap-1.5">
       <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
         style={{
-          background: done ? 'rgba(34,197,94,0.12)' : active ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
-          border: done ? '1px solid rgba(34,197,94,0.4)' : active ? '1px solid rgba(99,102,241,0.5)' : '0.5px solid rgba(255,255,255,0.08)',
+          background: done || skip ? 'rgba(34,197,94,0.12)' : active ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
+          border: done || skip ? '1px solid rgba(34,197,94,0.4)' : active ? '1px solid rgba(99,102,241,0.5)' : '0.5px solid rgba(255,255,255,0.08)',
         }}>
-        {done
+        {done || skip
           ? <CheckCircle2 className="w-3 h-3 text-green-400" />
           : active
             ? <Loader2 className="w-3 h-3 text-[#6366f1] animate-spin" />
-            : skip
-              ? <CheckCircle2 className="w-3 h-3 text-green-400" />
-              : <div className="w-1.5 h-1.5 rounded-full bg-[#3f3f46]" />}
+            : <div className="w-1.5 h-1.5 rounded-full bg-[#3f3f46]" />}
       </div>
-      <span style={{
-        fontSize: 12,
-        fontWeight: 600,
-        color: done ? '#22c55e' : active ? '#818cf8' : '#3f3f46',
-      }}>{label}</span>
+      <span style={{ fontSize: 12, fontWeight: 600, color: done || skip ? '#22c55e' : active ? '#818cf8' : '#3f3f46' }}>{label}</span>
     </div>
   )
 }
