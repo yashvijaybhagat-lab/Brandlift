@@ -7,8 +7,10 @@ const BASE = 'https://platform.higgsfield.ai'
 
 function hfHeaders(): Record<string, string> {
   const creds = process.env.HIGGSFIELD_CREDENTIALS ?? ''
+  // Single token → Bearer; KEY_ID:KEY_SECRET pair → Key
+  const auth = creds.includes(':') ? `Key ${creds}` : `Bearer ${creds}`
   return {
-    'Authorization': `Key ${creds}`,
+    'Authorization': auth,
     'Content-Type': 'application/json',
   }
 }
