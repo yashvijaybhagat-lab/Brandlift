@@ -377,6 +377,8 @@ function VideosInner() {
   const [exporting, setExporting]             = useState(false)
   const [exportProgress, setExportProgress]   = useState(0)
   const [exportLabel, setExportLabel]         = useState('')
+  const [exportedBlobUrl, setExportedBlobUrl] = useState<string | null>(null)
+  const [exportedMime, setExportedMime]       = useState('video/webm')
 
   const activeClip      = clips.find(c => c.id === activeClipId) ?? clips[0] ?? null
   const displayUrl      = activeClip?.url ?? ''
@@ -818,6 +820,7 @@ function VideosInner() {
   const handleExport = useCallback(async () => {
     if (clips.length === 0 || exporting) return
     setExporting(true); setExportProgress(0); setExportLabel('Preparing…')
+    setExportedBlobUrl(null)
     const grade    = GRADES[colorGrade]
     const musicUrl = MUSIC_MOODS.find(m => m.id === selectedMusic)?.url ?? null
     try {
@@ -839,7 +842,11 @@ function VideosInner() {
         aspect:  exportAspect,
         onProgress: (pct, label) => { setExportProgress(pct); setExportLabel(label) },
       })
-      downloadBlob(blob, `brandlift-${Date.now()}.webm`)
+      const filename = `brandlift-${Date.now()}.webm`
+      downloadBlob(blob, filename)
+      const url = URL.createObjectURL(blob)
+      setExportedBlobUrl(url)
+      setExportedMime(blob.type || 'video/webm')
     } catch (err) {
       console.error('[export]', err)
       alert('Export failed — try a shorter clip or reload the page.')
@@ -866,6 +873,7 @@ function VideosInner() {
     setCopyPlatform('tiktok'); setCopyData({}); setCopyLoading(false)
     setPexelsQuery(''); setPexelsResults([]); setPexelsSearching(false); setPexelsTotal(0)
     setActiveQuickLook(null)
+    setExportedBlobUrl(null)
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current.load() }
   }
 
@@ -2450,6 +2458,60 @@ function VideosInner() {
                       )}
                     </div>
                   </>
+                )}
+
+                {/* Social Export Panel — appears after export completes */}
+                {exportedBlobUrl && !exporting && (
+                  <div style={{ marginTop: 4, padding: '16px', borderRadius: 14, background: 'rgba(99,102,241,0.04)', border: '0.5px solid rgba(99,102,241,0.18)' }}>
+                    <div className="flex items-center justify-between mb-3">
+                      <p style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Share to Social</p>
+                      <a
+                        href={exportedBlobUrl}
+                        download={`brandlift-${Date.now()}.webm`}
+                        style={{ fontSize: 11, color: '#52525B', textDecoration: 'none' }}
+                        onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = '#FAFAFA'}
+                        onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = '#52525B'}
+                      >
+                        Download again ↓
+                      </a>
+                    </div>
+                    <p style={{ fontSize: 11, color: '#52525B', marginBottom: 12, lineHeight: 1.5 }}>
+                      Video downloaded — click a platform to open its upload page. Paste your caption from the Copy tab.
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                      {[
+                        { id: 'tiktok',    label: 'TikTok',      tip: '9:16 · 15s–10min', bg: '#010101', border: 'rgba(255,255,255,0.12)', color: '#FAFAFA', url: 'https://www.tiktok.com/upload', icon: '♪' },
+                        { id: 'instagram', label: 'Reels',        tip: '9:16 · up to 90s',  bg: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', border: 'rgba(253,29,29,0.35)', color: '#FAFAFA', url: 'https://www.instagram.com', icon: '◎' },
+                        { id: 'youtube',   label: 'YT Shorts',   tip: '9:16 · under 60s',  bg: '#FF0000', border: 'rgba(255,0,0,0.35)', color: '#FAFAFA', url: 'https://studio.youtube.com', icon: '▶' },
+                        { id: 'twitter',   label: 'X / Twitter', tip: 'Up to 2m 20s',       bg: '#000000', border: 'rgba(255,255,255,0.15)', color: '#FAFAFA', url: 'https://twitter.com/compose/tweet', icon: '✕' },
+                        { id: 'snapchat',  label: 'Snapchat',    tip: 'Spotlight · 9:16',   bg: '#FFFC00', border: 'rgba(0,0,0,0.15)', color: '#000000', url: 'https://www.snapchat.com', icon: '👻' },
+                        { id: 'linkedin',  label: 'LinkedIn',    tip: 'Professional',        bg: '#0A66C2', border: 'rgba(10,102,194,0.5)', color: '#FAFAFA', url: 'https://www.linkedin.com/feed/', icon: 'in' },
+                      ].map(p => (
+                        <a
+                          key={p.id}
+                          href={p.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                            padding: '10px 6px', borderRadius: 10, textDecoration: 'none',
+                            background: p.bg, border: `0.5px solid ${p.border}`,
+                            transition: 'transform 120ms ease, box-shadow 120ms ease',
+                            cursor: 'pointer',
+                          }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 6px 20px rgba(0,0,0,0.4)' }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.transform = ''; (e.currentTarget as HTMLAnchorElement).style.boxShadow = '' }}
+                        >
+                          <span style={{ fontSize: 16, lineHeight: 1 }}>{p.icon}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: p.color, letterSpacing: '-0.01em' }}>{p.label}</span>
+                          <span style={{ fontSize: 9, color: p.id === 'snapchat' ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 1.3 }}>{p.tip}</span>
+                        </a>
+                      ))}
+                    </div>
+                    <p style={{ fontSize: 10, color: '#27272a', marginTop: 10, textAlign: 'center' }}>
+                      Need platform captions? Use the <span style={{ color: '#6366f1' }}>Copy</span> tab → generate post copy
+                    </p>
+                  </div>
                 )}
               </div>
 

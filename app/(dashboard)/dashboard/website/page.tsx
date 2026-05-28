@@ -274,14 +274,30 @@ function ImproveModal({ section, domain, context, onClose }: { section: PageSect
 
 // ─── Redesign Modal ───────────────────────────────────────────
 
-function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose }: {
-  domain: string; analysis: Analysis; h1s: string[]; bodyPreview: string; onClose: () => void
+const INSPIRATION_PRESETS = [
+  { label: 'Stripe',   url: 'stripe.com',   hint: 'Clean, premium fintech' },
+  { label: 'Linear',   url: 'linear.app',   hint: 'Dark, minimal, modern' },
+  { label: 'Vercel',   url: 'vercel.com',   hint: 'Dev-focused, sleek' },
+  { label: 'Notion',   url: 'notion.so',    hint: 'Clean, whitespace-heavy' },
+  { label: 'Framer',   url: 'framer.com',   hint: 'Bold, animated' },
+  { label: 'Apple',    url: 'apple.com',    hint: 'Premium, spacious' },
+  { label: 'Airbnb',   url: 'airbnb.com',   hint: 'Warm, photo-forward' },
+  { label: 'Figma',    url: 'figma.com',    hint: 'Colorful, playful' },
+]
+
+function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromScratch, businessDescription, initialReferenceUrl, initialFeatureRequest }: {
+  domain: string; analysis: Analysis | null; h1s: string[]; bodyPreview: string; onClose: () => void;
+  buildFromScratch?: boolean; businessDescription?: string;
+  initialReferenceUrl?: string; initialFeatureRequest?: string;
 }) {
-  const [colorScheme, setColorScheme] = useState<ColorScheme>('dark')
-  const [device, setDevice]           = useState<DeviceMode>('desktop')
-  const [viewMode, setViewMode]       = useState<'preview'|'code'>('preview')
-  const [githubOpen, setGithubOpen]   = useState(false)
-  const [state, setState]             = useState<RedesignState>({ phase:'idle', html:'', error:'' })
+  const [colorScheme, setColorScheme]   = useState<ColorScheme>('dark')
+  const [device, setDevice]             = useState<DeviceMode>('desktop')
+  const [viewMode, setViewMode]         = useState<'preview'|'code'>('preview')
+  const [githubOpen, setGithubOpen]     = useState(false)
+  const [state, setState]               = useState<RedesignState>({ phase:'idle', html:'', error:'' })
+  const [referenceUrl, setReferenceUrl] = useState(initialReferenceUrl ?? '')
+  const [featureRequest, setFeatureRequest] = useState(initialFeatureRequest ?? '')
+  const [showInspiration, setShowInspiration] = useState(false)
   const abortRef = useRef<AbortController|null>(null)
 
   const generate = useCallback(async (scheme: ColorScheme) => {
@@ -293,7 +309,13 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose }: {
     try {
       const res = await fetch('/api/website/redesign', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ domain, analysis, h1s, bodyPreview, colorScheme: scheme }),
+        body: JSON.stringify({
+          domain, analysis, h1s, bodyPreview, colorScheme: scheme,
+          referenceUrl: referenceUrl.trim(),
+          featureRequest: featureRequest.trim(),
+          buildFromScratch: buildFromScratch ?? false,
+          businessDescription: businessDescription ?? '',
+        }),
         signal: ctrl.signal,
       })
       if (!res.ok||!res.body){setState({phase:'error',html:'',error:'Generation failed'});return}
@@ -323,6 +345,11 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose }: {
   const handleSchemeChange = (s: ColorScheme) => {
     setColorScheme(s)
     if (state.phase === 'done' || state.phase === 'error') generate(s)
+  }
+
+  const applyPreset = (url: string) => {
+    setReferenceUrl(url)
+    setShowInspiration(false)
   }
 
   const download = () => {
@@ -432,6 +459,85 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose }: {
               </button>
             </div>
           </div>
+
+          {/* Row 2: inspiration + feature request — shown when not generating */}
+          {!isGenerating && (
+            <div className="flex items-start gap-3 px-5 pb-3 flex-wrap" style={{borderTop:'0.5px solid rgba(255,255,255,0.05)'}}>
+              {/* Reference URL */}
+              <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+                <label className="text-[10px] text-[#3f3f46] uppercase tracking-wider flex items-center gap-1.5">
+                  <Globe className="w-3 h-3"/>Inspired by / base it on
+                </label>
+                <div className="flex items-center gap-1.5 relative">
+                  <input
+                    value={referenceUrl}
+                    onChange={e => setReferenceUrl(e.target.value)}
+                    placeholder="stripe.com, linear.app, etc."
+                    className="flex-1 px-3 py-1.5 rounded-[8px] text-[12px] text-[#FAFAFA] outline-none"
+                    style={{background:'rgba(24,24,28,0.9)',border:'0.5px solid rgba(255,255,255,0.1)'}}
+                    onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)'}}
+                    onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}}
+                  />
+                  <button
+                    onClick={() => setShowInspiration(v => !v)}
+                    className="px-2.5 py-1.5 rounded-[7px] text-[11px] font-medium transition-colors flex-shrink-0"
+                    style={{background:showInspiration?'rgba(99,102,241,0.15)':'rgba(255,255,255,0.04)', color:showInspiration?'#818cf8':'#52525B', border:'0.5px solid rgba(255,255,255,0.08)'}}>
+                    Presets
+                  </button>
+                </div>
+                {showInspiration && (
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {INSPIRATION_PRESETS.map(p => (
+                      <button key={p.url} onClick={() => applyPreset(p.url)}
+                        title={p.hint}
+                        className="px-2.5 py-1 rounded-[6px] text-[11px] font-medium transition-all"
+                        style={{
+                          background: referenceUrl === p.url ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
+                          border: `0.5px solid ${referenceUrl === p.url ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                          color: referenceUrl === p.url ? '#818cf8' : '#71717A',
+                        }}>
+                        {p.label}
+                      </button>
+                    ))}
+                    {referenceUrl && (
+                      <button onClick={() => setReferenceUrl('')}
+                        className="px-2.5 py-1 rounded-[6px] text-[11px] transition-colors"
+                        style={{color:'#52525B'}}>
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Feature request */}
+              <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+                <label className="text-[10px] text-[#3f3f46] uppercase tracking-wider flex items-center gap-1.5">
+                  <Wand2 className="w-3 h-3"/>Specific features to include
+                </label>
+                <input
+                  value={featureRequest}
+                  onChange={e => setFeatureRequest(e.target.value)}
+                  placeholder="e.g. animated pricing table, logo carousel, dark hero…"
+                  className="px-3 py-1.5 rounded-[8px] text-[12px] text-[#FAFAFA] outline-none"
+                  style={{background:'rgba(24,24,28,0.9)',border:'0.5px solid rgba(255,255,255,0.1)'}}
+                  onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)'}}
+                  onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}}
+                />
+              </div>
+
+              {/* Regenerate with new settings */}
+              {(referenceUrl || featureRequest) && (
+                <div className="flex items-end pb-0.5">
+                  <button onClick={() => generate(colorScheme)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[12px] font-medium transition-all"
+                    style={{background:'rgba(99,102,241,0.12)',border:'0.5px solid rgba(99,102,241,0.3)',color:'#818cf8'}}>
+                    <Sparkles className="w-3.5 h-3.5"/>Apply
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Progress bar when generating */}
           {isGenerating && (
@@ -681,6 +787,8 @@ function LoadingView({ url }: { url: string }) {
 
 // ─── Main Page ────────────────────────────────────────────────
 
+type BuildMode = 'analyze' | 'scratch'
+
 export default function WebsitePage() {
   const [inputUrl,setInputUrl]       = useState('')
   const [phase,setPhase]             = useState<Phase>('idle')
@@ -693,6 +801,10 @@ export default function WebsitePage() {
   const [severityFilter,setSeverityFilter] = useState<SeverityFilter>('all')
   const [improveSection,setImproveSection] = useState<PageSection|null>(null)
   const [showRedesign,setShowRedesign]     = useState(false)
+  const [buildMode,setBuildMode]           = useState<BuildMode>('analyze')
+  const [scratchDesc,setScratchDesc]       = useState('')
+  const [scratchRef,setScratchRef]         = useState('')
+  const [scratchFeatures,setScratchFeatures] = useState('')
   const submittedUrlRef = useRef('')
 
   const handleAnalyze = useCallback(async (url: string) => {
@@ -758,30 +870,128 @@ export default function WebsitePage() {
           {/* ── Idle ── */}
           {phase==='idle'&&(
             <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}}
-              className="flex flex-col items-center justify-center text-center py-16 rounded-2xl gap-6"
-              style={{border:'0.5px dashed rgba(255,255,255,0.1)',background:'rgba(17,17,19,0.5)'}}>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                style={{background:'rgba(99,102,241,0.1)',border:'0.5px solid rgba(99,102,241,0.2)'}}>
-                <Globe className="w-7 h-7 text-[#6366f1]"/>
+              className="flex flex-col rounded-2xl overflow-hidden"
+              style={{border:'0.5px solid rgba(255,255,255,0.08)',background:'rgba(17,17,19,0.5)'}}>
+
+              {/* Mode tabs */}
+              <div className="flex border-b" style={{borderColor:'rgba(255,255,255,0.06)'}}>
+                {([['analyze','Analyze my site',Globe],['scratch','Build from inspiration',Sparkles]] as const).map(([mode,label,Icon])=>(
+                  <button key={mode} onClick={()=>setBuildMode(mode)}
+                    className="flex items-center gap-2 px-5 py-3.5 text-[13px] font-medium transition-all relative"
+                    style={{color:buildMode===mode?'#FAFAFA':'#52525B',background:'transparent',border:'none',cursor:'pointer'}}>
+                    <Icon className="w-3.5 h-3.5"/>
+                    {label}
+                    {buildMode===mode&&(
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{background:'#6366f1'}}/>
+                    )}
+                  </button>
+                ))}
               </div>
-              <div>
-                <h2 className="text-[18px] font-semibold text-[#FAFAFA] mb-2" style={{letterSpacing:'-0.02em'}}>Analyze your website</h2>
-                <p className="text-[14px] text-[#71717A] max-w-[40ch] mx-auto leading-relaxed">
-                  Full AI audit — SEO, content, trust signals, CTAs — then generate a stunning redesign.
-                </p>
-              </div>
-              <form onSubmit={handleSubmit} className="flex gap-2 w-full max-w-md">
-                <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)}
-                  placeholder="yourbusiness.com"
-                  className="flex-1 min-w-0 px-4 py-2.5 rounded-xl text-[14px] text-[#FAFAFA] outline-none"
-                  style={{background:'rgba(24,24,28,0.8)',border:'0.5px solid rgba(255,255,255,0.1)'}}
-                  onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.08)'}}
-                  onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)';e.currentTarget.style.boxShadow='none'}}/>
-                <Button type="submit" variant="primary" size="sm" className="gap-1.5 flex-shrink-0">
-                  Analyze<ArrowRight className="w-3.5 h-3.5"/>
-                </Button>
-              </form>
-              <p className="text-[12px]" style={{color:'#3f3f46'}}>Checks SEO, content, trust signals, CTAs, and structure.</p>
+
+              {/* Analyze mode */}
+              {buildMode==='analyze'&&(
+                <div className="flex flex-col items-center text-center py-12 px-6 gap-5">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                    style={{background:'rgba(99,102,241,0.1)',border:'0.5px solid rgba(99,102,241,0.2)'}}>
+                    <Globe className="w-6 h-6 text-[#6366f1]"/>
+                  </div>
+                  <div>
+                    <h2 className="text-[17px] font-semibold text-[#FAFAFA] mb-1.5" style={{letterSpacing:'-0.02em'}}>Analyze your website</h2>
+                    <p className="text-[13px] text-[#71717A] max-w-[40ch] mx-auto leading-relaxed">
+                      AI audit — SEO, content, trust signals, CTAs — then generate a redesign, optionally inspired by any site.
+                    </p>
+                  </div>
+                  <form onSubmit={handleSubmit} className="flex gap-2 w-full max-w-md">
+                    <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)}
+                      placeholder="yourbusiness.com"
+                      className="flex-1 min-w-0 px-4 py-2.5 rounded-xl text-[14px] text-[#FAFAFA] outline-none"
+                      style={{background:'rgba(24,24,28,0.8)',border:'0.5px solid rgba(255,255,255,0.1)'}}
+                      onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.08)'}}
+                      onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)';e.currentTarget.style.boxShadow='none'}}/>
+                    <Button type="submit" variant="primary" size="sm" className="gap-1.5 flex-shrink-0">
+                      Analyze<ArrowRight className="w-3.5 h-3.5"/>
+                    </Button>
+                  </form>
+                  <p className="text-[12px]" style={{color:'#3f3f46'}}>After analysis, you can reference any site in the redesign step.</p>
+                </div>
+              )}
+
+              {/* Build from scratch mode */}
+              {buildMode==='scratch'&&(
+                <div className="flex flex-col py-10 px-6 gap-5">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{background:'rgba(99,102,241,0.1)',border:'0.5px solid rgba(99,102,241,0.2)'}}>
+                      <Sparkles className="w-5 h-5 text-[#6366f1]"/>
+                    </div>
+                    <div>
+                      <h2 className="text-[17px] font-semibold text-[#FAFAFA]" style={{letterSpacing:'-0.02em'}}>Build from inspiration</h2>
+                      <p className="text-[13px] text-[#71717A] mt-0.5">Describe your business and reference a site you love — AI builds it.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 max-w-xl">
+                    {/* Business description */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] text-[#71717A] font-medium">What is your business?</label>
+                      <input value={scratchDesc} onChange={e=>setScratchDesc(e.target.value)}
+                        placeholder="e.g. A SaaS tool for scheduling social media posts"
+                        className="px-4 py-2.5 rounded-xl text-[13px] text-[#FAFAFA] outline-none"
+                        style={{background:'rgba(24,24,28,0.8)',border:'0.5px solid rgba(255,255,255,0.1)'}}
+                        onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)'}}
+                        onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}}/>
+                    </div>
+
+                    {/* Reference site */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] text-[#71717A] font-medium">Base it on / inspired by</label>
+                      <input value={scratchRef} onChange={e=>setScratchRef(e.target.value)}
+                        placeholder="stripe.com, linear.app, vercel.com…"
+                        className="px-4 py-2.5 rounded-xl text-[13px] text-[#FAFAFA] outline-none"
+                        style={{background:'rgba(24,24,28,0.8)',border:'0.5px solid rgba(255,255,255,0.1)'}}
+                        onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)'}}
+                        onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}}/>
+                      {/* Preset chips */}
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        {INSPIRATION_PRESETS.map(p=>(
+                          <button key={p.url} onClick={()=>setScratchRef(p.url)}
+                            title={p.hint}
+                            className="px-2.5 py-1 rounded-[6px] text-[11px] font-medium transition-all"
+                            style={{
+                              background:scratchRef===p.url?'rgba(99,102,241,0.18)':'rgba(255,255,255,0.04)',
+                              border:`0.5px solid ${scratchRef===p.url?'rgba(99,102,241,0.4)':'rgba(255,255,255,0.08)'}`,
+                              color:scratchRef===p.url?'#818cf8':'#52525B',
+                            }}>
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Feature requests */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] text-[#71717A] font-medium">Specific features to include <span style={{color:'#3f3f46'}}>(optional)</span></label>
+                      <input value={scratchFeatures} onChange={e=>setScratchFeatures(e.target.value)}
+                        placeholder="e.g. animated pricing table, testimonials, email signup, sticky nav"
+                        className="px-4 py-2.5 rounded-xl text-[13px] text-[#FAFAFA] outline-none"
+                        style={{background:'rgba(24,24,28,0.8)',border:'0.5px solid rgba(255,255,255,0.1)'}}
+                        onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)'}}
+                        onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}}/>
+                    </div>
+
+                    <Button
+                      variant="primary" size="sm"
+                      className="gap-1.5 self-start mt-1"
+                      disabled={!scratchDesc.trim()}
+                      onClick={()=>{
+                        setDomain(scratchDesc.slice(0,40))
+                        setShowRedesign(true)
+                      }}>
+                      <Sparkles className="w-3.5 h-3.5"/>Build my website
+                    </Button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -934,8 +1144,18 @@ export default function WebsitePage() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {showRedesign&&analysis&&(
-          <RedesignModal domain={domain} analysis={analysis} h1s={h1s} bodyPreview={bodyPreview} onClose={()=>setShowRedesign(false)}/>
+        {showRedesign&&(analysis||buildMode==='scratch')&&(
+          <RedesignModal
+            domain={domain}
+            analysis={analysis}
+            h1s={h1s}
+            bodyPreview={bodyPreview}
+            onClose={()=>setShowRedesign(false)}
+            buildFromScratch={buildMode==='scratch'}
+            businessDescription={buildMode==='scratch' ? scratchDesc : undefined}
+            initialReferenceUrl={buildMode==='scratch' ? scratchRef : undefined}
+            initialFeatureRequest={buildMode==='scratch' ? scratchFeatures : undefined}
+          />
         )}
       </AnimatePresence>
     </div>

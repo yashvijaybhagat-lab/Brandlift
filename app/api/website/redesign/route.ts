@@ -113,35 +113,70 @@ export async function POST(req: NextRequest) {
     h1s?: string[]
     bodyPreview?: string
     colorScheme?: string
+    referenceUrl?: string
+    featureRequest?: string
+    buildFromScratch?: boolean
+    businessDescription?: string
   }
   try { body = await req.json() } catch {
     return new Response('Invalid request', { status: 400 })
   }
 
-  const { domain = '', analysis, h1s = [], bodyPreview = '', colorScheme = 'dark' } = body
-  if (!analysis) return new Response('Analysis data required', { status: 400 })
+  const {
+    domain = '', analysis, h1s = [], bodyPreview = '', colorScheme = 'dark',
+    referenceUrl = '', featureRequest = '',
+    buildFromScratch = false, businessDescription = '',
+  } = body
+  if (!analysis && !buildFromScratch) return new Response('Analysis data required', { status: 400 })
+
+  // Fetch reference site metadata if provided
+  let referenceContext = ''
+  if (referenceUrl) {
+    try {
+      const refDomain = referenceUrl.replace(/^https?:\/\//, '').split('/')[0]
+      const refRes = await fetch(
+        referenceUrl.startsWith('http') ? referenceUrl : `https://${referenceUrl}`,
+        { signal: AbortSignal.timeout(5000), headers: { 'User-Agent': 'Mozilla/5.0' } }
+      )
+      if (refRes.ok) {
+        const html = await refRes.text()
+        const titleMatch     = html.match(/<title[^>]*>([^<]+)<\/title>/i)
+        const descMatch      = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i)
+        const h1Match        = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
+        const ogTitleMatch   = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i)
+        const bodyTextMatch  = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 800)
+        referenceContext = `
+REFERENCE / INSPIRATION SITE: ${refDomain}
+- Title: ${titleMatch?.[1] ?? ogTitleMatch?.[1] ?? refDomain}
+- Description: ${descMatch?.[1] ?? '(none)'}
+- Main headline: ${h1Match?.[1] ?? '(none)'}
+- Content sample: ${bodyTextMatch}
+→ STYLE DIRECTIVE: Borrow the visual language, layout patterns, interaction feel, and design DNA from ${refDomain}. Match its level of polish and use similar section structures.`
+      }
+    } catch {}
+  }
 
   const scheme = SCHEME_TOKENS[colorScheme] ?? SCHEME_TOKENS.dark
   const isLight = colorScheme === 'light'
 
-  const detectedContent = analysis.sections
-    .filter(s => s.detectedCopy)
-    .map(s => `${s.name}: "${s.detectedCopy}"`)
-    .join('\n')
+  const detectedContent = analysis?.sections
+    .filter((s: { detectedCopy?: string }) => s.detectedCopy)
+    .map((s: { name: string; detectedCopy?: string }) => `${s.name}: "${s.detectedCopy}"`)
+    .join('\n') ?? ''
 
-  const criticalFixes = analysis.issues
-    .filter(i => i.severity === 'critical' || i.severity === 'warning')
-    .map(i => `• ${i.title} → ${i.fix}`)
-    .join('\n')
+  const criticalFixes = analysis?.issues
+    .filter((i: { severity: string }) => i.severity === 'critical' || i.severity === 'warning')
+    .map((i: { title: string; fix: string }) => `• ${i.title} → ${i.fix}`)
+    .join('\n') ?? ''
 
-  const missingSections = analysis.sections
-    .filter(s => s.quality === 'missing')
-    .map(s => s.name)
-    .join(', ')
+  const missingSections = analysis?.sections
+    .filter((s: { quality: string }) => s.quality === 'missing')
+    .map((s: { name: string }) => s.name)
+    .join(', ') ?? ''
 
-  const prompt = `Generate a COMPLETE, PRODUCTION-QUALITY HTML website redesign. This must be stunning — award-winning agency quality.
-
-BUSINESS: ${domain}
+  const businessContext = buildFromScratch
+    ? `BUSINESS DESCRIPTION: ${businessDescription || domain}`
+    : `BUSINESS: ${domain}
 DETECTED HEADLINE: ${h1s[0] || '(none)'}
 DETECTED CONTENT:
 ${detectedContent || bodyPreview.slice(0, 2000)}
@@ -149,7 +184,13 @@ ${detectedContent || bodyPreview.slice(0, 2000)}
 AUDIT — fixes to apply:
 ${criticalFixes || 'Improve overall quality and professionalism'}
 Missing sections to add: ${missingSections || 'none'}
-Redesign goal: ${analysis.redesignBrief}
+Redesign goal: ${analysis?.redesignBrief ?? 'Create a stunning, high-converting website'}`
+
+  const prompt = `Generate a COMPLETE, PRODUCTION-QUALITY HTML website${buildFromScratch ? '' : ' redesign'}. This must be stunning — award-winning agency quality.
+
+${businessContext}
+${referenceContext}
+${featureRequest ? `\nSPECIFIC FEATURE REQUESTS FROM USER: ${featureRequest}\n` : ''}
 
 COLOR SCHEME CSS VARIABLES TO USE (inject these into :root exactly as-is):
 ${scheme}
