@@ -75,24 +75,22 @@ export default function GlobalReach() {
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#FAFAFA]">
           {isConfigured && totalCountries ? (
             <>
-              Creators in{' '}
+              Visited from{' '}
               <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
                 {totalCountries} countries
-              </span>{' '}
-              trust BrandLift
+              </span>
             </>
           ) : (
             <>
               Creators{' '}
               <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
                 worldwide
-              </span>{' '}
-              trust BrandLift
+              </span>
             </>
           )}
         </h2>
         <p className="mt-2 text-sm text-[#52525B]">
-          From local shops to global brands — showing up online, everywhere.
+          Real visitors from around the world — tracked live via Vercel Analytics.
         </p>
       </div>
 

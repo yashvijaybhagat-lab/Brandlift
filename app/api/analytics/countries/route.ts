@@ -84,6 +84,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     configured:     true,
     totalCountries: data.totalCountries,
+    totalVisitors:  data.totalVisitors,
     flags:          data.countries.slice(0, 30).map(c => ({ code: c.code, flag: c.flag, name: c.name })),
     updatedAt:      data.updatedAt,
   })

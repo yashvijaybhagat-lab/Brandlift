@@ -126,7 +126,7 @@ export default function Pricing() {
                 Ready to 10× your content output?
               </p>
               <p className="text-[14px] max-w-sm" style={{ color: '#71717A', lineHeight: 1.65 }}>
-                Join hundreds of small businesses already saving 10+ hours a week on content creation.
+                Early beta — every feature is free. Lock in your spot before paid plans launch.
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">

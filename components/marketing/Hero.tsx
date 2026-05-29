@@ -4,6 +4,26 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import Link from 'next/link'
 
+function useAnalyticsStats() {
+  const [stats, setStats] = useState<{ visitors: number; countries: number } | null>(null)
+  useEffect(() => {
+    fetch('/api/analytics/countries')
+      .then(r => r.json())
+      .then((d: { configured?: boolean; totalVisitors?: number; totalCountries?: number }) => {
+        if (d.configured && d.totalVisitors && d.totalCountries) {
+          setStats({ visitors: d.totalVisitors, countries: d.totalCountries })
+        }
+      })
+      .catch(() => {})
+  }, [])
+  return stats
+}
+
+function formatVisitors(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k`
+  return n.toString()
+}
+
 /* ─── Stagger reveal helper ─────────────────────────────────────────────── */
 type RevealProps = {
   delay?: number
@@ -246,6 +266,7 @@ function VideoReveal() {
 
 /* ─── Hero ───────────────────────────────────────────────────────────────── */
 export default function Hero() {
+  const stats = useAnalyticsStats()
   return (
     <section
       className="relative min-h-screen flex items-center pt-14 overflow-hidden"
@@ -344,7 +365,10 @@ export default function Hero() {
                     50% { box-shadow: 0 0 0 5px rgba(74,222,128,0.1); }
                   }
                 `}</style>
-                2,400+ businesses live
+                {stats
+                  ? `${formatVisitors(stats.visitors)} visits · ${stats.countries} countries`
+                  : 'Now in beta · free to join'
+                }
               </div>
             </Reveal>
 
