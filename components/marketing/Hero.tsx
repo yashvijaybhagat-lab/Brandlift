@@ -6,16 +6,23 @@ import Link from 'next/link'
 
 function useAnalyticsStats() {
   const [stats, setStats] = useState<{ visitors: number; countries: number } | null>(null)
+
   useEffect(() => {
-    fetch('/api/analytics/countries')
-      .then(r => r.json())
-      .then((d: { configured?: boolean; totalVisitors?: number; totalCountries?: number }) => {
-        if (d.configured && d.totalVisitors && d.totalCountries) {
-          setStats({ visitors: d.totalVisitors, countries: d.totalCountries })
-        }
-      })
-      .catch(() => {})
+    const load = () =>
+      fetch('/api/analytics/countries')
+        .then(r => r.json())
+        .then((d: { configured?: boolean; totalVisitors?: number; totalCountries?: number }) => {
+          if (d.configured && d.totalVisitors && d.totalCountries) {
+            setStats({ visitors: d.totalVisitors, countries: d.totalCountries })
+          }
+        })
+        .catch(() => {})
+
+    load()
+    const id = setInterval(load, 5 * 60 * 1000)
+    return () => clearInterval(id)
   }, [])
+
   return stats
 }
 
