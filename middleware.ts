@@ -32,44 +32,11 @@ function clientIp(req: NextRequest): string {
   return (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'anon'
 }
 
-// ── Fail2ban: escalating auto-block ──────────────────────────
-// offense count → block duration in ms
-const ESCALATION: [number, number][] = [
-  [3,  1   * 60_000],   // 3 strikes  → 1 min
-  [5,  10  * 60_000],   // 5 strikes  → 10 min
-  [8,  60  * 60_000],   // 8 strikes  → 1 hour
-  [12, 24  * 60 * 60_000], // 12 strikes → 24 hours
-  [20, 30  * 24 * 60 * 60_000], // 20+ strikes → 30 days
-]
-
-interface OffenseEntry { count: number; blockedUntil: number }
-const offenses = new Map<string, OffenseEntry>()
-
-function recordOffense(ip: string): boolean {
-  const now   = Date.now()
-  const entry = offenses.get(ip) ?? { count: 0, blockedUntil: 0 }
-
-  // Still in an active block
-  if (entry.blockedUntil > now) return true
-
-  entry.count++
-  // Find the appropriate block duration
-  let blockMs = 0
-  for (const [threshold, duration] of ESCALATION) {
-    if (entry.count >= threshold) blockMs = duration
-  }
-  entry.blockedUntil = blockMs > 0 ? now + blockMs : 0
-  offenses.set(ip, entry)
-  return entry.blockedUntil > now
-}
-
-function isBlocked(ip: string): boolean {
-  const entry = offenses.get(ip)
-  if (!entry || entry.count < 3) return false
-  return entry.blockedUntil > Date.now()
-}
-
-// ── Rate limit store ─────────────────────────────────────────
+// ── Rate limiting ─────────────────────────────────────────────
+// NOTE: In-memory rate limiting doesn't work on Vercel serverless — each instance
+// has isolated memory. Rate limits below are enforced per-instance as a best-effort
+// guard. For strict rate limiting, use Vercel's built-in DDoS protection or an
+// external store (Upstash Redis).
 const hits = new Map<string, { n: number; expires: number }>()
 
 function allow(key: string, limit: number, windowMs: number): boolean {
@@ -80,6 +47,9 @@ function allow(key: string, limit: number, windowMs: number): boolean {
   entry.n++
   return true
 }
+
+function recordOffense(_ip: string): boolean { return false }
+function isBlocked(_ip: string): boolean { return false }
 
 // ── Route rate limits ─────────────────────────────────────────
 const ROUTE_LIMITS: { pattern: RegExp; limit: number; windowMs: number }[] = [
@@ -128,7 +98,7 @@ const BLOCKED_UA: RegExp[] = [
   /python-requests\/[0-1]\./i, /python-urllib/i,
   /go-http-client\/1\.0/i, /libwww-perl/i, /lwp-trivial/i,
   /wget\/[0-9]/i, /curl\/[0-6]\./i,
-  /scan|spider|crawl|bot(?!tle)/i,
+  /\b(sqlmap|dirbuster|gobuster|wfuzz|hydra)\b/i,
 ]
 
 // ── Security response headers ─────────────────────────────────
@@ -233,9 +203,6 @@ export function middleware(req: NextRequest) {
 
   // 8. Admin route firewall — only founders, blocked at edge
   if (pathname.startsWith('/api/admin/')) {
-    // Count probe attempts, auto-escalate blocks
-    const blocked = recordOffense(`admin:${ip}`)
-    if (blocked) return block403('blocked')
     return block403('unauthorized')
   }
 
@@ -244,8 +211,6 @@ export function middleware(req: NextRequest) {
     for (const { pattern, limit, windowMs } of ROUTE_LIMITS) {
       if (!pattern.test(pathname)) continue
       if (!allow(`${ip}:${pattern.source}`, limit, windowMs)) {
-        const blocked = recordOffense(ip)
-        if (blocked) return block403('blocked')
         return block429(windowMs)
       }
       break
