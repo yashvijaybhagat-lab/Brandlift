@@ -295,37 +295,6 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
-/* ─── Seed testimonials shown until real ones arrive ─────────────────────── */
-const SEED_REVIEWS: Review[] = [
-  {
-    id: 'seed-1',
-    name: 'Marcus T.',
-    business: "Marcus's Barbershop",
-    location: 'Austin, TX',
-    result: '2.4K new followers in 3 weeks',
-    quote: "I was posting random iPhone clips and getting maybe 200 views. BrandLift helped me write a proper script, color grade it, and add captions in literally 8 minutes. My next video hit 40K views. I've been doing this every week since.",
-    submittedAt: 0,
-  },
-  {
-    id: 'seed-2',
-    name: 'Priya K.',
-    business: "Priya's Kitchen",
-    location: 'Chicago, IL',
-    result: '3× more bookings from TikTok',
-    quote: "Running a food truck alone means I have zero time for editing. BrandLift changed that. I record a 60-second clip after service and it's polished and posted before I get home. My customers now find me on TikTok all the time.",
-    submittedAt: 0,
-  },
-  {
-    id: 'seed-3',
-    name: 'Jordan Lee',
-    business: 'FitForce Studio',
-    location: 'Miami, FL',
-    result: '500+ new class sign-ups',
-    quote: "The script generator alone is worth it. I describe what I want to talk about and it turns it into an actual TikTok script that sounds like me, not a robot. My content finally feels professional without hiring a video editor.",
-    submittedAt: 0,
-  },
-]
-
 /* ─── Main component ─────────────────────────────────────────────────────── */
 export default function SocialProof() {
   const sectionRef                        = useRef<HTMLElement>(null)
@@ -351,10 +320,7 @@ export default function SocialProof() {
 
   useEffect(() => { fetchReviews() }, [])
 
-  // Merge real reviews with seeds to always show 3 cards
-  const displayReviews = reviews.length >= 3
-    ? reviews.slice(0, 3)
-    : [...reviews, ...SEED_REVIEWS.slice(0, 3 - reviews.length)]
+  const displayReviews = reviews.slice(0, 3)
 
   return (
     <section ref={sectionRef} aria-label="Social proof" className="py-20 overflow-hidden"
@@ -385,9 +351,14 @@ export default function SocialProof() {
               <div key={i} className="h-52 rounded-2xl animate-pulse" style={{ background: '#111113' }} />
             ))}
           </div>
+        ) : displayReviews.length === 0 ? (
+          <div className="grid md:grid-cols-3 gap-4">
+            <EmptySlot /><EmptySlot /><EmptySlot />
+          </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-4">
             {displayReviews.map((r, i) => <ReviewCard key={r.id} review={r} index={i} />)}
+            {Array.from({ length: Math.max(0, 3 - displayReviews.length) }).map((_, i) => <EmptySlot key={`empty-${i}`} />)}
           </div>
         )}
 

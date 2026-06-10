@@ -41,15 +41,15 @@ interface GradeLook { filter: string; color?: { bg: string; blend: string; opaci
 
 const GRADES: Record<GradeKey, GradeLook> = {
   original:    { filter: 'none' },
-  teal_orange: { filter: 'contrast(1.18) brightness(0.82) saturate(0.62)', color: { bg: 'linear-gradient(135deg,rgb(0,90,90) 0%,rgb(110,40,0) 100%)', blend: 'color', opacity: 0.28 }, vignette: 0.72 },
-  moody:       { filter: 'contrast(1.35) brightness(0.72) saturate(0.42)', color: { bg: 'linear-gradient(180deg,rgb(10,15,35) 0%,rgb(25,8,18) 100%)', blend: 'color', opacity: 0.38 }, vignette: 0.85 },
-  bleach:      { filter: 'contrast(1.55) brightness(0.88) saturate(0.22)', color: { bg: 'linear-gradient(180deg,rgb(230,235,240) 0%,rgb(25,25,25) 100%)', blend: 'soft-light', opacity: 0.14 }, vignette: 0.48 },
-  golden:      { filter: 'brightness(1.1) contrast(1.05) saturate(1.3)', color: { bg: 'linear-gradient(135deg,rgb(255,200,50) 0%,rgb(200,90,0) 100%)', blend: 'soft-light', opacity: 0.3 }, vignette: 0.32 },
-  noir:        { filter: 'grayscale(1) contrast(1.45) brightness(0.78)', vignette: 0.88 },
-  fuji:        { filter: 'brightness(1.04) contrast(1.08) saturate(0.88)', color: { bg: 'linear-gradient(135deg,rgb(180,220,170) 0%,rgb(245,215,175) 100%)', blend: 'soft-light', opacity: 0.18 }, vignette: 0.28 },
-  vintage:     { filter: 'brightness(0.94) contrast(1.08) saturate(0.72) sepia(0.28)', color: { bg: 'linear-gradient(135deg,rgb(175,125,75) 0%,rgb(100,60,30) 100%)', blend: 'soft-light', opacity: 0.22 }, vignette: 0.58 },
-  arctic:      { filter: 'brightness(1.14) contrast(1.06) saturate(0.52)', color: { bg: 'linear-gradient(180deg,rgb(195,228,255) 0%,rgb(95,148,220) 100%)', blend: 'color', opacity: 0.2 }, vignette: 0.22 },
-  kodak:       { filter: 'brightness(1.05) contrast(1.12) saturate(1.08)', color: { bg: 'linear-gradient(135deg,rgb(255,198,112) 0%,rgb(195,155,78) 100%)', blend: 'soft-light', opacity: 0.2 }, vignette: 0.38 },
+  teal_orange: { filter: 'contrast(1.22) brightness(0.80) saturate(0.58) hue-rotate(-3deg)', color: { bg: 'linear-gradient(135deg,rgb(0,100,100) 0%,rgb(120,45,0) 100%)', blend: 'color', opacity: 0.30 }, vignette: 0.78 },
+  moody:       { filter: 'contrast(1.42) brightness(0.70) saturate(0.38)', color: { bg: 'linear-gradient(180deg,rgb(8,12,32) 0%,rgb(22,6,16) 100%)', blend: 'color', opacity: 0.40 }, vignette: 0.90 },
+  bleach:      { filter: 'contrast(1.60) brightness(0.90) saturate(0.18)', color: { bg: 'linear-gradient(180deg,rgb(225,232,238) 0%,rgb(20,20,20) 100%)', blend: 'soft-light', opacity: 0.16 }, vignette: 0.52 },
+  golden:      { filter: 'brightness(1.12) contrast(1.08) saturate(1.35) sepia(0.08)', color: { bg: 'linear-gradient(135deg,rgb(255,210,55) 0%,rgb(210,95,0) 100%)', blend: 'soft-light', opacity: 0.32 }, vignette: 0.34 },
+  noir:        { filter: 'grayscale(1) contrast(1.52) brightness(0.76)', vignette: 0.92 },
+  fuji:        { filter: 'brightness(1.05) contrast(1.10) saturate(0.85) hue-rotate(5deg)', color: { bg: 'linear-gradient(135deg,rgb(170,215,160) 0%,rgb(248,218,178) 100%)', blend: 'soft-light', opacity: 0.20 }, vignette: 0.30 },
+  vintage:     { filter: 'brightness(0.92) contrast(1.12) saturate(0.68) sepia(0.32)', color: { bg: 'linear-gradient(135deg,rgb(180,128,78) 0%,rgb(98,58,28) 100%)', blend: 'soft-light', opacity: 0.24 }, vignette: 0.62 },
+  arctic:      { filter: 'brightness(1.16) contrast(1.08) saturate(0.48) hue-rotate(8deg)', color: { bg: 'linear-gradient(180deg,rgb(190,225,255) 0%,rgb(90,145,218) 100%)', blend: 'color', opacity: 0.22 }, vignette: 0.24 },
+  kodak:       { filter: 'brightness(1.06) contrast(1.15) saturate(1.12) sepia(0.05)', color: { bg: 'linear-gradient(135deg,rgb(255,200,115) 0%,rgb(198,158,80) 100%)', blend: 'soft-light', opacity: 0.22 }, vignette: 0.40 },
   custom:      { filter: 'none' },
 }
 
@@ -321,6 +321,9 @@ function VideosInner() {
   const [captionStyle, setCaptionStyle]       = useState<CaptionStyle>('bold')
   const [captionPos, setCaptionPos]           = useState<CaptionPos>('bottom')
   const [captionSize, setCaptionSize]         = useState(1.0)
+  const [captionColor, setCaptionColor]       = useState('#FFFFFF')
+  const [captionFont, setCaptionFont]         = useState('inter')
+  const [ttsPlaying, setTtsPlaying]           = useState(false)
   const [editingCaption, setEditingCaption]   = useState<number | null>(null)
   const [newCaptionText, setNewCaptionText]   = useState('')
   const [newCaptionStart, setNewCaptionStart] = useState('')
@@ -404,12 +407,21 @@ function VideosInner() {
     ...(captionPos === 'bottom' ? { bottom: '12%' } : {}),
   }
 
+  const PREVIEW_FONT_MAP: Record<string, string> = {
+    inter:   'Inter, Arial, sans-serif',
+    impact:  'Impact, "Arial Narrow", sans-serif',
+    serif:   'Georgia, "Times New Roman", serif',
+    mono:    '"Courier New", Courier, monospace',
+    display: '"Playfair Display", Georgia, serif',
+  }
+
   const captionTextStyle: React.CSSProperties = {
     textAlign: 'center',
-    fontWeight: captionStyle === 'minimal' ? 500 : 700,
+    fontWeight: captionFont === 'impact' ? 900 : captionStyle === 'minimal' ? 500 : 700,
+    fontFamily: PREVIEW_FONT_MAP[captionFont] ?? 'Inter, Arial, sans-serif',
     fontSize: `clamp(${11 * captionSize}px,${2.6 * captionSize}vw,${18 * captionSize}px)`,
     lineHeight: 1.4,
-    color: captionStyle === 'neon' ? '#a5b4fc' : '#FFFFFF',
+    color: captionStyle === 'neon' ? '#a5b4fc' : captionColor,
     padding: captionStyle === 'film' ? '3px 12px' : undefined,
     background: captionStyle === 'film' ? 'rgba(0,0,0,0.7)' : undefined,
     borderRadius: captionStyle === 'film' ? 3 : undefined,
@@ -448,6 +460,19 @@ function VideosInner() {
     const p = audio.play()
     if (p) p.catch((e: Error) => { if (e.name !== 'AbortError') console.warn('[music]', e.name, e.message) })
   }, [])
+
+  const previewTTS = useCallback(() => {
+    if (!scriptText.trim() || typeof window === 'undefined') return
+    const synth = window.speechSynthesis
+    if (ttsPlaying) { synth.cancel(); setTtsPlaying(false); return }
+    const utterance = new SpeechSynthesisUtterance(scriptText)
+    utterance.rate = 0.92; utterance.pitch = 1.0; utterance.volume = 1.0
+    utterance.onend = () => setTtsPlaying(false)
+    utterance.onerror = () => setTtsPlaying(false)
+    setTtsPlaying(true)
+    synth.cancel()
+    synth.speak(utterance)
+  }, [scriptText, ttsPlaying])
 
   const transcribeFromAudio = useCallback(async (urlOverride?: string) => {
     const url = urlOverride ?? displayUrl
@@ -833,7 +858,7 @@ function VideosInner() {
         letterbox,
         halation,
         captionsEnabled, captions,
-        captionStyle, captionPos, captionSize,
+        captionStyle, captionPos, captionSize, captionColor, captionFont,
         showHook, hookText,
         showCta, ctaText,
         musicUrl, musicVolume: 0.4,
@@ -851,7 +876,7 @@ function VideosInner() {
       console.error('[export]', err)
       alert('Export failed — try a shorter clip or reload the page.')
     } finally { setExporting(false); setExportProgress(0); setExportLabel('') }
-  }, [clips, exporting, colorGrade, customColor, grain, letterbox, halation, selectedMusic, captionsEnabled, captions, captionStyle, captionPos, captionSize, showHook, hookText, showCta, ctaText, transition, transitionDuration, exportQuality, exportAspect])
+  }, [clips, exporting, colorGrade, customColor, grain, letterbox, halation, selectedMusic, captionsEnabled, captions, captionStyle, captionPos, captionSize, captionColor, captionFont, showHook, hookText, showCta, ctaText, transition, transitionDuration, exportQuality, exportAspect])
 
   const reset = () => {
     setStage('script'); setUploadProgress(0); setErrorMsg(''); setClips([]); setActiveClipId(null)
@@ -1619,32 +1644,39 @@ function VideosInner() {
                         </p>
                       </div>
 
-                      {/* Film strip swatches — cinematic 2:1 aspect */}
-                      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
-                        {GRADE_META.map(({ key, label, swatch }) => (
+                      {/* Film strip swatches — cinematic aspect */}
+                      <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
+                        {GRADE_META.map(({ key, label, swatch, desc }) => (
                           <button key={key} onClick={() => setColorGrade(key)}
-                            className="flex-shrink-0 flex flex-col gap-2 transition-all duration-200"
-                            style={{ width: 82 }}>
-                            {/* Swatch — 2:1 cinematic ratio */}
+                            className="flex-shrink-0 flex flex-col gap-1.5 transition-all duration-200 group"
+                            style={{ width: 88 }}>
+                            {/* Swatch */}
                             <div className="w-full relative overflow-hidden transition-all duration-200"
                               style={{
-                                height: 46,
-                                borderRadius: 8,
+                                height: 58,
+                                borderRadius: 10,
                                 background: swatch,
-                                outline: colorGrade === key ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.08)',
+                                outline: colorGrade === key ? '2px solid #6366f1' : '1px solid rgba(255,255,255,0.08)',
                                 outlineOffset: colorGrade === key ? 2 : 0,
-                                boxShadow: colorGrade === key ? '0 0 16px rgba(99,102,241,0.4), 0 2px 8px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.3)',
+                                boxShadow: colorGrade === key
+                                  ? '0 0 20px rgba(99,102,241,0.45), 0 4px 12px rgba(0,0,0,0.5)'
+                                  : '0 2px 8px rgba(0,0,0,0.4)',
                               }}>
-                              {/* Letterbox bars — cinematic look */}
-                              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5, background: 'rgba(0,0,0,0.55)' }} />
-                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 5, background: 'rgba(0,0,0,0.55)' }} />
+                              {/* Letterbox bars */}
+                              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, background: 'rgba(0,0,0,0.6)' }} />
+                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, background: 'rgba(0,0,0,0.6)' }} />
+                              {/* Vignette overlay */}
+                              <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.35) 100%)' }} />
                               {colorGrade === key && (
-                                <div style={{ position: 'absolute', top: 6, right: 5, width: 12, height: 12, borderRadius: '50%', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <span style={{ fontSize: 7, color: '#fff', fontWeight: 900 }}>✓</span>
+                                <div style={{ position: 'absolute', top: 7, right: 6, width: 14, height: 14, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 8px rgba(99,102,241,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <span style={{ fontSize: 8, color: '#fff', fontWeight: 900 }}>✓</span>
                                 </div>
                               )}
                             </div>
-                            <p style={{ fontSize: 10, fontWeight: colorGrade === key ? 700 : 500, color: colorGrade === key ? '#a5b4fc' : '#52525B', textAlign: 'center', letterSpacing: '0.02em' }}>{label}</p>
+                            <div className="flex flex-col gap-0.5 px-0.5">
+                              <p style={{ fontSize: 10, fontWeight: colorGrade === key ? 700 : 500, color: colorGrade === key ? '#a5b4fc' : '#71717A', textAlign: 'center', letterSpacing: '0.02em' }}>{label}</p>
+                              <p style={{ fontSize: 9, color: '#3f3f46', textAlign: 'center' }}>{desc}</p>
+                            </div>
                           </button>
                         ))}
                       </div>
@@ -1864,6 +1896,72 @@ function VideosInner() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Caption color + font */}
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Color */}
+                        <div className="flex flex-col gap-2">
+                          <p style={{ fontSize: 11, fontWeight: 700, color: '#52525B', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Color</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {[
+                              { label: 'White',  hex: '#FFFFFF' },
+                              { label: 'Yellow', hex: '#FFE600' },
+                              { label: 'Cyan',   hex: '#60A5FA' },
+                              { label: 'Pink',   hex: '#F472B6' },
+                              { label: 'Green',  hex: '#4ADE80' },
+                            ].map(c => (
+                              <button key={c.hex} onClick={() => setCaptionColor(c.hex)}
+                                title={c.label}
+                                style={{
+                                  width: 26, height: 26, borderRadius: '50%',
+                                  background: c.hex,
+                                  border: captionColor === c.hex ? '2px solid #6366f1' : '2px solid transparent',
+                                  outline: captionColor === c.hex ? '1px solid rgba(99,102,241,0.4)' : 'none',
+                                  outlineOffset: 2,
+                                  boxShadow: captionColor === c.hex ? '0 0 8px rgba(99,102,241,0.5)' : '0 1px 4px rgba(0,0,0,0.4)',
+                                  cursor: 'pointer', flexShrink: 0,
+                                }} />
+                            ))}
+                            <input type="color" value={captionColor} onChange={e => setCaptionColor(e.target.value)}
+                              title="Custom color"
+                              style={{ width: 26, height: 26, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', padding: 0, cursor: 'pointer', background: 'transparent' }} />
+                          </div>
+                        </div>
+                        {/* Font */}
+                        <div className="flex flex-col gap-2">
+                          <p style={{ fontSize: 11, fontWeight: 700, color: '#52525B', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Font</p>
+                          <div className="grid grid-cols-3 gap-1.5">
+                            {([
+                              { id: 'inter',   preview: 'Aa', label: 'Sans',    ff: 'Inter, Arial, sans-serif' },
+                              { id: 'impact',  preview: 'Aa', label: 'Impact',  ff: 'Impact, Arial Narrow, sans-serif' },
+                              { id: 'serif',   preview: 'Aa', label: 'Serif',   ff: 'Georgia, serif' },
+                              { id: 'mono',    preview: 'Aa', label: 'Mono',    ff: '"Courier New", monospace' },
+                              { id: 'display', preview: 'Aa', label: 'Display', ff: '"Playfair Display", Georgia, serif' },
+                            ] as const).map(f => (
+                              <button key={f.id} onClick={() => setCaptionFont(f.id)}
+                                className="flex flex-col items-center gap-0.5 py-2 rounded-lg transition-all duration-150"
+                                style={{ background: captionFont === f.id ? 'rgba(99,102,241,0.12)' : '#0d0d10', border: captionFont === f.id ? '1px solid rgba(99,102,241,0.35)' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                                <span style={{ fontFamily: f.ff, fontSize: 14, fontWeight: 700, color: captionFont === f.id ? '#a5b4fc' : '#52525B', lineHeight: 1 }}>{f.preview}</span>
+                                <span style={{ fontSize: 9, fontWeight: 600, color: captionFont === f.id ? '#818cf8' : '#3f3f46', letterSpacing: '0.04em' }}>{f.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* TTS voice preview */}
+                      <button
+                        onClick={previewTTS}
+                        disabled={!scriptText.trim()}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 disabled:opacity-30"
+                        style={{
+                          background: ttsPlaying ? 'rgba(239,68,68,0.08)' : 'rgba(99,102,241,0.07)',
+                          border: `1px solid ${ttsPlaying ? 'rgba(239,68,68,0.25)' : 'rgba(99,102,241,0.2)'}`,
+                          color: ttsPlaying ? '#f87171' : '#818cf8',
+                        }}>
+                        <span style={{ fontSize: 14 }}>{ttsPlaying ? '⏹' : '🔊'}</span>
+                        {ttsPlaying ? 'Stop preview' : 'Hear script (TTS preview)'}
+                      </button>
 
                       {/* Caption list + manual editor */}
                       <div className="flex flex-col gap-2">

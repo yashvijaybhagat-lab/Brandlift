@@ -50,6 +50,8 @@ export interface ExportOptions {
   captionStyle?:    CaptionStyle
   captionPos?:      CaptionPos
   captionSize?:     number
+  captionColor?:    string   // hex e.g. '#FFFFFF'
+  captionFont?:     string   // 'inter' | 'impact' | 'serif' | 'mono' | 'display'
   showHook:         boolean
   hookText:         string
   showCta:          boolean
@@ -84,6 +86,14 @@ const BITRATES: Record<ExportQuality, number> = {
 
 // All qualities at 30fps — smooth cinematic output
 const FPS = 30
+
+const FONT_FAMILIES: Record<string, string> = {
+  inter:   'Inter, Arial, sans-serif',
+  impact:  'Impact, "Arial Narrow", sans-serif',
+  serif:   'Georgia, "Times New Roman", serif',
+  mono:    '"Courier New", Courier, monospace',
+  display: '"Playfair Display", Georgia, serif',
+}
 
 function getCanvasSize(quality: ExportQuality, aspect: ExportAspect = '16:9'): { w: number; h: number } {
   const base = RESOLUTIONS[quality]
@@ -171,13 +181,13 @@ function drawHalation(
   const gc = document.createElement('canvas')
   gc.width = GW; gc.height = GH
   const gctx = gc.getContext('2d')!
-  // Extract only the brightest highlights, heavily blurred
-  gctx.filter = `brightness(${2 + amount * 0.025}) contrast(4) saturate(1.6) blur(${Math.round(GW * 0.07)}px)`
+  // Extract highlights — warm orange shift mimics real film halation
+  gctx.filter = `brightness(${2 + amount * 0.028}) contrast(3.8) saturate(2.4) hue-rotate(-22deg) blur(${Math.round(GW * 0.08)}px)`
   gctx.drawImage(video, 0, 0, GW, GH)
-  // Blend back — 'screen' only brightens existing pixels (safe, no clipping)
+  // Blend back — 'screen' only brightens (safe, no clipping)
   ctx.save()
   ctx.globalCompositeOperation = 'screen'
-  ctx.globalAlpha = Math.min(0.55, amount * 0.0045)
+  ctx.globalAlpha = Math.min(0.62, amount * 0.006)
   ctx.imageSmoothingEnabled = true
   ctx.imageSmoothingQuality = 'high'
   ctx.filter = `blur(${Math.round(w * 0.018)}px)`
@@ -192,8 +202,9 @@ function drawHalation(
  */
 function drawGrain(ctx: CanvasRenderingContext2D, w: number, h: number, amount: number, seed: number) {
   if (amount <= 0) return
-  const GW = Math.max(320, Math.round(w / 3)), GH = Math.max(180, Math.round(h / 3))
-  const intensity = (amount / 100) * 65
+  // Use finer grain at higher quality (w/4 instead of w/3 gives denser noise at same canvas size)
+  const GW = Math.max(480, Math.round(w / 2.5)), GH = Math.max(270, Math.round(h / 2.5))
+  const intensity = (amount / 100) * 55
   const gc = document.createElement('canvas')
   gc.width = GW; gc.height = GH
   const gctx = gc.getContext('2d', { willReadFrequently: true })!
@@ -210,7 +221,7 @@ function drawGrain(ctx: CanvasRenderingContext2D, w: number, h: number, amount: 
   gctx.putImageData(imgData, 0, 0)
   ctx.save()
   ctx.globalCompositeOperation = 'overlay'
-  ctx.globalAlpha = 0.40
+  ctx.globalAlpha = 0.45
   ctx.imageSmoothingEnabled = true
   ctx.imageSmoothingQuality = 'high'
   ctx.drawImage(gc, 0, 0, w, h)
@@ -327,7 +338,7 @@ function drawFrame(
   h: number,
   opts: Pick<ExportOptions,
     'colorFilter' | 'colorOverlay' | 'vignetteOpacity' | 'grain' | 'halation' |
-    'captionsEnabled' | 'captionStyle' | 'captionPos' | 'captionSize' |
+    'captionsEnabled' | 'captionStyle' | 'captionPos' | 'captionSize' | 'captionColor' | 'captionFont' |
     'showHook' | 'hookText' | 'showCta' | 'ctaText'>,
   clipTime: number,
   captions: CaptionSegment[],
@@ -337,8 +348,11 @@ function drawFrame(
   ctx.save()
   ctx.globalAlpha = overlayAlpha
 
-  // Clarity boost: subtle contrast/saturation lift gives perceived 4K sharpness
-  const clarityBoost = 'contrast(1.08) saturate(1.05)'
+  const fontFamilyStr = FONT_FAMILIES[opts.captionFont ?? 'inter'] ?? 'Inter, Arial, sans-serif'
+  const capColor = opts.captionColor ?? '#FFFFFF'
+
+  // Clarity boost: contrast/saturation lift gives perceived sharpness without blurring
+  const clarityBoost = 'contrast(1.12) saturate(1.08) brightness(1.01)'
   const baseFilter   = opts.colorFilter && opts.colorFilter !== 'none' ? opts.colorFilter : 'none'
   ctx.filter = baseFilter !== 'none' ? `${baseFilter} ${clarityBoost}` : clarityBoost
   drawVideoFit(ctx, video, w, h)
@@ -360,13 +374,14 @@ function drawFrame(
     ctx.globalAlpha = overlayAlpha
   }
 
-  // Vignette
+  // Vignette — crush corners more aggressively for filmic feel
   const vig = opts.vignetteOpacity ?? 0
   if (vig > 0) {
     const cx = w / 2, cy = h / 2
     const r = Math.sqrt(cx * cx + cy * cy)
-    const vg = ctx.createRadialGradient(cx, cy, r * 0.28, cx, cy, r)
+    const vg = ctx.createRadialGradient(cx, cy, r * 0.32, cx, cy, r * 1.05)
     vg.addColorStop(0, 'rgba(0,0,0,0)')
+    vg.addColorStop(0.7, `rgba(0,0,0,${vig * overlayAlpha * 0.4})`)
     vg.addColorStop(1, `rgba(0,0,0,${vig * overlayAlpha})`)
     ctx.globalCompositeOperation = 'source-over'
     ctx.fillStyle = vg
@@ -384,7 +399,7 @@ function drawFrame(
   // Hook
   if (opts.showHook && opts.hookText) {
     const sz = Math.round(w * 0.032 * (opts.captionSize ?? 1))
-    ctx.font = `700 ${sz}px Inter, Arial, sans-serif`
+    ctx.font = `700 ${sz}px ${fontFamilyStr}`
     ctx.textAlign = 'center'
     drawStyledText(ctx, opts.hookText, w / 2, h * 0.06 + sz, w * 0.85, '#FAFAFA', opts.captionStyle ?? 'bold')
   }
@@ -395,16 +410,16 @@ function drawFrame(
     if (cap) {
       const sz = Math.round(w * 0.028 * (opts.captionSize ?? 1))
       const y = captionY(h, opts.captionPos, sz)
-      ctx.font = `${opts.captionStyle === 'minimal' ? 500 : 700} ${sz}px Inter, Arial, sans-serif`
+      ctx.font = `${opts.captionStyle === 'minimal' ? 500 : 700} ${sz}px ${fontFamilyStr}`
       ctx.textAlign = 'center'
-      drawStyledText(ctx, cap.text, w / 2, y, w * 0.80, '#FFFFFF', opts.captionStyle ?? 'bold')
+      drawStyledText(ctx, cap.text, w / 2, y, w * 0.80, capColor, opts.captionStyle ?? 'bold')
     }
   }
 
   // CTA
   if (opts.showCta && opts.ctaText) {
     const sz = Math.round(w * 0.025 * (opts.captionSize ?? 1))
-    ctx.font = `600 ${sz}px Inter, Arial, sans-serif`
+    ctx.font = `600 ${sz}px ${fontFamilyStr}`
     ctx.textAlign = 'center'
     drawStyledText(ctx, opts.ctaText, w / 2, h * 0.94, w * 0.80, '#a5b4fc', opts.captionStyle ?? 'bold')
   }
