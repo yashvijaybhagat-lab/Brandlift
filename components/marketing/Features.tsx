@@ -65,6 +65,22 @@ function FeatureSection({
 }
 
 /* ─── Smart Onboarding Mockup ────────────────────────────────────────────── */
+/* ─── Glow mockup wrapper ─────────────────────────────────────────────────── */
+function MockupFrame({ children, accent = '#6366f1' }: { children: React.ReactNode; accent?: string }) {
+  return (
+    <div className="relative rounded-[20px] p-[1px]"
+      style={{
+        background: `linear-gradient(135deg, ${accent}35 0%, ${accent}10 50%, rgba(255,255,255,0.05) 100%)`,
+        boxShadow: `0 0 0 1px ${accent}10, 0 24px 60px rgba(0,0,0,0.45), 0 0 80px ${accent}08`,
+      }}
+    >
+      <div className="rounded-[19px] overflow-hidden" style={{ background: 'var(--color-surface)' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
 function OnboardingMockup() {
   const [showAi, setShowAi] = useState(false)
 
@@ -90,13 +106,11 @@ function OnboardingMockup() {
   }, [])
 
   return (
+    <MockupFrame accent="#6366f1">
     <div
       id="onboarding-mockup"
-      className="rounded-container p-6 flex flex-col gap-5"
-      style={{
-        background: 'var(--color-surface)',
-        border: '0.5px solid var(--color-border)',
-      }}
+      className="p-6 flex flex-col gap-5"
+      style={{ background: 'var(--color-surface)' }}
     >
       {/* Header */}
       <div className="flex items-center gap-3">
@@ -170,11 +184,13 @@ function OnboardingMockup() {
             style={{
               background: i === 0 ? 'var(--color-primary)' : 'var(--color-border-strong)',
               transition: 'background 200ms var(--ease-out)',
+              boxShadow: i === 0 ? '0 0 8px rgba(99,102,241,0.6)' : undefined,
             }}
           />
         ))}
       </div>
     </div>
+    </MockupFrame>
   )
 }
 
@@ -208,21 +224,21 @@ const CONTENT_IDEAS = [
 
 function ContentMockup() {
   return (
+    <MockupFrame accent="#8b5cf6">
     <div
-      className="rounded-container p-5 grid grid-cols-2 gap-3"
-      style={{
-        background: 'var(--color-surface)',
-        border: '0.5px solid var(--color-border)',
-      }}
+      className="p-5 grid grid-cols-2 gap-3"
+      style={{ background: 'var(--color-surface)' }}
     >
       {CONTENT_IDEAS.map((idea, i) => (
         <div
           key={i}
-          className="card-hover rounded-card p-3.5 flex flex-col gap-2.5"
+          className="rounded-card p-3.5 flex flex-col gap-2.5 transition-all duration-150"
           style={{
             background: 'var(--color-surface-elevated)',
             border: '0.5px solid var(--color-border)',
           }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(139,92,246,0.3)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)' }}
         >
           <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text)' }}>
             {idea.hook}
@@ -247,6 +263,7 @@ function ContentMockup() {
         </div>
       ))}
     </div>
+    </MockupFrame>
   )
 }
 
@@ -303,14 +320,11 @@ function PipelineMockup() {
   }, [])
 
   return (
+    <MockupFrame accent="#4ADE80">
     <div
       id="pipeline-mockup"
-      className="rounded-container p-6 flex flex-col gap-4"
-      style={{
-        background: 'var(--color-surface)',
-        border: '0.5px solid var(--color-border)',
-        fontFamily: 'monospace',
-      }}
+      className="p-6 flex flex-col gap-4"
+      style={{ background: 'var(--color-surface)', fontFamily: 'monospace' }}
     >
       {/* Filename header */}
       <div
@@ -362,6 +376,7 @@ function PipelineMockup() {
         </div>
       ))}
     </div>
+    </MockupFrame>
   )
 }
 
@@ -395,13 +410,17 @@ export default function Features() {
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 800,
-              fontSize: 'clamp(30px, 4.5vw, 48px)',
+              fontSize: 'clamp(30px, 4.5vw, 52px)',
               letterSpacing: '-0.04em',
-              lineHeight: 1.05,
+              lineHeight: 1.0,
               color: '#FAFAFA',
             }}
           >
-            Everything you need.<br />Nothing you don&apos;t.
+            Everything you need.
+            <br />
+            <span style={{ background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 45%, #a78bfa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              Nothing you don&apos;t.
+            </span>
           </h2>
           <p style={{ fontSize: 16, color: '#71717A', maxWidth: '46ch', lineHeight: 1.65 }}>
             From smart onboarding to AI-powered video production — one platform that does the work of a full marketing team.

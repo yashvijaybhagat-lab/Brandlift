@@ -71,28 +71,34 @@ export default function Pricing() {
           {BETA_FEATURES.map((f, i) => {
             const Icon = f.icon
             return (
-              <ScrollReveal key={f.label} delay={i * 30}>
+              <ScrollReveal key={f.label} delay={i * 25}>
                 <div
-                  className="flex items-start gap-3 p-4 rounded-2xl transition-all duration-200 h-full"
+                  className="flex items-start gap-3 p-4 rounded-2xl transition-all duration-200 h-full relative overflow-hidden group"
                   style={{ background: 'var(--color-surface)', border: '0.5px solid var(--color-border)' }}
                   onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.3)'
-                    ;(e.currentTarget as HTMLElement).style.background = 'var(--color-surface-elevated)'
-                    ;(e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'
+                    const el = e.currentTarget as HTMLElement
+                    el.style.borderColor = 'rgba(99,102,241,0.35)'
+                    el.style.background = 'var(--color-surface-elevated)'
+                    el.style.transform = 'translateY(-2px)'
+                    el.style.boxShadow = '0 8px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(99,102,241,0.1)'
                   }}
                   onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)'
-                    ;(e.currentTarget as HTMLElement).style.background = 'var(--color-surface)'
-                    ;(e.currentTarget as HTMLElement).style.transform = 'translateY(0)'
+                    const el = e.currentTarget as HTMLElement
+                    el.style.borderColor = 'var(--color-border)'
+                    el.style.background = 'var(--color-surface)'
+                    el.style.transform = 'translateY(0)'
+                    el.style.boxShadow = 'none'
                   }}
                 >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
+                  <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent)', opacity: 0 }} />
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                    style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.25)', boxShadow: '0 0 12px rgba(99,102,241,0.15)' }}>
                     <Icon className="w-4 h-4" style={{ color: '#818cf8' }} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="text-[13px] font-semibold" style={{ color: 'var(--color-text)' }}>{f.label}</p>
-                      <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded" style={{ background: 'rgba(74,222,128,0.1)', color: '#4ADE80', border: '0.5px solid rgba(74,222,128,0.2)' }}>Free</span>
+                      <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded" style={{ background: 'rgba(74,222,128,0.08)', color: '#4ADE80', border: '0.5px solid rgba(74,222,128,0.25)' }}>Free</span>
                     </div>
                     <p className="text-[12px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{f.desc}</p>
                   </div>
@@ -107,19 +113,24 @@ export default function Pricing() {
           <div
             className="rounded-2xl p-8 flex flex-col items-center gap-6 text-center relative overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.06) 100%)',
-              border: '0.5px solid rgba(99,102,241,0.2)',
+              background: 'linear-gradient(135deg, rgba(99,102,241,0.07) 0%, rgba(139,92,246,0.05) 100%)',
+              border: '0.5px solid rgba(99,102,241,0.25)',
+              boxShadow: '0 0 0 1px rgba(99,102,241,0.08), 0 32px 64px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)',
             }}
           >
-            {/* Subtle glow */}
+            {/* Top edge highlight */}
+            <div className="absolute top-0 left-0 right-0 h-px pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 10%, rgba(99,102,241,0.5) 50%, transparent 90%)' }} aria-hidden />
+            {/* Glow */}
             <div
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-24 pointer-events-none"
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-32 pointer-events-none"
               aria-hidden
               style={{
-                background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.15) 0%, transparent 70%)',
-                filter: 'blur(20px)',
+                background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.18) 0%, transparent 70%)',
+                filter: 'blur(24px)',
               }}
             />
+            {/* Corner accents */}
+            <div className="absolute bottom-0 left-0 w-40 h-40 pointer-events-none" style={{ background: 'radial-gradient(ellipse at bottom-left, rgba(139,92,246,0.08) 0%, transparent 70%)' }} aria-hidden />
 
             <div className="relative z-10 flex flex-col items-center gap-4">
               <p className="text-[22px] font-bold" style={{ color: '#FAFAFA', fontFamily: 'var(--font-display)', letterSpacing: '-0.03em' }}>

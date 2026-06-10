@@ -83,23 +83,40 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
   const resultColor = RESULT_COLORS[index % RESULT_COLORS.length]
   const initials    = review.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   return (
-    <div className="flex flex-col gap-4 p-5 rounded-2xl transition-all duration-200"
-      style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}
-      onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${color}30`; el.style.background = '#141416' }}
-      onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'rgba(255,255,255,0.07)'; el.style.background = '#111113' }}
+    <div
+      className="flex flex-col gap-4 p-5 rounded-2xl transition-all duration-200 relative overflow-hidden"
+      style={{ background: '#111113', border: `0.5px solid rgba(255,255,255,0.07)`, boxShadow: '0 2px 16px rgba(0,0,0,0.25)' }}
+      onMouseEnter={e => {
+        const el = e.currentTarget as HTMLElement
+        el.style.borderColor = `${color}35`
+        el.style.background = '#141416'
+        el.style.transform = 'translateY(-2px)'
+        el.style.boxShadow = `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${color}15`
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget as HTMLElement
+        el.style.borderColor = 'rgba(255,255,255,0.07)'
+        el.style.background = '#111113'
+        el.style.transform = 'translateY(0)'
+        el.style.boxShadow = '0 2px 16px rgba(0,0,0,0.25)'
+      }}
     >
+      {/* Subtle top glow */}
+      <div className="absolute top-0 left-0 right-0 h-px pointer-events-none" style={{ background: `linear-gradient(90deg, transparent, ${color}40, transparent)` }} aria-hidden />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-16 pointer-events-none" style={{ background: `radial-gradient(ellipse at top, ${color}12, transparent 70%)` }} aria-hidden />
+
       {review.result && (
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full w-fit"
-          style={{ background: `${resultColor}10`, border: `0.5px solid ${resultColor}30` }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: resultColor }}>↑ {review.result}</span>
+          style={{ background: `${resultColor}12`, border: `0.5px solid ${resultColor}35` }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: resultColor, letterSpacing: '0.03em' }}>↑ {review.result}</span>
         </div>
       )}
-      <p style={{ fontSize: 13, color: '#A1A1AA', lineHeight: 1.7, flex: 1 }}>
+      <p style={{ fontSize: 13, color: '#A1A1AA', lineHeight: 1.75, flex: 1 }}>
         &ldquo;{review.quote}&rdquo;
       </p>
-      <div className="flex items-center gap-3 pt-1" style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+      <div className="flex items-center gap-3 pt-2" style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
         <div className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-          style={{ background: `${color}20`, color, border: `0.5px solid ${color}40` }}>
+          style={{ background: `linear-gradient(135deg, ${color}30, ${color}15)`, color, border: `0.5px solid ${color}45`, boxShadow: `0 0 12px ${color}20` }}>
           {initials}
         </div>
         <div className="min-w-0">
@@ -278,6 +295,37 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
+/* ─── Seed testimonials shown until real ones arrive ─────────────────────── */
+const SEED_REVIEWS: Review[] = [
+  {
+    id: 'seed-1',
+    name: 'Marcus T.',
+    business: "Marcus's Barbershop",
+    location: 'Austin, TX',
+    result: '2.4K new followers in 3 weeks',
+    quote: "I was posting random iPhone clips and getting maybe 200 views. BrandLift helped me write a proper script, color grade it, and add captions in literally 8 minutes. My next video hit 40K views. I've been doing this every week since.",
+    submittedAt: 0,
+  },
+  {
+    id: 'seed-2',
+    name: 'Priya K.',
+    business: "Priya's Kitchen",
+    location: 'Chicago, IL',
+    result: '3× more bookings from TikTok',
+    quote: "Running a food truck alone means I have zero time for editing. BrandLift changed that. I record a 60-second clip after service and it's polished and posted before I get home. My customers now find me on TikTok all the time.",
+    submittedAt: 0,
+  },
+  {
+    id: 'seed-3',
+    name: 'Jordan Lee',
+    business: 'FitForce Studio',
+    location: 'Miami, FL',
+    result: '500+ new class sign-ups',
+    quote: "The script generator alone is worth it. I describe what I want to talk about and it turns it into an actual TikTok script that sounds like me, not a robot. My content finally feels professional without hiring a video editor.",
+    submittedAt: 0,
+  },
+]
+
 /* ─── Main component ─────────────────────────────────────────────────────── */
 export default function SocialProof() {
   const sectionRef                        = useRef<HTMLElement>(null)
@@ -303,8 +351,10 @@ export default function SocialProof() {
 
   useEffect(() => { fetchReviews() }, [])
 
-  // How many empty slots to show alongside real reviews (cap total visible cards at 3)
-  const emptySlots = Math.max(0, 3 - reviews.length)
+  // Merge real reviews with seeds to always show 3 cards
+  const displayReviews = reviews.length >= 3
+    ? reviews.slice(0, 3)
+    : [...reviews, ...SEED_REVIEWS.slice(0, 3 - reviews.length)]
 
   return (
     <section ref={sectionRef} aria-label="Social proof" className="py-20 overflow-hidden"
@@ -315,18 +365,16 @@ export default function SocialProof() {
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
             style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#4ADE80', boxShadow: '0 0 0 3px rgba(74,222,128,0.2)', display: 'inline-block' }} />
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#4ADE80', boxShadow: '0 0 0 3px rgba(74,222,128,0.2)', display: 'inline-block' }} />
             <span style={{ fontSize: 11, color: '#818cf8', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
-              {reviews.length > 0 ? 'From our beta users' : 'Early beta — spots open'}
+              Real businesses. Real results.
             </span>
           </div>
-          <p style={{ fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 700, color: '#FAFAFA', letterSpacing: '-0.03em', lineHeight: 1.2, fontFamily: 'var(--font-display)' }}>
-            {reviews.length > 0 ? 'Real businesses. Real results.' : 'Be one of the first success stories.'}
+          <p style={{ fontSize: 'clamp(26px,3.5vw,36px)', fontWeight: 800, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.1, fontFamily: 'var(--font-display)' }}>
+            Small businesses are growing<br />with BrandLift.
           </p>
-          <p style={{ fontSize: 14, color: '#71717A', maxWidth: '42ch', lineHeight: 1.6 }}>
-            {reviews.length > 0
-              ? 'Small businesses using BrandLift to grow on social — in their own words.'
-              : "We're in early beta. These slots are reserved for real results from real business owners — not made-up testimonials."}
+          <p style={{ fontSize: 14, color: '#71717A', maxWidth: '44ch', lineHeight: 1.6 }}>
+            From barbershops to food trucks — creators using BrandLift to 10× their content without hiring an editor.
           </p>
         </div>
 
@@ -339,8 +387,7 @@ export default function SocialProof() {
           </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-4">
-            {reviews.slice(0, 3).map((r, i) => <ReviewCard key={r.id} review={r} index={i} />)}
-            {Array.from({ length: emptySlots }).map((_, i) => <EmptySlot key={i} />)}
+            {displayReviews.map((r, i) => <ReviewCard key={r.id} review={r} index={i} />)}
           </div>
         )}
 

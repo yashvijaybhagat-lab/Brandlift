@@ -152,8 +152,9 @@ export function Sidebar({
           width: collapsed ? 60 : 240,
           transition: 'width 220ms cubic-bezier(0.23,1,0.32,1)',
           willChange: 'width',
+          background: 'linear-gradient(180deg, #111113 0%, #0e0e10 100%)',
         }}
-        className="relative flex flex-col h-full bg-[#111113] border-r border-white/[0.06] overflow-hidden flex-shrink-0"
+        className="relative flex flex-col h-full border-r border-white/[0.06] overflow-hidden flex-shrink-0"
         aria-label="Main navigation"
       >
         {/* ── Top section ── */}
@@ -212,22 +213,25 @@ export function Sidebar({
                   href={item.href}
                   className={cn(
                     'relative flex items-center gap-3 rounded-[8px] h-9 px-2.5',
-                    'text-[14px] font-medium select-none',
-                    'transition-colors duration-160',
+                    'text-[13px] font-medium select-none',
+                    'transition-all duration-160',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60',
                     isActive
-                      ? ['text-[#818cf8]']
-                      : ['text-[#52525B]', 'hover:bg-[#18181C]', 'hover:text-[#A1A1AA]']
+                      ? ['text-[#a5b4fc]']
+                      : ['text-[#52525B]', 'hover:bg-white/[0.04]', 'hover:text-[#A1A1AA]']
                   )}
                   style={{
-                    background: isActive ? 'rgba(99,102,241,0.08)' : undefined,
-                    boxShadow: isActive ? 'inset 2px 0 0 0 #6366f1' : undefined,
+                    background: isActive ? 'linear-gradient(90deg, rgba(99,102,241,0.12) 0%, rgba(99,102,241,0.04) 100%)' : undefined,
+                    boxShadow: isActive ? 'inset 2px 0 0 0 #6366f1, 0 0 12px rgba(99,102,241,0.08)' : undefined,
                   }}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon
                     className="flex-shrink-0 w-4 h-4"
-                    style={{ color: isActive ? '#6366f1' : undefined }}
+                    style={{
+                      color: isActive ? '#818cf8' : undefined,
+                      filter: isActive ? 'drop-shadow(0 0 4px rgba(99,102,241,0.5))' : undefined,
+                    }}
                   />
                   <span
                     className="truncate"

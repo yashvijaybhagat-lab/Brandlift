@@ -29,7 +29,7 @@ export function AnimatedBackground() {
             left: '-20%',
             width: '70%',
             height: '80%',
-            background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.13) 0%, transparent 68%)',
+            background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.22) 0%, transparent 68%)',
             filter: 'blur(55px)',
           }}
           animate={{ x: [0, 35, -18, 0], y: [0, -25, 22, 0], scale: [1, 1.04, 0.97, 1] }}
@@ -44,7 +44,7 @@ export function AnimatedBackground() {
             right: '-15%',
             width: '60%',
             height: '65%',
-            background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.09) 0%, transparent 68%)',
+            background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.17) 0%, transparent 68%)',
             filter: 'blur(75px)',
           }}
           animate={{ x: [0, -45, 22, 0], y: [0, 35, -18, 0], scale: [1, 1.07, 0.94, 1] }}
@@ -59,11 +59,26 @@ export function AnimatedBackground() {
             left: '28%',
             width: '48%',
             height: '50%',
-            background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.05) 0%, transparent 68%)',
+            background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.10) 0%, transparent 68%)',
             filter: 'blur(90px)',
           }}
           animate={{ x: [0, 20, -12, 0], y: [0, -18, 28, 0] }}
           transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut', delay: 11 }}
+        />
+
+        {/* Top-right warm accent blob */}
+        <motion.div
+          className="absolute rounded-full"
+          style={{
+            top: '-10%',
+            right: '-10%',
+            width: '40%',
+            height: '45%',
+            background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.12) 0%, transparent 70%)',
+            filter: 'blur(80px)',
+          }}
+          animate={{ x: [0, -20, 15, 0], y: [0, 20, -10, 0] }}
+          transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
         />
       </motion.div>
 

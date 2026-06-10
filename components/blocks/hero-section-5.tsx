@@ -145,20 +145,27 @@ const HeroHeader = () => {
 }
 
 /* ─── Stat badge ──────────────────────────────────────────────────────────── */
-function StatBadge({ value, label }: { value: string; label: string }) {
+function StatBadge({ value, label, accent }: { value: string; label: string; accent?: string }) {
+  const color = accent ?? '#6366f1'
   return (
     <div
-      className="flex flex-col gap-0.5 px-4 py-3 rounded-xl"
+      className="flex flex-col gap-0.5 px-4 py-3 rounded-xl relative overflow-hidden"
       style={{
-        background: 'rgba(17,17,19,0.8)',
-        border: '0.5px solid rgba(255,255,255,0.08)',
+        background: 'rgba(17,17,19,0.85)',
+        border: `0.5px solid ${color}25`,
         backdropFilter: 'blur(12px)',
+        boxShadow: `0 0 0 1px ${color}10, 0 4px 20px rgba(0,0,0,0.3)`,
       }}
     >
-      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1 }}>
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at 30% 0%, ${color}12 0%, transparent 65%)` }}
+        aria-hidden
+      />
+      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1, position: 'relative' }}>
         {value}
       </span>
-      <span style={{ fontSize: 11, color: '#71717A', fontWeight: 500, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+      <span style={{ fontSize: 11, color: '#71717A', fontWeight: 500, letterSpacing: '0.02em', textTransform: 'uppercase', position: 'relative' }}>
         {label}
       </span>
     </div>
@@ -456,9 +463,9 @@ export function HeroSection() {
                     Free forever · No credit card · Setup in 5 minutes
                   </p>
                   <div className="flex gap-3 flex-wrap">
-                    <StatBadge value="10x" label="Faster editing" />
-                    <StatBadge value="3 min" label="Video ready" />
-                    <StatBadge value="500+" label="Businesses" />
+                    <StatBadge value="10x" label="Faster editing" accent="#6366f1" />
+                    <StatBadge value="3 min" label="Video ready" accent="#8b5cf6" />
+                    <StatBadge value="500+" label="Businesses" accent="#4ADE80" />
                   </div>
                 </motion.div>
               </div>
