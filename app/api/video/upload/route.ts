@@ -1,19 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateClientTokenFromReadWriteToken } from '@vercel/blob/client'
+import { getServerSession } from 'next-auth'
+import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
-  const url = new URL(request.url)
-  const filename = url.searchParams.get('filename') ?? 'video.mp4'
-  const ext = filename.includes('.') ? filename.split('.').pop()! : 'mp4'
-  // Construct a unique pathname for Vercel Blob, ensuring it's a file path.
-  const pathname = `videos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+const ALLOWED_EXTS = new Set(['mp4', 'mov', 'avi', 'webm', 'mkv', 'qt'])
 
+export async function GET(request: NextRequest) {
+  const session = await getServerSession()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Sign in to upload videos' }, { status: 401 })
+  }
+
+  const ip = getIp(request)
+  const rl = rateLimit(`video-upload:${ip}`, 20, 60 * 60_000)
+  if (!rl.success) return tooManyRequests(rl.reset)
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json({ error: 'Blob storage not configured' }, { status: 503 })
   }
+
+  const url = new URL(request.url)
+  const filename = url.searchParams.get('filename') ?? 'video.mp4'
+  const rawExt = filename.includes('.') ? filename.split('.').pop()!.toLowerCase() : 'mp4'
+  const ext = ALLOWED_EXTS.has(rawExt) ? rawExt : 'mp4'
+  const pathname = `videos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
   try {
     const clientToken = await generateClientTokenFromReadWriteToken({

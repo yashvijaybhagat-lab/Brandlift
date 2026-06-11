@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
+import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest) {
-  const { email } = await req.json()
+const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/
 
-  if (!email || typeof email !== 'string' || !email.includes('@')) {
+export async function POST(req: NextRequest) {
+  const ip = getIp(req)
+  const rl = rateLimit(`subscribe:${ip}`, 5, 15 * 60_000)
+  if (!rl.success) return tooManyRequests(rl.reset)
+
+  let body: { email?: unknown }
+  try { body = await req.json() } catch {
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+  }
+  const { email } = body
+
+  if (!email || typeof email !== 'string' || email.length > 254 || !EMAIL_RE.test(email)) {
     return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
   }
 

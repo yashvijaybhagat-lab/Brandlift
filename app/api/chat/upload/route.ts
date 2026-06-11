@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateClientTokenFromReadWriteToken } from '@vercel/blob/client'
+import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +11,10 @@ const ALLOWED_TYPES = [
 ]
 
 export async function GET(request: NextRequest) {
+  const ip = getIp(request)
+  const rl = rateLimit(`chat-upload:${ip}`, 20, 60 * 60_000)
+  if (!rl.success) return tooManyRequests(rl.reset)
+
   const { searchParams } = new URL(request.url)
   const filename = searchParams.get('filename') ?? 'file'
   const contentType = searchParams.get('type') ?? 'application/octet-stream'

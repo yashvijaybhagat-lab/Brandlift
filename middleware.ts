@@ -65,6 +65,13 @@ const ROUTE_LIMITS: { pattern: RegExp; limit: number; windowMs: number }[] = [
   { pattern: /^\/api\/pexels\//,           limit: 60,  windowMs: 60 * 60_000 },
   { pattern: /^\/api\/chat\/upload/,       limit: 20,  windowMs: 60 * 60_000 },
   { pattern: /^\/api\/chat/,              limit: 30,  windowMs: 60_000       },
+  { pattern: /^\/api\/subscribe/,         limit: 5,   windowMs: 15 * 60_000 },
+  { pattern: /^\/api\/video\/upload/,     limit: 20,  windowMs: 60 * 60_000 },
+  { pattern: /^\/api\/video\//,           limit: 30,  windowMs: 60 * 60_000 },
+  { pattern: /^\/api\/user\//,            limit: 60,  windowMs: 60 * 60_000 },
+  { pattern: /^\/api\/community\//,       limit: 60,  windowMs: 60 * 60_000 },
+  { pattern: /^\/api\/onboard\//,         limit: 20,  windowMs: 60 * 60_000 },
+  { pattern: /^\/api\/content\//,         limit: 30,  windowMs: 60 * 60_000 },
   { pattern: /^\/api\//,                  limit: 100, windowMs: 60_000       },
 ]
 
@@ -98,7 +105,6 @@ const BLOCKED_UA: RegExp[] = [
   /python-requests\/[0-1]\./i, /python-urllib/i,
   /go-http-client\/1\.0/i, /libwww-perl/i, /lwp-trivial/i,
   /wget\/[0-9]/i, /curl\/[0-6]\./i,
-  /\b(sqlmap|dirbuster|gobuster|wfuzz|hydra)\b/i,
 ]
 
 // ── Security response headers ─────────────────────────────────
@@ -187,8 +193,11 @@ export function middleware(req: NextRequest) {
     return addSecHeaders(NextResponse.next())
   }
 
-  // 6. NextAuth routes — pass with headers (must not be rate-limited)
+  // 6. Auth routes — rate limit sign-in attempts (5 per 15 min per IP)
   if (pathname.startsWith('/api/auth/')) {
+    if (pathname === '/api/auth/signin' || pathname.startsWith('/api/auth/callback/')) {
+      if (!allow(`auth:${ip}`, 5, 15 * 60_000)) return block429(15 * 60_000)
+    }
     return addSecHeaders(NextResponse.next())
   }
 
