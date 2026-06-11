@@ -26,7 +26,7 @@ type CopyPlatform = 'tiktok' | 'instagram' | 'youtube' | 'linkedin'
 interface PostCopy { title: string; caption: string; hashtags: string[]; cta: string }
 interface HookItem { text: string; style: string; emoji: string }
 interface ScriptScore { score: number; grade: string; color: string; tips: string[] }
-type GradeKey  = 'original' | 'teal_orange' | 'moody' | 'bleach' | 'golden' | 'noir' | 'fuji' | 'vintage' | 'arctic' | 'kodak' | 'custom'
+type GradeKey  = 'original' | 'premium' | 'clean_cool' | 'natural' | 'vivid' | 'deep' | 'mono' | 'custom'
 
 interface VideoRecord  { id: string; name: string; script: string; originalUrl: string; enhancedUrl: string; createdAt: number }
 interface Caption      { text: string; start: number; end: number }
@@ -40,31 +40,31 @@ const DEFAULT_CUSTOM: CustomColor = { exposure: 0, contrast: 0, saturation: 0, t
 interface GradeLook { filter: string; color?: { bg: string; blend: string; opacity: number }; vignette?: number }
 
 const GRADES: Record<GradeKey, GradeLook> = {
-  original:    { filter: 'none' },
-  teal_orange: { filter: 'contrast(1.22) brightness(0.80) saturate(0.58) hue-rotate(-3deg)', color: { bg: 'linear-gradient(135deg,rgb(0,100,100) 0%,rgb(120,45,0) 100%)', blend: 'color', opacity: 0.30 }, vignette: 0.78 },
-  moody:       { filter: 'contrast(1.42) brightness(0.70) saturate(0.38)', color: { bg: 'linear-gradient(180deg,rgb(8,12,32) 0%,rgb(22,6,16) 100%)', blend: 'color', opacity: 0.40 }, vignette: 0.90 },
-  bleach:      { filter: 'contrast(1.60) brightness(0.90) saturate(0.18)', color: { bg: 'linear-gradient(180deg,rgb(225,232,238) 0%,rgb(20,20,20) 100%)', blend: 'soft-light', opacity: 0.16 }, vignette: 0.52 },
-  golden:      { filter: 'brightness(1.12) contrast(1.08) saturate(1.35) sepia(0.08)', color: { bg: 'linear-gradient(135deg,rgb(255,210,55) 0%,rgb(210,95,0) 100%)', blend: 'soft-light', opacity: 0.32 }, vignette: 0.34 },
-  noir:        { filter: 'grayscale(1) contrast(1.52) brightness(0.76)', vignette: 0.92 },
-  fuji:        { filter: 'brightness(1.05) contrast(1.10) saturate(0.85) hue-rotate(5deg)', color: { bg: 'linear-gradient(135deg,rgb(170,215,160) 0%,rgb(248,218,178) 100%)', blend: 'soft-light', opacity: 0.20 }, vignette: 0.30 },
-  vintage:     { filter: 'brightness(0.92) contrast(1.12) saturate(0.68) sepia(0.32)', color: { bg: 'linear-gradient(135deg,rgb(180,128,78) 0%,rgb(98,58,28) 100%)', blend: 'soft-light', opacity: 0.24 }, vignette: 0.62 },
-  arctic:      { filter: 'brightness(1.16) contrast(1.08) saturate(0.48) hue-rotate(8deg)', color: { bg: 'linear-gradient(180deg,rgb(190,225,255) 0%,rgb(90,145,218) 100%)', blend: 'color', opacity: 0.22 }, vignette: 0.24 },
-  kodak:       { filter: 'brightness(1.06) contrast(1.15) saturate(1.12) sepia(0.05)', color: { bg: 'linear-gradient(135deg,rgb(255,200,115) 0%,rgb(198,158,80) 100%)', blend: 'soft-light', opacity: 0.22 }, vignette: 0.40 },
-  custom:      { filter: 'none' },
+  // "Invisible premium" — neutral-cool S-curve, skin-safe, natural saturation
+  original:   { filter: 'none' },
+  premium:    { filter: 'contrast(1.07) brightness(1.02) saturate(1.05) hue-rotate(-2deg)' },
+  // Ultra-clean, cool-neutral — DTC/creator studio look
+  clean_cool: { filter: 'contrast(1.06) brightness(1.05) saturate(0.96) hue-rotate(-5deg)' },
+  // Warm natural daylight — accurate skin, no orange wash
+  natural:    { filter: 'contrast(1.05) brightness(1.04) saturate(1.10)' },
+  // Modern vivid — punchy without halos
+  vivid:      { filter: 'contrast(1.08) brightness(1.02) saturate(1.22)' },
+  // Rich shadows with retained detail — cinematic depth, no vignette
+  deep:       { filter: 'contrast(1.14) brightness(0.96) saturate(1.04)' },
+  // Clean monochrome — natural gray response, not crushed
+  mono:       { filter: 'grayscale(1) contrast(1.12) brightness(1.03)' },
+  custom:     { filter: 'none' },
 }
 
 const GRADE_META: { key: GradeKey; label: string; swatch: string; desc: string }[] = [
-  { key: 'original',    label: 'Original',      swatch: 'linear-gradient(160deg,#3a3a3a 0%,#888 100%)',                    desc: 'No grade' },
-  { key: 'teal_orange', label: 'Teal & Orange', swatch: 'linear-gradient(160deg,#003d3d 30%,#7a3000 100%)',               desc: 'Blockbuster' },
-  { key: 'moody',       label: 'Moody',         swatch: 'linear-gradient(160deg,#070a18 0%,#150510 100%)',                desc: 'Dark drama' },
-  { key: 'bleach',      label: 'Bleach',        swatch: 'linear-gradient(160deg,#d0d8e0 0%,#444 70%,#0a0a0a 100%)',      desc: 'Bypass' },
-  { key: 'golden',      label: 'Golden',        swatch: 'linear-gradient(160deg,#a0620f 0%,#d48a10 55%,#b84f00 100%)',   desc: 'Sunset' },
-  { key: 'noir',        label: 'Noir',          swatch: 'linear-gradient(160deg,#000 0%,#4a4a4a 55%,#0d0d0d 100%)',      desc: 'B&W' },
-  { key: 'fuji',        label: 'Fuji',          swatch: 'linear-gradient(160deg,#4a7a4e 0%,#a8cc90 55%,#e8c880 100%)',   desc: 'Film stock' },
-  { key: 'vintage',     label: 'Vintage',       swatch: 'linear-gradient(160deg,#5a2a10 0%,#a8703c 55%,#c89858 100%)',   desc: 'Faded warm' },
-  { key: 'arctic',      label: 'Arctic',        swatch: 'linear-gradient(160deg,#90b8d8 0%,#6898c8 55%,#3868a8 100%)',   desc: 'Icy cool' },
-  { key: 'kodak',       label: 'Kodak',         swatch: 'linear-gradient(160deg,#d8900c 0%,#e0a840 55%,#b86010 100%)',   desc: 'Warm stock' },
-  { key: 'custom',      label: 'Custom',        swatch: 'linear-gradient(160deg,#4040c0 0%,#8050d8 55%,#6030b0 100%)',   desc: 'Manual' },
+  { key: 'original',   label: 'Original',    swatch: 'linear-gradient(160deg,#5a5a5a 0%,#909090 100%)',                  desc: 'No grade' },
+  { key: 'premium',    label: 'Premium',     swatch: 'linear-gradient(160deg,#c8d8e8 0%,#5878a0 55%,#2a4868 100%)',     desc: 'Invisible clean' },
+  { key: 'clean_cool', label: 'Clean Cool',  swatch: 'linear-gradient(160deg,#daeaf8 0%,#6898c8 55%,#2858a8 100%)',     desc: 'DTC neutral' },
+  { key: 'natural',    label: 'Natural',     swatch: 'linear-gradient(160deg,#e8e0d0 0%,#a0b888 55%,#607848 100%)',     desc: 'Daylight accurate' },
+  { key: 'vivid',      label: 'Vivid',       swatch: 'linear-gradient(160deg,#2060d0 0%,#20b050 50%,#d83020 100%)',     desc: 'Punchy & sharp' },
+  { key: 'deep',       label: 'Deep',        swatch: 'linear-gradient(160deg,#0a1020 0%,#203050 55%,#304878 100%)',     desc: 'Rich shadows' },
+  { key: 'mono',       label: 'Mono',        swatch: 'linear-gradient(160deg,#181818 0%,#686868 50%,#d0d0d0 100%)',     desc: 'Clean B&W' },
+  { key: 'custom',     label: 'Custom',      swatch: 'linear-gradient(160deg,#4040c0 0%,#8050d8 55%,#6030b0 100%)',     desc: 'Manual' },
 ]
 
 function buildCustomFilter(c: CustomColor): string {
@@ -149,12 +149,12 @@ interface QuickLook {
   letterbox?: boolean; halation?: number
 }
 const QUICK_LOOKS: QuickLook[] = [
-  { id: 'viral-tiktok', label: 'Viral TikTok',  desc: 'Teal/orange + hype beat',        swatch: 'linear-gradient(135deg,#003d3d 0%,#7a3000 100%)', grade: 'teal_orange', music: 'hype',      captionStyle: 'bold',    captionPos: 'center', captions: true  },
-  { id: 'warm-brand',   label: 'Warm Brand',    desc: 'Golden hour + acoustic',          swatch: 'linear-gradient(135deg,#a0620f 0%,#d48a10 100%)', grade: 'golden',      music: 'acoustic',  captionStyle: 'minimal', captionPos: 'bottom', captions: true  },
-  { id: 'cinematic',    label: 'Cinematic',     desc: 'Letterbox · halation · moody',   swatch: 'linear-gradient(135deg,#070a18 0%,#150510 100%)', grade: 'moody',       music: 'cinematic', captionStyle: 'film',    captionPos: 'bottom', captions: true,  letterbox: true, halation: 40 },
-  { id: 'clean-pro',    label: 'Clean Pro',     desc: 'No grade + corporate',            swatch: 'linear-gradient(135deg,#3a3a3a 0%,#888 100%)',    grade: 'original',    music: 'corporate', captionStyle: 'bold',    captionPos: 'bottom', captions: false },
-  { id: 'retro',        label: 'Retro',         desc: 'Vintage film + jazz',             swatch: 'linear-gradient(135deg,#5a2a10 0%,#a8703c 100%)', grade: 'vintage',     music: 'jazz',      captionStyle: 'film',    captionPos: 'bottom', captions: true,  halation: 20 },
-  { id: 'noir-drama',   label: 'Noir Drama',    desc: 'B&W + tension score',             swatch: 'linear-gradient(135deg,#000 0%,#4a4a4a 100%)',    grade: 'noir',        music: 'dark',      captionStyle: 'minimal', captionPos: 'center', captions: true,  letterbox: true },
+  { id: 'premium-social', label: 'Premium Social', desc: 'Clean cool + lofi · flagship',   swatch: 'linear-gradient(135deg,#c8d8e8 0%,#4878a8 100%)', grade: 'premium',    music: 'lofi',      captionStyle: 'minimal', captionPos: 'bottom', captions: true  },
+  { id: 'bold-creator',   label: 'Bold Creator',   desc: 'Vivid + hype · high-energy',     swatch: 'linear-gradient(135deg,#2060d0 0%,#20b050 50%,#d83020 100%)', grade: 'vivid', music: 'hype', captionStyle: 'bold', captionPos: 'center', captions: true },
+  { id: 'clean-brand',    label: 'Clean Brand',    desc: 'Neutral cool + corporate',       swatch: 'linear-gradient(135deg,#daeaf8 0%,#3870b8 100%)', grade: 'clean_cool', music: 'corporate', captionStyle: 'minimal', captionPos: 'bottom', captions: false },
+  { id: 'natural-story',  label: 'Natural Story',  desc: 'Daylight accurate + acoustic',   swatch: 'linear-gradient(135deg,#e8e0d0 0%,#708858 100%)', grade: 'natural',    music: 'acoustic',  captionStyle: 'minimal', captionPos: 'bottom', captions: true  },
+  { id: 'deep-cinematic', label: 'Deep Cinematic', desc: 'Rich shadows + cinematic score', swatch: 'linear-gradient(135deg,#0a1020 0%,#304878 100%)', grade: 'deep',       music: 'cinematic', captionStyle: 'film',    captionPos: 'bottom', captions: true  },
+  { id: 'monochrome',     label: 'Monochrome',     desc: 'Clean B&W + ambient',            swatch: 'linear-gradient(135deg,#181818 0%,#c0c0c0 100%)', grade: 'mono',       music: 'ambient',   captionStyle: 'minimal', captionPos: 'bottom', captions: true  },
 ]
 
 const POLL_INTERVAL = 4000
@@ -1544,29 +1544,13 @@ function VideosInner() {
                     }
                   }} />
 
-                {/* Color overlay */}
+                {/* Color overlay — used only when grade defines one (current grades use CSS filters only) */}
                 {previewGrade.color && (
                   <div className="absolute inset-0 pointer-events-none" style={{
                     background: previewGrade.color.bg,
                     mixBlendMode: previewGrade.color.blend as React.CSSProperties['mixBlendMode'],
                     opacity: previewGrade.color.opacity,
                   }} />
-                )}
-
-                {/* Vignette */}
-                {(previewGrade.vignette ?? 0) > 0 && (
-                  <div className="absolute inset-0 pointer-events-none" style={{
-                    background: `radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(0,0,0,${previewGrade.vignette}) 100%)`,
-                    mixBlendMode: 'multiply',
-                  }} />
-                )}
-
-                {/* Letterbox bars — 2.39:1 cinema ratio preview (~12.8% each side for 16:9 video) */}
-                {letterbox && (
-                  <>
-                    <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: '12.8%', background: '#000000', zIndex: 8 }} />
-                    <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height: '12.8%', background: '#000000', zIndex: 8 }} />
-                  </>
                 )}
 
                 {/* Hook */}
@@ -1695,11 +1679,8 @@ function VideosInner() {
                                   ? '0 0 20px rgba(99,102,241,0.45), 0 4px 12px rgba(0,0,0,0.5)'
                                   : '0 2px 8px rgba(0,0,0,0.4)',
                               }}>
-                              {/* Letterbox bars */}
-                              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, background: 'rgba(0,0,0,0.6)' }} />
-                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, background: 'rgba(0,0,0,0.6)' }} />
-                              {/* Vignette overlay */}
-                              <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.35) 100%)' }} />
+                              {/* Subtle inner border for depth */}
+                              <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)', borderRadius: 'inherit', pointerEvents: 'none' }} />
                               {colorGrade === key && (
                                 <div style={{ position: 'absolute', top: 7, right: 6, width: 14, height: 14, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 8px rgba(99,102,241,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                   <span style={{ fontSize: 8, color: '#fff', fontWeight: 900 }}>✓</span>
@@ -1714,11 +1695,11 @@ function VideosInner() {
                         ))}
                       </div>
 
-                      {/* Noise reduction — beta feature */}
+                      {/* Clarity — micro-contrast enhancement */}
                       <div className="flex items-center justify-between p-3.5 rounded-xl" style={{ background: '#0d0d10', border: `0.5px solid ${noiseReduce ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'}` }}>
                         <div className="flex flex-col gap-0.5">
                           <div className="flex items-center gap-2">
-                            <span style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA' }}>Noise Reduction</span>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA' }}>Clarity</span>
                             {!beta.has('noise_reduce') && (
                               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold"
                                 style={{ background: 'rgba(139,92,246,0.1)', color: '#8b5cf6', border: '0.5px solid rgba(139,92,246,0.25)' }}>
@@ -1727,7 +1708,7 @@ function VideosInner() {
                             )}
                           </div>
                           <span style={{ fontSize: 11, color: '#3f3f46' }}>
-                            {noiseReduce ? 'Active — sharpening applied' : 'Reduce visual noise and boost clarity'}
+                            {noiseReduce ? 'Active — micro-contrast and subject pop applied' : 'Adds depth and sharpness — subject pops off background'}
                           </span>
                         </div>
                         {beta.has('noise_reduce') ? (
@@ -1739,67 +1720,6 @@ function VideosInner() {
                             Unlock
                           </button>
                         )}
-                      </div>
-
-                      {/* Film grain — with presets */}
-                      <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.05)' }}>
-                        <div className="flex items-center justify-between">
-                          <span style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA', letterSpacing: '0.02em' }}>Film Grain</span>
-                          <div className="flex items-center gap-2">
-                            {[{ label: 'None', v: 0 }, { label: 'Light', v: 22 }, { label: 'Medium', v: 48 }, { label: 'Heavy', v: 80 }].map(p => (
-                              <button key={p.label} onClick={() => setGrain(p.v)}
-                                className="px-2 py-0.5 rounded text-[10px] font-semibold transition-all duration-150"
-                                style={{
-                                  background: grain === p.v ? 'rgba(99,102,241,0.15)' : 'transparent',
-                                  color: grain === p.v ? '#818cf8' : '#3f3f46',
-                                  border: grain === p.v ? '0.5px solid rgba(99,102,241,0.3)' : '0.5px solid transparent',
-                                }}>
-                                {p.label}
-                              </button>
-                            ))}
-                            <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#6366f1', minWidth: 28, textAlign: 'right' }}>{grain}</span>
-                          </div>
-                        </div>
-                        <input type="range" min={0} max={100} value={grain}
-                          onChange={e => setGrain(Number(e.target.value))}
-                          className="w-full" style={{ accentColor: '#6366f1', cursor: 'pointer', height: 3 }} />
-                      </div>
-
-                      {/* Cinematic FX */}
-                      <div className="flex flex-col gap-4 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.05)' }}>
-                        <p style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Cinematic FX</p>
-
-                        {/* Letterbox */}
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA' }}>Letterbox</p>
-                            <p style={{ fontSize: 11, color: '#3f3f46' }}>2.39:1 cinema crop bars</p>
-                          </div>
-                          <Toggle on={letterbox} onToggle={() => setLetterbox(p => !p)} />
-                        </div>
-
-                        {/* Halation / Glow */}
-                        <div className="flex flex-col gap-2.5">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA' }}>Halation</p>
-                              <p style={{ fontSize: 11, color: '#3f3f46' }}>Light bloom around highlights</p>
-                            </div>
-                            <span style={{ fontSize: 10, fontFamily: 'monospace', color: halation > 0 ? '#6366f1' : '#3f3f46', minWidth: 26, textAlign: 'right' }}>{halation}</span>
-                          </div>
-                          <div className="flex gap-2 items-center">
-                            {[{ label: 'Off', v: 0 }, { label: 'Subtle', v: 25 }, { label: 'Film', v: 55 }, { label: 'Dream', v: 85 }].map(p => (
-                              <button key={p.label} onClick={() => setHalation(p.v)}
-                                className="px-2 py-0.5 rounded text-[10px] font-semibold transition-all duration-150"
-                                style={{ background: halation === p.v ? 'rgba(99,102,241,0.15)' : 'transparent', color: halation === p.v ? '#818cf8' : '#3f3f46', border: halation === p.v ? '0.5px solid rgba(99,102,241,0.3)' : '0.5px solid transparent' }}>
-                                {p.label}
-                              </button>
-                            ))}
-                          </div>
-                          <input type="range" min={0} max={100} value={halation}
-                            onChange={e => setHalation(Number(e.target.value))}
-                            className="w-full" style={{ accentColor: '#6366f1', cursor: 'pointer', height: 3 }} />
-                        </div>
                       </div>
 
                       {/* Custom controls */}
