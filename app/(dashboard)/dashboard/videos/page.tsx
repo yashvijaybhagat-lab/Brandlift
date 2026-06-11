@@ -323,7 +323,13 @@ function VideosInner() {
   const [captionSize, setCaptionSize]         = useState(1.0)
   const [captionColor, setCaptionColor]       = useState('#FFFFFF')
   const [captionFont, setCaptionFont]         = useState('inter')
-  const [ttsPlaying, setTtsPlaying]           = useState(false)
+  const [ttsText, setTtsText]                 = useState('')
+  const [ttsVoice, setTtsVoice]               = useState('v2/en_speaker_6')
+  const [ttsGenerating, setTtsGenerating]     = useState(false)
+  const [ttsAudioUrl, setTtsAudioUrl]         = useState<string | null>(null)
+  const [ttsJobId, setTtsJobId]               = useState<string | null>(null)
+  const [ttsError, setTtsError]               = useState('')
+  const [ttsInExport, setTtsInExport]         = useState(false)
   const [editingCaption, setEditingCaption]   = useState<number | null>(null)
   const [newCaptionText, setNewCaptionText]   = useState('')
   const [newCaptionStart, setNewCaptionStart] = useState('')
@@ -461,18 +467,41 @@ function VideosInner() {
     if (p) p.catch((e: Error) => { if (e.name !== 'AbortError') console.warn('[music]', e.name, e.message) })
   }, [])
 
-  const previewTTS = useCallback(() => {
-    if (!scriptText.trim() || typeof window === 'undefined') return
-    const synth = window.speechSynthesis
-    if (ttsPlaying) { synth.cancel(); setTtsPlaying(false); return }
-    const utterance = new SpeechSynthesisUtterance(scriptText)
-    utterance.rate = 0.92; utterance.pitch = 1.0; utterance.volume = 1.0
-    utterance.onend = () => setTtsPlaying(false)
-    utterance.onerror = () => setTtsPlaying(false)
-    setTtsPlaying(true)
-    synth.cancel()
-    synth.speak(utterance)
-  }, [scriptText, ttsPlaying])
+  const generateVoice = useCallback(async () => {
+    const text = ttsText.trim() || scriptText.trim()
+    if (!text || ttsGenerating) return
+    setTtsGenerating(true); setTtsError(''); setTtsAudioUrl(null); setTtsJobId(null)
+    try {
+      const res = await fetch('/api/video/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text.slice(0, 500), voice: ttsVoice }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error ?? `Error ${res.status}`)
+
+      // Completed within Replicate's wait window
+      if (data.url) { setTtsAudioUrl(data.url); return }
+
+      // Poll via status route
+      if (!data.id) throw new Error('No job ID returned')
+      setTtsJobId(data.id)
+      for (let i = 0; i < 50; i++) {
+        await new Promise(r => setTimeout(r, 4000))
+        const s = await fetch(`/api/video/status/${data.id}`).then(r => r.json()).catch(() => ({}))
+        if ((s.status === 'succeeded' || s.status === 'completed')) {
+          const url = typeof s.output === 'string' ? s.output : s.output?.audio_out
+          if (url) { setTtsAudioUrl(url); setTtsJobId(null); return }
+        }
+        if (s.status === 'failed' || s.error) throw new Error(s.error ?? 'Voice generation failed')
+      }
+      throw new Error('Timed out — try a shorter text')
+    } catch (err) {
+      setTtsError(err instanceof Error ? err.message : 'Voice generation failed')
+    } finally {
+      setTtsGenerating(false)
+    }
+  }, [ttsText, scriptText, ttsVoice, ttsGenerating])
 
   const transcribeFromAudio = useCallback(async (urlOverride?: string) => {
     const url = urlOverride ?? displayUrl
@@ -862,6 +891,8 @@ function VideosInner() {
         showHook, hookText,
         showCta, ctaText,
         musicUrl, musicVolume: 0.4,
+        ttsUrl: ttsInExport && ttsAudioUrl ? ttsAudioUrl : null,
+        ttsVolume: 1.0,
         transition, transitionDuration,
         quality: exportQuality,
         aspect:  exportAspect,
@@ -876,7 +907,7 @@ function VideosInner() {
       console.error('[export]', err)
       alert('Export failed — try a shorter clip or reload the page.')
     } finally { setExporting(false); setExportProgress(0); setExportLabel('') }
-  }, [clips, exporting, colorGrade, customColor, grain, letterbox, halation, selectedMusic, captionsEnabled, captions, captionStyle, captionPos, captionSize, captionColor, captionFont, showHook, hookText, showCta, ctaText, transition, transitionDuration, exportQuality, exportAspect])
+  }, [clips, exporting, colorGrade, customColor, grain, letterbox, halation, selectedMusic, captionsEnabled, captions, captionStyle, captionPos, captionSize, captionColor, captionFont, showHook, hookText, showCta, ctaText, transition, transitionDuration, exportQuality, exportAspect, ttsInExport, ttsAudioUrl])
 
   const reset = () => {
     setStage('script'); setUploadProgress(0); setErrorMsg(''); setClips([]); setActiveClipId(null)
@@ -889,6 +920,8 @@ function VideosInner() {
     setEditingCaption(null); setShowAddCaption(false); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('')
     setExportAspect('16:9'); setEnhancementStatus('idle'); setShowBetaPanel(false); setBetaCodeInput('')
     setLetterbox(false); setHalation(0)
+    setTtsText(''); setTtsVoice('v2/en_speaker_6'); setTtsGenerating(false)
+    setTtsAudioUrl(null); setTtsJobId(null); setTtsError(''); setTtsInExport(false)
     setTransition('fade'); setActiveTab('grade'); setTranscribing(false); setTranscribeError('')
     setDisplayedCaption(''); setCaptionOpacity(0); setExporting(false)
     setHashtagsOpen(false); setHashtags([]); setGeneratingHashtags(false)
@@ -1949,19 +1982,113 @@ function VideosInner() {
                         </div>
                       </div>
 
-                      {/* TTS voice preview */}
-                      <button
-                        onClick={previewTTS}
-                        disabled={!scriptText.trim()}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 disabled:opacity-30"
-                        style={{
-                          background: ttsPlaying ? 'rgba(239,68,68,0.08)' : 'rgba(99,102,241,0.07)',
-                          border: `1px solid ${ttsPlaying ? 'rgba(239,68,68,0.25)' : 'rgba(99,102,241,0.2)'}`,
-                          color: ttsPlaying ? '#f87171' : '#818cf8',
-                        }}>
-                        <span style={{ fontSize: 14 }}>{ttsPlaying ? '⏹' : '🔊'}</span>
-                        {ttsPlaying ? 'Stop preview' : 'Hear script (TTS preview)'}
-                      </button>
+                      {/* AI Voice Narration */}
+                      <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                        <div className="flex items-center gap-2">
+                          <span style={{ fontSize: 13, color: '#818cf8' }}>🎙</span>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: '#a5b4fc', letterSpacing: '0.04em' }}>AI Voice Narration</p>
+                        </div>
+
+                        {/* Text input */}
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center justify-between">
+                            <span style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>What to say</span>
+                            {scriptText.trim() && !ttsText && (
+                              <button onClick={() => setTtsText(scriptText)}
+                                style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                Fill from script
+                              </button>
+                            )}
+                          </div>
+                          <textarea
+                            value={ttsText}
+                            onChange={e => setTtsText(e.target.value.slice(0, 500))}
+                            rows={3}
+                            placeholder="Type what you want the AI voice to say…"
+                            className="w-full px-3 py-2.5 rounded-lg text-[13px] text-[#FAFAFA] outline-none resize-none"
+                            style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', lineHeight: 1.6 }}
+                            onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                            onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
+                          />
+                          <span style={{ fontSize: 10, color: '#3f3f46', textAlign: 'right' }}>{(ttsText || scriptText).length}/500</span>
+                        </div>
+
+                        {/* Voice selector */}
+                        <div className="flex flex-col gap-1.5">
+                          <span style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>Voice</span>
+                          <div className="grid grid-cols-4 gap-1.5">
+                            {([
+                              { id: 'v2/en_speaker_6', label: 'Voice A', desc: 'Clear' },
+                              { id: 'v2/en_speaker_0', label: 'Voice B', desc: 'Warm' },
+                              { id: 'v2/en_speaker_9', label: 'Voice C', desc: 'Deep' },
+                              { id: 'v2/en_speaker_3', label: 'Voice D', desc: 'Bright' },
+                            ] as const).map(v => (
+                              <button key={v.id} onClick={() => setTtsVoice(v.id)}
+                                className="flex flex-col items-center gap-0.5 py-2 rounded-lg transition-all duration-150"
+                                style={{ background: ttsVoice === v.id ? 'rgba(99,102,241,0.15)' : '#18181C', border: ttsVoice === v.id ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                                <span style={{ fontSize: 10, fontWeight: 700, color: ttsVoice === v.id ? '#a5b4fc' : '#71717A' }}>{v.label}</span>
+                                <span style={{ fontSize: 9, color: ttsVoice === v.id ? '#818cf8' : '#3f3f46' }}>{v.desc}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Generate button */}
+                        <button
+                          onClick={generateVoice}
+                          disabled={ttsGenerating || (!ttsText.trim() && !scriptText.trim())}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 disabled:opacity-40"
+                          style={{ background: ttsGenerating ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.35)', color: ttsGenerating ? '#52525B' : '#a5b4fc' }}>
+                          {ttsGenerating ? (
+                            <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Generating voice… (~30–90s)</>
+                          ) : (
+                            <><span style={{ fontSize: 14 }}>🎙</span>Generate AI Voice</>
+                          )}
+                        </button>
+
+                        {/* Progress hint */}
+                        {ttsGenerating && ttsJobId && (
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(99,102,241,0.05)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#6366f1' }} />
+                            <p style={{ fontSize: 11, color: '#818cf8' }}>AI is generating your voice — this takes 30–90 seconds.</p>
+                          </div>
+                        )}
+
+                        {/* Error */}
+                        {ttsError && (
+                          <p style={{ fontSize: 11, color: '#f87171', lineHeight: 1.5 }}>{ttsError}</p>
+                        )}
+
+                        {/* Generated audio player + export toggle */}
+                        {ttsAudioUrl && !ttsGenerating && (
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2 p-2.5 rounded-lg" style={{ background: 'rgba(74,222,128,0.06)', border: '0.5px solid rgba(74,222,128,0.2)' }}>
+                              <span style={{ fontSize: 12, color: '#4ADE80' }}>✓</span>
+                              <p style={{ fontSize: 11, color: '#4ADE80', flex: 1 }}>Voice generated!</p>
+                            </div>
+                            <audio
+                              src={ttsAudioUrl}
+                              controls
+                              className="w-full"
+                              style={{ height: 32, borderRadius: 8, filter: 'invert(0.85) hue-rotate(180deg)' }}
+                            />
+                            <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                              <div className="flex flex-col gap-0.5">
+                                <span style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA' }}>Include in export</span>
+                                <span style={{ fontSize: 10, color: '#3f3f46' }}>Replaces original audio · music ducked to 14%</span>
+                              </div>
+                              <Toggle on={ttsInExport} onToggle={() => setTtsInExport(p => !p)} />
+                            </div>
+                            <button
+                              onClick={() => { setTtsAudioUrl(null); setTtsInExport(false); setTtsError('') }}
+                              style={{ fontSize: 11, color: '#3f3f46', textAlign: 'right', cursor: 'pointer', background: 'none', border: 'none' }}
+                              onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#f87171'}
+                              onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#3f3f46'}>
+                              Regenerate
+                            </button>
+                          </div>
+                        )}
+                      </div>
 
                       {/* Caption list + manual editor */}
                       <div className="flex flex-col gap-2">

@@ -59,6 +59,8 @@ export interface ExportOptions {
   // Audio
   musicUrl:         string | null
   musicVolume:      number
+  ttsUrl?:          string | null   // AI narration track — replaces original video audio
+  ttsVolume?:       number
   // Transitions
   transition:       TransitionType
   transitionDuration: number
@@ -606,12 +608,19 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
   canvas.width = w; canvas.height = h
   const ctx = canvas.getContext('2d', { alpha: false })!
 
-  // Connect video elements to audio graph
+  // TTS narration: load before connecting video sources
+  let ttsBlobUrl: string | null = null
+  if (opts.ttsUrl) {
+    try { ttsBlobUrl = await toBlobUrl(opts.ttsUrl); objectUrls.push(ttsBlobUrl) } catch {}
+  }
+
+  // Connect video elements — mute original audio if TTS narration is active
   videoEls.forEach(v => {
     v.muted = false
     try {
       const src = audioCtx.createMediaElementSource(v)
-      const gain = audioCtx.createGain(); gain.gain.value = 1
+      const gain = audioCtx.createGain()
+      gain.gain.value = ttsBlobUrl ? 0 : 1  // silence original when narrating
       src.connect(gain); gain.connect(dest)
     } catch {}
   })
@@ -622,9 +631,23 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
       musicEl = await loadAudio(musicBlobUrl)
       musicEl.loop = true
       const ms = audioCtx.createMediaElementSource(musicEl)
-      const mg = audioCtx.createGain(); mg.gain.value = opts.musicVolume
+      const mg = audioCtx.createGain()
+      // Duck music under narration so voice is clear
+      mg.gain.value = ttsBlobUrl ? Math.min(opts.musicVolume * 0.35, 0.14) : opts.musicVolume
       ms.connect(mg); mg.connect(dest)
       musicEl.play().catch(() => {})
+    } catch {}
+  }
+
+  let ttsEl: HTMLAudioElement | null = null
+  if (ttsBlobUrl) {
+    try {
+      ttsEl = await loadAudio(ttsBlobUrl)
+      ttsEl.loop = false
+      const ts = audioCtx.createMediaElementSource(ttsEl)
+      const tg = audioCtx.createGain(); tg.gain.value = opts.ttsVolume ?? 1.0
+      ts.connect(tg); tg.connect(dest)
+      ttsEl.play().catch(() => {})
     } catch {}
   }
 
@@ -736,6 +759,7 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
 
   report(92, 'Encoding…')
   musicEl?.pause()
+  ttsEl?.pause()
   for (const v of videoEls) { v.pause(); v.src = '' }
 
   await new Promise<void>(resolve => { recorder.onstop = () => resolve(); recorder.stop() })
