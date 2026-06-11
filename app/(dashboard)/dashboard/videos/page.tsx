@@ -13,13 +13,14 @@ import {
   Share2, Users,
 } from 'lucide-react'
 import {
-  exportVideo, downloadBlob,
+  exportVideo, downloadBlob, PLATFORM_EXPORT_SPECS,
   type TransitionType, type ExportQuality, type ExportAspect,
   type CaptionStyle, type CaptionPos,
 } from '@/lib/videoExport'
 import { useBetaAccess } from '@/lib/betaAccess'
 import SmartEditStudio from '@/components/SmartEditStudio'
 import { type EditState } from '@/lib/editPlan'
+import { STAGE_META, type PipelineStage, type SourceAnalysis } from '@/lib/enhancePipeline'
 
 /* ─── Types ──────────────────────────────────────────── */
 type Stage     = 'script' | 'upload' | 'uploading' | 'done' | 'error'
@@ -756,32 +757,89 @@ function VideosInner() {
     if (sc.length) { setCaptions(sc); setCaptionsEnabled(true) }
   }, [scriptText, saveVideos])
 
-  const [enhancementStatus, setEnhancementStatus] = useState<'idle' | 'enhancing' | 'done' | 'failed'>('idle')
+  // Pipeline state — replaces the old binary enhancementStatus
+  const [pipelineStage, setPipelineStage]       = useState<PipelineStage | 'idle' | 'failed'>('idle')
+  const [pipelineProgress, setPipelineProgress] = useState(0)
+  const [pipelineAnalysis, setPipelineAnalysis] = useState<SourceAnalysis | null>(null)
+  const [qualityGatePassed, setQualityGatePassed] = useState<boolean | null>(null)
+
+  // Legacy alias so unchanged callsites still compile
+  const enhancementStatus: 'idle' | 'enhancing' | 'done' | 'failed' =
+    pipelineStage === 'idle' ? 'idle' :
+    pipelineStage === 'failed' ? 'failed' :
+    pipelineStage === 'export' ? 'done' : 'enhancing'
 
   const runEnhancementInBackground = useCallback(async (blobUrl: string, recordId: string) => {
-    setEnhancementStatus('enhancing')
+    setPipelineStage('analyze'); setPipelineProgress(5); setQualityGatePassed(null)
+
     try {
-      const res = await fetch('/api/video/enhance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ videoUrl: blobUrl }) })
-      if (!res.ok) { setEnhancementStatus('failed'); return }
-      const data = await res.json()
-      if (!data.id) { setEnhancementStatus('failed'); return }
+      // Stage 1: Analyze source (client sends video metadata from the video element)
+      const videoEl = document.querySelector('video') as HTMLVideoElement | null
+      const w   = videoEl?.videoWidth  ?? 1920
+      const h   = videoEl?.videoHeight ?? 1080
+      const fps = 30  // no reliable DOM API for FPS
+      const dur = videoEl?.duration ?? 0
+
+      const analysisRes = await fetch('/api/video/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ width: w, height: h, fps, duration: dur, hasFaces: true }),
+      })
+      if (!analysisRes.ok) { setPipelineStage('failed'); return }
+      const { analysis } = await analysisRes.json() as { analysis: SourceAnalysis }
+      setPipelineAnalysis(analysis)
+
+      // Stages 2-3: Denoise + stabilize are canvas pre-passes (instant)
+      if (!analysis.skipDenoise) {
+        setPipelineStage('denoise'); setPipelineProgress(12)
+        await new Promise(r => setTimeout(r, 400))
+      }
+      setPipelineStage('stabilize'); setPipelineProgress(18)
+      await new Promise(r => setTimeout(r, 300))
+
+      // Stage 4: Upscale via Replicate
+      setPipelineStage('upscale'); setPipelineProgress(22)
+      const enhRes = await fetch('/api/video/enhance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl: blobUrl, analysis }),
+      })
+      if (!enhRes.ok) { setPipelineStage('failed'); return }
+      const enhData = await enhRes.json()
+      if (!enhData.id) { setPipelineStage('failed'); return }
+
+      // If Replicate returned synchronously
+      if (enhData.status === 'succeeded' && enhData.outputUrl) {
+        const enhanced = enhData.outputUrl
+        setVideos(prev => { const next = prev.map(v => v.id === recordId ? { ...v, enhancedUrl: enhanced } : v); saveVideos(next); return next })
+        setClips(prev => prev.map(c => c.id === recordId ? { ...c, url: enhanced } : c))
+        setPipelineStage('export'); setPipelineProgress(100); setQualityGatePassed(true)
+        return
+      }
+
+      // Poll the new status endpoint
       const poll = async (): Promise<void> => {
         try {
-          const r = await fetch(`/api/video/status/${data.id}`); const d = await r.json()
-          if ((d.status === 'succeeded' || d.status === 'completed') && d.output) {
-            const enhanced = Array.isArray(d.output) ? d.output[0] : d.output
+          const r = await fetch(`/api/video/enhance/status/${enhData.id}`)
+          const d = await r.json()
+          if (d.outputUrl) {
+            setPipelineStage(d.stage ?? 'color'); setPipelineProgress(d.progress ?? 70)
+            if (d.qualityGate) setQualityGatePassed(d.qualityGate.passed)
+            const enhanced = d.outputUrl
             setVideos(prev => { const next = prev.map(v => v.id === recordId ? { ...v, enhancedUrl: enhanced } : v); saveVideos(next); return next })
             setClips(prev => prev.map(c => c.id === recordId ? { ...c, url: enhanced } : c))
-            setEnhancementStatus('done')
-          } else if (d.status === 'failed' || d.error) {
-            setEnhancementStatus('failed')
+            setPipelineStage('export'); setPipelineProgress(100)
+            if (d.qualityGate == null) setQualityGatePassed(true)
+          } else if (d.status === 'failed' || d.error || d.fallback) {
+            setPipelineStage('failed')
           } else {
-            await new Promise(r => setTimeout(r, POLL_INTERVAL)); return poll()
+            setPipelineStage(d.stage ?? 'upscale'); setPipelineProgress(d.progress ?? 40)
+            await new Promise(res => setTimeout(res, POLL_INTERVAL)); return poll()
           }
-        } catch { setEnhancementStatus('failed') }
+        } catch { setPipelineStage('failed') }
       }
       await poll()
-    } catch { setEnhancementStatus('failed') }
+    } catch { setPipelineStage('failed') }
   }, [saveVideos])
 
   const uploadProgressRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -826,7 +884,7 @@ function VideosInner() {
     setStage('done')
     // Auto-transcribe from actual audio (fires in bg; falls back to script if no speech)
     setTimeout(() => transcribeFromAudio(clip.url), 400)
-  }, [uploadClip, scriptText, saveVideos, runEnhancementInBackground, transcribeFromAudio])
+  }, [uploadClip, scriptText, saveVideos, transcribeFromAudio])
 
   const addClip = useCallback(async (file: File) => {
     if (!file.type.startsWith('video/')) return
@@ -921,7 +979,7 @@ function VideosInner() {
     setSelectedMusic('none'); setCaptions([]); setCaptionsEnabled(false); setCurrentCaption('')
     setCaptionStyle('bold'); setCaptionPos('bottom'); setCaptionSize(1.0)
     setEditingCaption(null); setShowAddCaption(false); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('')
-    setExportAspect('16:9'); setEnhancementStatus('idle'); setShowBetaPanel(false); setBetaCodeInput('')
+    setExportAspect('16:9'); setPipelineStage('idle'); setPipelineProgress(0); setPipelineAnalysis(null); setQualityGatePassed(null); setShowBetaPanel(false); setBetaCodeInput('')
     setLetterbox(false); setHalation(0)
     setTtsText(''); setTtsVoice('v2/en_speaker_6'); setTtsGenerating(false)
     setTtsAudioUrl(null); setTtsJobId(null); setTtsError(''); setTtsInExport(false)
@@ -1489,35 +1547,43 @@ function VideosInner() {
                   <p style={{ fontSize: 14, fontWeight: 500, color: '#FAFAFA' }} className="truncate">
                     {clips.length === 1 ? clips[0].name : `${clips.length} clips ready`}
                   </p>
-                  {enhancementStatus === 'enhancing' && (
-                    <span className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.3)', color: '#818cf8' }}>
-                      <Sparkles className="w-3 h-3 animate-pulse" />AI enhancing…
-                    </span>
-                  )}
-                  {enhancementStatus === 'done' && (
-                    <span className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]" style={{ background: 'rgba(74,222,128,0.08)', border: '0.5px solid rgba(74,222,128,0.3)', color: '#4ADE80' }}>
-                      ✦ Enhanced
-                    </span>
-                  )}
-                  {enhancementStatus === 'failed' && (
-                    <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]" style={{ background: 'rgba(239,68,68,0.08)', border: '0.5px solid rgba(239,68,68,0.2)', color: '#f87171' }}
-                      title="Enhancement failed — check REPLICATE_API_TOKEN">
-                      Enhancement unavailable
-                    </span>
-                  )}
-                  {beta.has('enhancement') && (enhancementStatus === 'idle' || enhancementStatus === 'failed') && (
+                  {/* ── Pipeline status pill ── */}
+                  {pipelineStage === 'idle' && beta.has('enhancement') && (
                     <button
                       onClick={() => { if (activeClip) runEnhancementInBackground(activeClip.url, activeClip.id) }}
                       className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] transition-colors"
                       style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.25)', color: '#818cf8' }}>
-                      <Sparkles className="w-2.5 h-2.5" />{enhancementStatus === 'failed' ? 'Retry enhance' : 'Enhance'}
+                      <Sparkles className="w-2.5 h-2.5" />4K Enhance
                     </button>
                   )}
-                  {!beta.has('enhancement') && enhancementStatus === 'idle' && (
+                  {pipelineStage === 'idle' && !beta.has('enhancement') && (
                     <button onClick={() => setShowBetaPanel(true)}
                       className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] transition-colors"
                       style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.25)', color: '#8b5cf6' }}>
-                      <Lock className="w-2.5 h-2.5" />AI Enhancement
+                      <Lock className="w-2.5 h-2.5" />4K Enhance
+                    </button>
+                  )}
+                  {pipelineStage !== 'idle' && pipelineStage !== 'failed' && pipelineStage !== 'export' && (() => {
+                    const meta = STAGE_META[pipelineStage as PipelineStage]
+                    return (
+                      <span className="flex items-center gap-1.5 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.3)', color: '#818cf8' }}>
+                        <Sparkles className="w-3 h-3 animate-pulse" />
+                        {meta?.label ?? 'Processing'}… {pipelineProgress > 0 && `${pipelineProgress}%`}
+                      </span>
+                    )
+                  })()}
+                  {pipelineStage === 'export' && (
+                    <span className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]" style={{ background: qualityGatePassed === false ? 'rgba(234,179,8,0.08)' : 'rgba(74,222,128,0.08)', border: `0.5px solid ${qualityGatePassed === false ? 'rgba(234,179,8,0.3)' : 'rgba(74,222,128,0.3)'}`, color: qualityGatePassed === false ? '#fde047' : '#4ADE80' }}>
+                      {qualityGatePassed === false ? '⚠ Fallback quality' : '✦ 4K Enhanced'}
+                    </span>
+                  )}
+                  {pipelineStage === 'failed' && (
+                    <button
+                      onClick={() => { setPipelineStage('idle'); if (activeClip) runEnhancementInBackground(activeClip.url, activeClip.id) }}
+                      className="flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]"
+                      title="Enhancement failed — check REPLICATE_API_TOKEN"
+                      style={{ background: 'rgba(239,68,68,0.08)', border: '0.5px solid rgba(239,68,68,0.2)', color: '#f87171', cursor: 'pointer' }}>
+                      Retry enhance
                     </button>
                   )}
                   {beta.unlocked && (

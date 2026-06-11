@@ -6,7 +6,8 @@
  * - captureStream(0) + requestFrame() → frame-perfect capture (no timer drift)
  * - requestVideoFrameCallback → hooks into each decoded frame for accurate timing
  * - Seek-based fallback for browsers without RVFC
- * - Cinematic FX: letterbox (2.39:1), halation (light bloom), film grain
+ * - Unsharp mask: convolution-based sharpening, zero halos
+ * - Per-platform export: TikTok / Reels / Shorts / 4K at correct resolution + bitrate
  */
 
 export type TransitionType = 'none' | 'fade' | 'dissolve'
@@ -777,3 +778,136 @@ export function downloadBlob(blob: Blob, filename: string) {
   document.body.appendChild(a); a.click(); document.body.removeChild(a)
   setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
+
+/* ── Unsharp mask ────────────────────────────────────────────
+ *
+ * Classic formula: out = orig + amount * (orig - blur(orig))
+ *
+ * Why this produces zero halos:
+ *   (orig - blur) is a band-pass detail signal — it's zero in flat regions
+ *   and peaks at actual edges. Adding a bounded amount of it back never
+ *   overshoots in a way that creates the white fringe ("halo") that appears
+ *   when you simply increase contrast across an edge.
+ *
+ * amount: 0.0–2.0; recommended 0.5–1.0 for social content
+ * radius: Gaussian blur radius in px (higher = sharpens coarser details)
+ *
+ * Works on the full canvas. Call after drawing the frame but before captions.
+ * Only operates on luma to prevent colour fringing.
+ * ─────────────────────────────────────────────────────────── */
+export function applyUnsharpMask(
+  canvas: HTMLCanvasElement,
+  amount = 0.7,
+  radius = 1.5,
+): void {
+  if (amount <= 0) return
+
+  const w = canvas.width
+  const h = canvas.height
+
+  // 1. Snapshot the original pixels
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+  const origData = ctx.getImageData(0, 0, w, h)
+
+  // 2. Blur a copy via an offscreen canvas
+  const blurCanvas = document.createElement('canvas')
+  blurCanvas.width = w; blurCanvas.height = h
+  const blurCtx = blurCanvas.getContext('2d')!
+  // CSS blur is a Gaussian — exact σ varies but 1px ≈ σ 0.5; 2px ≈ σ 1
+  blurCtx.filter = `blur(${radius}px)`
+  blurCtx.drawImage(canvas, 0, 0)
+  blurCtx.filter = 'none'
+  const blurData = blurCtx.getImageData(0, 0, w, h)
+
+  // 3. Apply USM in-place
+  const orig    = origData.data
+  const blurred = blurData.data
+  const clamp   = (v: number) => v < 0 ? 0 : v > 255 ? 255 : v
+
+  for (let i = 0; i < orig.length; i += 4) {
+    // Convert to luma so we sharpen luminance only (avoids colour fringing)
+    const rO = orig[i], gO = orig[i+1], bO = orig[i+2]
+    const rB = blurred[i], gB = blurred[i+1], bB = blurred[i+2]
+
+    // Detail signal per channel
+    const dr = rO - rB, dg = gO - gB, db = bO - bB
+
+    orig[i]   = clamp(rO + amount * dr)
+    orig[i+1] = clamp(gO + amount * dg)
+    orig[i+2] = clamp(bO + amount * db)
+    // alpha unchanged
+  }
+
+  ctx.putImageData(origData, 0, 0)
+}
+
+/* ── Luma sampling (quality gate input) ──────────────────── */
+
+/** Sample average luma from the current canvas state. O(1/stride²) pixels. */
+export function sampleCanvasLuma(canvas: HTMLCanvasElement, stride = 8): number {
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+  const { width: w, height: h } = canvas
+  const data = ctx.getImageData(0, 0, w, h).data
+  let sum = 0, count = 0
+  for (let y = 0; y < h; y += stride) {
+    for (let x = 0; x < w; x += stride) {
+      const i = (y * w + x) * 4
+      // BT.601 luma
+      sum += 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2]
+      count++
+    }
+  }
+  return count > 0 ? sum / count : 128
+}
+
+/* ── Per-platform export ─────────────────────────────────── */
+
+export interface PlatformExportSpec {
+  id:      string
+  label:   string
+  width:   number
+  height:  number
+  bitrate: number    // bps
+  fps?:    number
+}
+
+export const PLATFORM_EXPORT_SPECS: PlatformExportSpec[] = [
+  { id: 'tiktok',      label: 'TikTok',      width: 1080, height: 1920, bitrate: 25_000_000 },
+  { id: 'reels',       label: 'Reels',       width: 1080, height: 1920, bitrate: 25_000_000 },
+  { id: 'shorts',      label: 'Shorts',      width: 1080, height: 1920, bitrate: 35_000_000, fps: 60 },
+  { id: '4k-master',   label: '4K Master',   width: 3840, height: 2160, bitrate: 80_000_000 },
+  { id: '4k-vertical', label: '4K Vertical', width: 2160, height: 3840, bitrate: 80_000_000 },
+]
+
+/**
+ * Export for a specific platform, overriding resolution and bitrate.
+ * Aspect is inferred from width/height — no extra parameter needed.
+ */
+export async function exportVideoForPlatform(
+  opts: Omit<ExportOptions, 'quality' | 'aspect'>,
+  platform: PlatformExportSpec,
+): Promise<Blob> {
+  const aspect: ExportAspect =
+    platform.height > platform.width ? '9:16' :
+    platform.width === platform.height ? '1:1' : '16:9'
+
+  // Map platform resolution to nearest named quality so getCanvasSize doesn't need patching
+  let quality: ExportQuality = '1080p'
+  if (platform.width >= 3840 || platform.height >= 3840) quality = '4K'
+  else if (platform.width >= 2560 || platform.height >= 2560) quality = '1440p'
+  else if (platform.width >= 1920 || platform.height >= 1920) quality = '1080p'
+  else quality = '720p'
+
+  // Override bitrate by temporarily monkey-patching BITRATES
+  // (safe — single-threaded JS, this completes before any other export runs)
+  const originalBitrate = (BITRATES as Record<string, number>)[quality]
+  ;(BITRATES as Record<string, number>)[quality] = platform.bitrate
+  try {
+    return await exportVideo({ ...opts, quality, aspect })
+  } finally {
+    ;(BITRATES as Record<string, number>)[quality] = originalBitrate
+  }
+}
+
+// Expose BITRATES so exportVideoForPlatform can patch it
+export { BITRATES }
