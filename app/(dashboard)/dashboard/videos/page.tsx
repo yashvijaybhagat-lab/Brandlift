@@ -18,6 +18,8 @@ import {
   type CaptionStyle, type CaptionPos,
 } from '@/lib/videoExport'
 import { useBetaAccess } from '@/lib/betaAccess'
+import SmartEditStudio from '@/components/SmartEditStudio'
+import { type EditState } from '@/lib/editPlan'
 
 /* ─── Types ──────────────────────────────────────────── */
 type Stage     = 'script' | 'upload' | 'uploading' | 'done' | 'error'
@@ -388,6 +390,7 @@ function VideosInner() {
   const [exportLabel, setExportLabel]         = useState('')
   const [exportedBlobUrl, setExportedBlobUrl] = useState<string | null>(null)
   const [exportedMime, setExportedMime]       = useState('video/webm')
+  const [showSmartEdit, setShowSmartEdit]     = useState(false)
 
   const activeClip      = clips.find(c => c.id === activeClipId) ?? clips[0] ?? null
   const displayUrl      = activeClip?.url ?? ''
@@ -975,8 +978,41 @@ function VideosInner() {
                   : 'Write a script, upload footage, export a polished video'}
               </p>
             </div>
-            {stage !== 'script' && stage !== 'done' && <Button variant="ghost" size="sm" onClick={reset}>← Start over</Button>}
+            <div className="flex items-center gap-2">
+              {stage === 'done' && displayUrl && (
+                <button
+                  onClick={() => setShowSmartEdit(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-semibold transition-all"
+                  style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.15))', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.35)', boxShadow: '0 0 12px rgba(99,102,241,0.15)' }}>
+                  ✨ Smart Edit
+                </button>
+              )}
+              {stage !== 'script' && stage !== 'done' && <Button variant="ghost" size="sm" onClick={reset}>← Start over</Button>}
+            </div>
           </div>
+
+          {/* Smart Edit overlay */}
+          {showSmartEdit && displayUrl && (
+            <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#09090B' }}>
+              <SmartEditStudio
+                videoUrl={displayUrl}
+                duration={activeClip?.duration ?? 60}
+                initialCaptions={captions}
+                colorFilter={previewFilter ?? ''}
+                onClose={() => setShowSmartEdit(false)}
+                onApply={(state: EditState) => {
+                  // Apply caption style edits back to the main studio
+                  setCaptions(state.captions)
+                  setCaptionColor(state.captionColor)
+                  const pos = state.captionPos as CaptionPos
+                  setCaptionPos(pos)
+                  setCaptionsEnabled(state.captionActive)
+                  if (state.music !== 'none') setSelectedMusic(state.music)
+                  setShowSmartEdit(false)
+                }}
+              />
+            </div>
+          )}
 
           <input ref={fileInputRef}    type="file" accept="video/*" className="hidden" onChange={onFileChange} />
           <input ref={addClipInputRef} type="file" accept="video/*" className="hidden" onChange={onAddClipChange} />
