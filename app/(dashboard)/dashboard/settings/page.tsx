@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { TopBar } from '@/components/dashboard/TopBar'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -109,6 +109,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = React.useState(false)
   const [saveError, setSaveError] = React.useState('')
   const [deleteConfirm, setDeleteConfirm] = React.useState(false)
+  const [deleting, setDeleting] = React.useState(false)
 
   /* ── Load profile from server on mount ──────────────────────────────────── */
   React.useEffect(() => {
@@ -264,8 +265,20 @@ export default function SettingsPage() {
                 ) : (
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm(false)}>Cancel</Button>
-                    <Button variant="danger" size="sm" onClick={() => { alert('Account deletion would be triggered here.'); setDeleteConfirm(false) }}>
-                      Yes, delete
+                    <Button variant="danger" size="sm" loading={deleting} onClick={async () => {
+                      // GDPR right to erasure — calls DELETE /api/user/delete which removes all Vercel Blob data
+                      setDeleting(true)
+                      try {
+                        const res = await fetch('/api/user/delete', { method: 'DELETE' })
+                        if (res.ok) {
+                          localStorage.clear()
+                          await signOut({ callbackUrl: '/' })
+                        } else {
+                          alert('Deletion failed. Please email support@brandlift.dev.')
+                        }
+                      } finally { setDeleting(false); setDeleteConfirm(false) }
+                    }}>
+                      {deleting ? 'Deleting…' : 'Yes, delete everything'}
                     </Button>
                   </div>
                 )}

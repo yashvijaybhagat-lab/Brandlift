@@ -89,6 +89,15 @@ export default function SignUpPage() {
             Sign up with Google
           </button>
 
+          {/* GDPR/CCPA consent notice — shown before any auth action */}
+          <p style={{ fontSize: 11, color: '#52525B', textAlign: 'center', lineHeight: 1.6 }}>
+            By signing up you agree to our{' '}
+            <a href="/terms" style={{ color: '#818cf8' }}>Terms of Service</a>
+            {' '}and{' '}
+            <a href="/privacy" style={{ color: '#818cf8' }}>Privacy Policy</a>.
+            We use your email only to operate your account.
+          </p>
+
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
             <span style={{ fontSize: 11, color: '#3f3f46', fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase' }}>or</span>

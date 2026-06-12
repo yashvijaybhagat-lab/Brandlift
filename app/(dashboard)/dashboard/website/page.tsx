@@ -699,7 +699,11 @@ function GitHubPushModal({ domain, html, onClose }: { domain: string; html: stri
               <p className="text-[15px] font-medium text-[#FAFAFA] mb-1">{state.result.type==='pr'?'Pull request created!':'Pushed to GitHub!'}</p>
               <p className="text-[13px] text-[#71717A]">{state.result.type==='pr'?`PR #${state.result.number} is open for review.`:`Changes are live on ${branch}.`}</p>
             </div>
-            <Button variant="primary" size="sm" onClick={()=>window.open(state.result!.url,'_blank')} className="gap-1.5">
+            <Button variant="primary" size="sm" onClick={()=>{
+              // Validate URL is a GitHub HTTPS URL before opening (prevents javascript: injection from unexpected API responses)
+              const u = state.result!.url
+              if (typeof u === 'string' && /^https:\/\/github\.com\//i.test(u)) window.open(u,'_blank','noopener,noreferrer')
+            }} className="gap-1.5">
               <ExternalLink className="w-3.5 h-3.5"/>
               {state.result.type==='pr'?'View pull request':'View commit'}
             </Button>
@@ -857,7 +861,10 @@ export default function WebsitePage() {
                 <Button variant="primary" size="sm" onClick={()=>setShowRedesign(true)} className="gap-1.5">
                   <Sparkles className="w-3.5 h-3.5"/>Generate redesign
                 </Button>
-                <Button variant="ghost" size="sm" onClick={()=>window.open(`https://${domain}`,'_blank')} className="gap-1.5">
+                <Button variant="ghost" size="sm" onClick={()=>{
+                  // Sanitize domain — strip any path/query that could smuggle a redirect; only open plain HTTPS hostname
+                  try { const h = new URL(`https://${domain}`).hostname; window.open(`https://${h}`,'_blank','noopener,noreferrer') } catch {}
+                }} className="gap-1.5">
                   <ExternalLink className="w-3.5 h-3.5"/>Open site
                 </Button>
                 <Button variant="ghost" size="sm" onClick={reset} className="gap-1.5">

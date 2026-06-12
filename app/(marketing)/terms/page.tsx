@@ -51,8 +51,24 @@ const SECTIONS = [
     body: `We may suspend or terminate your account for material breach of these terms, including but not limited to uploading illegal content or engaging in abuse. You may delete your account at any time from your account settings. Termination does not entitle you to a refund of prepaid fees.`,
   },
   {
+    title: 'Indemnification',
+    body: `You agree to indemnify, defend, and hold harmless BrandLift Inc. and its officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, and expenses (including reasonable legal fees) arising out of or in any way connected with: (a) your use of BrandLift; (b) your violation of these terms; (c) content you upload, submit, or transmit through BrandLift; or (d) your violation of any third-party right, including any intellectual property or privacy right. BrandLift reserves the right, at its own expense, to assume the exclusive defence and control of any matter subject to indemnification by you.`,
+  },
+  {
+    title: 'Content Reporting',
+    body: `If you encounter content on BrandLift that you believe violates these terms, infringes your intellectual property, or is otherwise unlawful, please report it by emailing abuse@brandlift.dev with the subject line "Content Report." Include a description of the content at issue and, if applicable, the URL or account identifier. We will review all reports and take appropriate action, which may include removing content or suspending accounts, within a reasonable timeframe.`,
+  },
+  {
+    title: 'DMCA Takedown',
+    body: `BrandLift respects intellectual property rights. If you believe that content on BrandLift infringes your copyright, please send a written notice to our designated DMCA agent at dmca@brandlift.dev containing: (1) a description of the copyrighted work you claim has been infringed; (2) identification of the infringing material and its location on BrandLift; (3) your contact information (name, address, email, phone); (4) a statement that you have a good-faith belief that the use is not authorised by the copyright owner, its agent, or law; and (5) a statement, under penalty of perjury, that the information in your notice is accurate and that you are the copyright owner or authorised to act on their behalf. Upon receiving a valid DMCA notice, we will remove or disable access to the alleged infringing content and notify the uploader, who may submit a counter-notice.`,
+  },
+  {
+    title: 'Dispute Resolution & Arbitration',
+    body: `PLEASE READ THIS SECTION CAREFULLY — IT AFFECTS YOUR LEGAL RIGHTS. Any dispute, claim, or controversy arising out of or relating to these terms or your use of BrandLift that cannot be resolved informally (by emailing contact@brandlift.dev and giving us 30 days to respond) shall be resolved by binding arbitration administered by the American Arbitration Association (AAA) under its Consumer Arbitration Rules. The arbitration shall take place in Austin, Texas, or by video if mutually agreed. Each party shall bear its own costs. You may opt out of this arbitration agreement within 30 days of first accepting these terms by emailing arbitration-opt-out@brandlift.dev. Nothing in this clause prevents either party from seeking injunctive or other equitable relief in court for intellectual property violations.`,
+  },
+  {
     title: 'Governing Law',
-    body: `These terms are governed by the laws of the State of Delaware, United States, without regard to conflict-of-law principles. Any disputes shall be resolved in the courts of Delaware, and you consent to personal jurisdiction there.`,
+    body: `These terms are governed by the laws of the State of Texas, United States, without regard to conflict-of-law principles. Subject to the arbitration clause above, any disputes not subject to arbitration shall be resolved in the state or federal courts located in Austin, Texas, and you consent to personal jurisdiction there.`,
   },
 ]
 
@@ -91,7 +107,7 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p style={{ fontSize: 14, color: '#52525B', marginTop: 12 }}>
-            Last updated: May 16, 2026 · Effective immediately
+            Last updated: June 11, 2026 · Effective immediately
           </p>
         </div>
 

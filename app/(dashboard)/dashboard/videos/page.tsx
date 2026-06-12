@@ -1112,6 +1112,8 @@ function VideosInner() {
                   </label>
                   {isGenerating && <span className="flex items-center gap-1.5" style={{ fontSize: 12, color: '#6366f1' }}><Sparkles className="w-3 h-3 animate-pulse" />Writing…</span>}
                   {generationDone && <span style={{ fontSize: 12, color: '#4ADE80' }}>✓ Script ready</span>}
+                  {/* AI disclosure — FTC/EU AI Act compliance: disclose AI-generated content at point of creation */}
+                  {generationDone && <span style={{ fontSize: 10, color: '#3f3f46', marginLeft: 4 }}>AI-generated · review before publishing</span>}
                 </div>
                 <textarea
                   value={scriptText} onChange={e => setScriptText(e.target.value)}
