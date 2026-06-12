@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
+import { sendWelcomeEmail } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +38,11 @@ export async function POST(req: NextRequest) {
     console.error('Subscribe error:', error.message)
     return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 })
   }
+
+  // Fire welcome email — non-blocking, don't fail subscribe if email fails
+  sendWelcomeEmail(email.toLowerCase().trim()).catch(err =>
+    console.error('[subscribe] welcome email failed:', err instanceof Error ? err.message : 'unknown')
+  )
 
   return NextResponse.json({ ok: true })
 }
