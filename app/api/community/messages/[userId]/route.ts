@@ -36,21 +36,22 @@ async function readThread(key: string): Promise<Thread> {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   const session = await getServerSession()
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const key = threadKey(session.user.email, params.userId)
+  const { userId } = await params
+  const key = threadKey(session.user.email, userId)
   const thread = await readThread(key)
   return NextResponse.json({ thread })
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   const ip = getIp(req)
   const rl = await rateLimit(`community-msg:${ip}`, 60, 60_000)
@@ -71,7 +72,8 @@ export async function POST(
 
   const senderEmail = session.user.email
   const senderName = session.user.name ?? senderEmail.split('@')[0]
-  const receiverEmail = params.userId
+  const { userId } = await params
+  const receiverEmail = userId
 
   const key = threadKey(senderEmail, receiverEmail)
   const thread = await readThread(key)

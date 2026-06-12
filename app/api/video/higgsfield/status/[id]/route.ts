@@ -6,14 +6,15 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession()
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {
-    const data = await hfGetStatus(params.id)
+    const { id } = await params
+    const data = await hfGetStatus(id)
     return NextResponse.json(data)
   } catch (err) {
     return NextResponse.json(

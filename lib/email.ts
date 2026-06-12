@@ -1,6 +1,10 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  const key = process.env.RESEND_API_KEY
+  if (!key) throw new Error('RESEND_API_KEY is not set')
+  return new Resend(key)
+}
 
 const FROM = 'BrandLift <updates@brandlift.dev>'
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://brandlift.dev'
@@ -41,7 +45,7 @@ function wrap(content: string, email: string) {
 }
 
 export async function sendWelcomeEmail(email: string) {
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM,
     to: email,
     subject: 'Welcome to BrandLift 👋',
@@ -77,7 +81,7 @@ export async function sendProductUpdateEmail(emails: string[], subject: string, 
   const results = []
   for (let i = 0; i < emails.length; i += 100) {
     const batch = emails.slice(i, i + 100)
-    const res = await resend.batch.send(
+    const res = await getResend().batch.send(
       batch.map(email => ({
         from: FROM,
         to: email,
@@ -105,7 +109,7 @@ export async function sendWeeklyTipEmail(emails: string[], tip: WeeklyTip) {
   const results = []
   for (let i = 0; i < emails.length; i += 100) {
     const batch = emails.slice(i, i + 100)
-    const res = await resend.batch.send(
+    const res = await getResend().batch.send(
       batch.map(email => ({
         from: FROM,
         to: email,

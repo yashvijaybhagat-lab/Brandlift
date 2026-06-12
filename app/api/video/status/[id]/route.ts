@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getServerSession()
   if (!session?.user?.email) {
@@ -15,8 +15,9 @@ export async function GET(
     return NextResponse.json({ error: 'REPLICATE_API_TOKEN not configured' }, { status: 503 })
   }
 
+  const { id } = await params
   const res = await fetch(
-    `https://api.replicate.com/v1/predictions/${params.id}`,
+    `https://api.replicate.com/v1/predictions/${id}`,
     {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',

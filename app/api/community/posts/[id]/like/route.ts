@@ -19,7 +19,7 @@ async function readFeed(): Promise<CommunityPost[]> {
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession()
   if (!session?.user?.email) {
@@ -27,8 +27,9 @@ export async function POST(
   }
 
   const email = session.user.email
+  const { id } = await params
   const feed = await readFeed()
-  const idx = feed.findIndex(p => p.id === params.id)
+  const idx = feed.findIndex(p => p.id === id)
   if (idx === -1) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
 
   const post = feed[idx]

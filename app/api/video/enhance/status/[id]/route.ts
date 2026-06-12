@@ -40,7 +40,7 @@ function runQualityGate(params: {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getServerSession()
   if (!session?.user?.email) {
@@ -56,7 +56,7 @@ export async function GET(
     return NextResponse.json({ error: 'REPLICATE_API_TOKEN not configured' }, { status: 503 })
   }
 
-  const { id } = params
+  const { id } = await params
   if (!id || !/^[a-z0-9]{8,32}$/.test(id)) {
     return NextResponse.json({ error: 'Invalid prediction ID' }, { status: 400 })
   }

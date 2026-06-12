@@ -30,15 +30,16 @@ async function readComments(postId: string): Promise<Comment[]> {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const comments = await readComments(params.id)
+  const { id } = await params
+  const comments = await readComments(id)
   return NextResponse.json({ comments })
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const ip = getIp(req)
   const rl = await rateLimit(`community-comment:${ip}`, 30, 60_000)
@@ -57,6 +58,7 @@ export async function POST(
   const text = body.text?.trim().slice(0, 300)
   if (!text) return NextResponse.json({ error: 'Comment cannot be empty' }, { status: 400 })
 
+  const { id } = await params
   const comment: Comment = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     userId: session.user.email,
@@ -66,10 +68,10 @@ export async function POST(
     postedAt: Date.now(),
   }
 
-  const comments = await readComments(params.id)
+  const comments = await readComments(id)
   const updated = [...comments, comment].slice(-200)
 
-  await put(commentKey(params.id), JSON.stringify(updated), {
+  await put(commentKey(id), JSON.stringify(updated), {
     access: 'public', contentType: 'application/json', allowOverwrite: true,
   })
 
@@ -78,7 +80,7 @@ export async function POST(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession()
   if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -87,12 +89,13 @@ export async function DELETE(
   const commentId = searchParams.get('commentId')
   if (!commentId) return NextResponse.json({ error: 'commentId required' }, { status: 400 })
 
-  const comments = await readComments(params.id)
+  const { id } = await params
+  const comments = await readComments(id)
   const comment = comments.find(c => c.id === commentId)
   if (!comment) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (comment.userId !== session.user.email) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  await put(commentKey(params.id), JSON.stringify(comments.filter(c => c.id !== commentId)), {
+  await put(commentKey(id), JSON.stringify(comments.filter(c => c.id !== commentId)), {
     access: 'public', contentType: 'application/json', allowOverwrite: true,
   })
 

@@ -20,13 +20,14 @@ async function readFollowing(email: string): Promise<string[]> {
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   const session = await getServerSession()
   if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const me = session.user.email
-  const target = params.userId
+  const { userId } = await params
+  const target = userId
   if (me === target) return NextResponse.json({ error: 'Cannot follow yourself' }, { status: 400 })
 
   const following = await readFollowing(me)

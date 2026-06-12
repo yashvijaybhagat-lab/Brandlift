@@ -6,17 +6,18 @@ const FEED_KEY = 'community/feed.json'
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const { blobs } = await list({ prefix: FEED_KEY, limit: 1 })
     if (!blobs.length) return NextResponse.json({ ok: true })
     const res = await fetch(blobs[0].url, { cache: 'no-store' })
     if (!res.ok) return NextResponse.json({ ok: true })
     const feed: Array<Record<string, unknown>> = await res.json()
-    const idx = feed.findIndex(p => p.id === params.id)
+    const idx = feed.findIndex(p => p.id === id)
     if (idx === -1) return NextResponse.json({ ok: true })
-    feed[idx] = { ...feed[idx], viewCount: ((feed[idx].viewCount as number) ?? 0) + 1 }
+    feed[idx] = { ...feed[idx], viewCount: ((feed[idx].viewCount as number | undefined) ?? 0) + 1 }
     await put(FEED_KEY, JSON.stringify(feed), { access: 'public', contentType: 'application/json', allowOverwrite: true })
   } catch {}
   return NextResponse.json({ ok: true })
