@@ -14,7 +14,7 @@ interface Review {
 }
 
 /* ─── Card accent palette ────────────────────────────────────────────────── */
-const ACCENTS = ['#6366f1', '#8b5cf6', '#06b6d4', '#4ADE80', '#f59e0b', '#f472b6']
+const ACCENTS = ['#5855D4', '#5855D4', '#06b6d4', '#4ADE80', '#f59e0b', '#f472b6']
 const RESULT_COLORS = ['#4ADE80', '#a78bfa', '#f59e0b', '#60a5fa', '#f87171', '#4ADE80']
 
 /* ─── Count-up hook ──────────────────────────────────────────────────────── */
@@ -47,9 +47,9 @@ function Marquee() {
   return (
     <div className="relative overflow-hidden w-full" aria-hidden>
       <div className="absolute left-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(to right, #0A0A0B, transparent)' }} />
+        style={{ background: 'linear-gradient(to right, #0D1117, transparent)' }} />
       <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(to left, #0A0A0B, transparent)' }} />
+        style={{ background: 'linear-gradient(to left, #0D1117, transparent)' }} />
       <div className="flex items-center gap-2.5 py-1"
         style={{ width: 'max-content', animation: 'marqueeScroll 35s linear infinite' }}>
         {items.map((biz, i) => (
@@ -59,7 +59,7 @@ function Marquee() {
           </span>
         ))}
       </div>
-      <style>{`@keyframes marqueeScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}`}</style>
+      
     </div>
   )
 }
@@ -139,8 +139,8 @@ function EmptySlot() {
     <div className="flex flex-col items-center justify-center gap-2 p-8 rounded-2xl text-center"
       style={{ border: '1px dashed rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.01)', minHeight: 180 }}>
       <div className="w-7 h-7 rounded-full flex items-center justify-center"
-        style={{ background: 'rgba(99,102,241,0.07)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
-        <span style={{ fontSize: 15, color: '#6366f1', lineHeight: 1 }}>+</span>
+        style={{ background: 'rgba(88,85,212,0.07)', border: '0.5px solid rgba(88,85,212,0.15)' }}>
+        <span style={{ fontSize: 15, color: '#5855D4', lineHeight: 1 }}>+</span>
       </div>
       <p style={{ fontSize: 12, color: '#3f3f46', lineHeight: 1.5, maxWidth: '20ch' }}>
         Your result could be featured here
@@ -219,7 +219,7 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
       <button
         onClick={() => setOpen(o => !o)}
         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150 w-full"
-        style={{ background: open ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.3)', color: '#a5b4fc' }}
+        style={{ background: open ? 'rgba(88,85,212,0.2)' : 'rgba(88,85,212,0.1)', border: '0.5px solid rgba(88,85,212,0.3)', color: '#a5b4fc' }}
       >
         {open ? '✕ Close' : 'Share your story →'}
       </button>
@@ -231,13 +231,13 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
             <div className="flex flex-col gap-1">
               <label style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>Your name *</label>
               <input value={name} onChange={e => setName(e.target.value)} placeholder="Jane D." style={inputStyle}
-                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
             </div>
             <div className="flex flex-col gap-1">
               <label style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>Business name *</label>
               <input value={business} onChange={e => setBusiness(e.target.value)} placeholder="Jane's Bakery" style={inputStyle}
-                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
             </div>
           </div>
@@ -246,13 +246,13 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
             <div className="flex flex-col gap-1">
               <label style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>Location <span style={{ color: '#3f3f46' }}>(optional)</span></label>
               <input value={location} onChange={e => setLocation(e.target.value)} placeholder="Austin, TX" style={inputStyle}
-                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
             </div>
             <div className="flex flex-col gap-1">
               <label style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>Result <span style={{ color: '#3f3f46' }}>(optional)</span></label>
               <input value={result} onChange={e => setResult(e.target.value)} placeholder="500 new followers" style={inputStyle}
-                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
             </div>
           </div>
@@ -263,7 +263,7 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
               value={quote} onChange={e => setQuote(e.target.value.slice(0, 600))} rows={4}
               placeholder="What did you post? What happened? Be specific — real stories get featured."
               style={{ ...inputStyle, resize: 'none', lineHeight: 1.6 }}
-              onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
               onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
             />
           </div>
@@ -277,9 +277,9 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
             disabled={state === 'submitting'}
             className="px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150"
             style={{
-              background: state === 'submitting' ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.15)',
-              border: '0.5px solid rgba(99,102,241,0.35)',
-              color: state === 'submitting' ? '#818cf8' : '#a5b4fc',
+              background: state === 'submitting' ? 'rgba(88,85,212,0.3)' : 'rgba(88,85,212,0.15)',
+              border: '0.5px solid rgba(88,85,212,0.35)',
+              color: state === 'submitting' ? '#8B87E6' : '#a5b4fc',
               cursor: state === 'submitting' ? 'default' : 'pointer',
             }}
           >
@@ -330,9 +330,9 @@ export default function SocialProof() {
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
-            style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
+            style={{ background: 'rgba(88,85,212,0.08)', border: '0.5px solid rgba(88,85,212,0.2)' }}>
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#4ADE80', boxShadow: '0 0 0 3px rgba(74,222,128,0.2)', display: 'inline-block' }} />
-            <span style={{ fontSize: 11, color: '#818cf8', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: 11, color: '#8B87E6', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
               Real businesses. Real results.
             </span>
           </div>

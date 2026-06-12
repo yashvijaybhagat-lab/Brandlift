@@ -34,7 +34,7 @@ export default function DashboardLayout({
   const businessName = session?.user?.name ?? 'Your Business'
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0A0A0B]">
+    <div className="flex h-screen overflow-hidden bg-[#0D1117]">
       <Sidebar
         collapsed={collapsed}
         onCollapsedChange={handleCollapsedChange}

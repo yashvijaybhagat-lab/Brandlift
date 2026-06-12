@@ -27,15 +27,15 @@ function UploadMockup({ active }: { active: boolean }) {
       <div
         className="rounded-xl flex flex-col items-center justify-center gap-3 py-8 transition-all duration-500"
         style={{
-          border: `1.5px dashed ${active ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.1)'}`,
-          background: active ? 'rgba(99,102,241,0.04)' : 'transparent',
+          border: `1.5px dashed ${active ? 'rgba(88,85,212,0.5)' : 'rgba(255,255,255,0.1)'}`,
+          background: active ? 'rgba(88,85,212,0.04)' : 'transparent',
         }}
       >
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500"
-          style={{ background: active ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.05)' }}
+          style={{ background: active ? 'rgba(88,85,212,0.15)' : 'rgba(255,255,255,0.05)' }}
         >
-          <Upload className="w-5 h-5" style={{ color: active ? '#6366f1' : '#52525B' }} />
+          <Upload className="w-5 h-5" style={{ color: active ? '#5855D4' : '#52525B' }} />
         </div>
         <div className="text-center">
           <p className="text-[13px] font-medium" style={{ color: active ? '#FAFAFA' : '#71717A' }}>
@@ -55,7 +55,7 @@ function UploadMockup({ active }: { active: boolean }) {
         }}
       >
         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(99,102,241,0.1)' }}>
+          style={{ background: 'rgba(88,85,212,0.1)' }}>
           <span style={{ fontSize: 14 }}>🎬</span>
         </div>
         <div className="flex-1 min-w-0">
@@ -64,7 +64,7 @@ function UploadMockup({ active }: { active: boolean }) {
             <div
               className="h-full rounded-full transition-all duration-1000"
               style={{
-                background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                background: 'linear-gradient(90deg, #5855D4, #5855D4)',
                 width: active ? '100%' : '0%',
               }}
             />
@@ -119,7 +119,7 @@ function ProcessMockup({ active }: { active: boolean }) {
       <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
         <div
           className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #6366f1, #8b5cf6)' }}
+          style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #5855D4, #5855D4)' }}
         />
       </div>
       {/* Steps */}
@@ -128,7 +128,7 @@ function ProcessMockup({ active }: { active: boolean }) {
           const show = active && tick >= i * 1.5
           return (
             <div key={s.label} className="flex items-center gap-2.5" style={{ opacity: show ? 1 : 0.2, transition: 'opacity 400ms ease' }}>
-              <span className="text-[13px] flex-shrink-0" style={{ color: s.done ? '#4ADE80' : '#6366f1' }}>
+              <span className="text-[13px] flex-shrink-0" style={{ color: s.done ? '#4ADE80' : '#5855D4' }}>
                 {s.done && show ? '✓' : show ? '→' : '·'}
               </span>
               <span className="text-[12px]" style={{ color: s.done ? '#A1A1AA' : '#FAFAFA' }}>{s.label}</span>
@@ -189,7 +189,7 @@ function ExportMockup({ active }: { active: boolean }) {
       <button
         className="w-full py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-500 mt-1"
         style={{
-          background: active ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.04)',
+          background: active ? 'linear-gradient(135deg, #5855D4, #5855D4)' : 'rgba(255,255,255,0.04)',
           color: active ? '#fff' : '#52525B',
           border: active ? 'none' : '0.5px solid rgba(255,255,255,0.06)',
           opacity: active ? 1 : 0.5,
@@ -214,8 +214,8 @@ const STEPS_DATA = [
   {
     num: '02',
     icon: Sparkles,
-    title: 'AI does the work',
-    desc: 'Our AI stabilizes, color grades, adds captions in your voice, writes hooks, and formats everything for each platform.',
+    title: 'We do the work',
+    desc: 'We stabilize, color grade, add captions in your voice, write hooks, and format everything for each platform.',
     Mockup: ProcessMockup,
   },
   {
@@ -250,13 +250,13 @@ export default function HowItWorks() {
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
             style={{
-              background: 'rgba(99,102,241,0.08)',
-              border: '0.5px solid rgba(99,102,241,0.2)',
+              background: 'rgba(88,85,212,0.08)',
+              border: '0.5px solid rgba(88,85,212,0.2)',
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: '#818cf8',
+              color: '#8B87E6',
             }}
           >
             How it works
@@ -274,7 +274,7 @@ export default function HowItWorks() {
             From raw clip to polished content<br />
             <span
               style={{
-                background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 45%, #8b5cf6 100%)',
+                background: 'linear-gradient(135deg, #8B87E6 0%, #5855D4 45%, #5855D4 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -284,7 +284,7 @@ export default function HowItWorks() {
             </span>
           </h2>
           <p style={{ fontSize: 16, color: '#71717A', maxWidth: '44ch', lineHeight: 1.65 }}>
-            No editing skills. No design software. No agency fees. Just your video, our AI, and results you can post today.
+            No editing skills. No design software. No agency fees. Just your video, our tools, and results you can post today.
           </p>
         </div>
 
@@ -310,7 +310,7 @@ export default function HowItWorks() {
                   <div className="flex items-center gap-2.5">
                     <span
                       className="text-[11px] font-bold tracking-widest uppercase"
-                      style={{ color: '#6366f1' }}
+                      style={{ color: '#5855D4' }}
                     >
                       {step.num}
                     </span>
@@ -319,9 +319,9 @@ export default function HowItWorks() {
                   <div className="flex items-start gap-2.5">
                     <div
                       className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}
+                      style={{ background: 'rgba(88,85,212,0.1)', border: '0.5px solid rgba(88,85,212,0.2)' }}
                     >
-                      <Icon className="w-3.5 h-3.5" style={{ color: '#818cf8' }} />
+                      <Icon className="w-3.5 h-3.5" style={{ color: '#8B87E6' }} />
                     </div>
                     <div>
                       <h3
@@ -349,9 +349,9 @@ export default function HowItWorks() {
         >
           {[0, 1].map(i => (
             <div key={i} className="flex items-center gap-4 flex-1 justify-center">
-              <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent)' }} />
-              <ArrowRight className="w-4 h-4 flex-shrink-0" style={{ color: '#6366f1' }} />
-              <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent)' }} />
+              <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(88,85,212,0.3), transparent)' }} />
+              <ArrowRight className="w-4 h-4 flex-shrink-0" style={{ color: '#5855D4' }} />
+              <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(88,85,212,0.3), transparent)' }} />
             </div>
           ))}
         </div>

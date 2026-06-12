@@ -30,7 +30,7 @@ export default function Nav() {
       style={{
         opacity: mounted ? 1 : 0,
         transform: mounted ? 'translateY(0)' : 'translateY(-8px)',
-        backgroundColor: scrolled ? 'rgba(10, 10, 11, 0.8)' : 'transparent',
+        backgroundColor: scrolled ? 'rgba(13, 17, 23, 0.8)' : 'transparent',
         backdropFilter: scrolled ? 'blur(12px)' : 'none',
         WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
         borderBottom: scrolled ? '0.5px solid var(--color-border)' : '0.5px solid transparent',

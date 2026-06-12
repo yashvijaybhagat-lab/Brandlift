@@ -57,9 +57,9 @@ function FloatCard({
     >
       <div
         className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ background: 'rgba(99,102,241,0.12)', border: '0.5px solid rgba(99,102,241,0.2)' }}
+        style={{ background: 'rgba(88,85,212,0.12)', border: '0.5px solid rgba(88,85,212,0.2)' }}
       >
-        <Icon className="w-4 h-4" style={{ color: '#818cf8' }} />
+        <Icon className="w-4 h-4" style={{ color: '#8B87E6' }} />
       </div>
       <div className="flex flex-col gap-0.5">
         <span style={{ fontSize: 11, color: '#52525B', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
@@ -92,7 +92,7 @@ function LeftPanel() {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 70% 60% at 40% 50%, rgba(99,102,241,0.1) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 70% 60% at 40% 50%, rgba(88,85,212,0.1) 0%, transparent 70%)',
         }}
       />
 
@@ -125,8 +125,8 @@ function LeftPanel() {
         <div
           className="w-20 h-20 rounded-3xl flex items-center justify-center"
           style={{
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-            boxShadow: '0 0 0 1px rgba(99,102,241,0.3), 0 0 60px rgba(99,102,241,0.35), 0 20px 40px rgba(0,0,0,0.5)',
+            background: '#5855D4',
+            boxShadow: '0 0 0 1px rgba(88,85,212,0.3), 0 0 60px rgba(88,85,212,0.35), 0 20px 40px rgba(0,0,0,0.5)',
           }}
         >
           <svg viewBox="0 0 28 28" fill="none" width="42" height="42">
@@ -162,8 +162,8 @@ function LeftPanel() {
             'Best posting times for your platform',
           ].map((f) => (
             <div key={f} className="flex items-center gap-2.5">
-              <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.15)', border: '0.5px solid rgba(99,102,241,0.3)' }}>
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3 5.5L6.5 2.5" stroke="#818cf8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(88,85,212,0.15)', border: '0.5px solid rgba(88,85,212,0.3)' }}>
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3 5.5L6.5 2.5" stroke="#8B87E6" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
               <span style={{ fontSize: 13, color: '#71717A' }}>{f}</span>
             </div>
@@ -204,9 +204,9 @@ function Field({
         onBlur={() => setFocused(false)}
         className="w-full px-4 py-3 rounded-xl text-[14px] text-[#FAFAFA] outline-none transition-all duration-200"
         style={{
-          background: focused ? 'rgba(99,102,241,0.06)' : 'rgba(255,255,255,0.04)',
-          border: `1px solid ${focused ? 'rgba(99,102,241,0.45)' : 'rgba(255,255,255,0.08)'}`,
-          boxShadow: focused ? '0 0 0 3px rgba(99,102,241,0.1)' : 'none',
+          background: focused ? 'rgba(88,85,212,0.06)' : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${focused ? 'rgba(88,85,212,0.45)' : 'rgba(255,255,255,0.08)'}`,
+          boxShadow: focused ? '0 0 0 3px rgba(88,85,212,0.1)' : 'none',
           fontFamily: 'inherit',
         }}
         autoComplete={type === 'email' ? 'email' : 'current-password'}
@@ -241,7 +241,7 @@ export default function SignInPage() {
         {/* Ambient glow */}
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse 50% 40% at 70% 50%, rgba(99,102,241,0.06) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(ellipse 50% 40% at 70% 50%, rgba(88,85,212,0.06) 0%, transparent 70%)' }}
         />
 
         <div className="relative z-10 w-full max-w-[380px]">
@@ -249,7 +249,7 @@ export default function SignInPage() {
           <div className="flex lg:hidden items-center gap-2.5 mb-10">
             <div
               className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' }}
+              style={{ background: '#5855D4' }}
             >
               <svg viewBox="0 0 28 28" fill="none" width="20" height="20">
                 <path d="M4 5h8a4 4 0 0 1 0 8H4V5zm0 8h8.5a4.5 4.5 0 0 1 0 9H4V13z" fill="white" opacity="0.95" />
@@ -343,7 +343,7 @@ export default function SignInPage() {
                   type="button"
                   className="text-[12px] transition-colors duration-150"
                   style={{ color: '#52525B' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#818cf8')}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#8B87E6')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = '#52525B')}
                 >
                   Forgot password?
@@ -364,18 +364,18 @@ export default function SignInPage() {
               disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all duration-200 mt-1"
               style={{
-                background: 'linear-gradient(135deg, #6366f1 0%, #5558e8 100%)',
-                boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.25)',
+                background: '#5855D4',
+                boxShadow: '0 0 0 1px rgba(88,85,212,0.4), 0 8px 24px rgba(88,85,212,0.25)',
                 opacity: loading ? 0.75 : 1,
                 cursor: loading ? 'not-allowed' : 'pointer',
               }}
               onMouseEnter={(e) => {
                 if (loading) return
-                e.currentTarget.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.5), 0 12px 32px rgba(99,102,241,0.35)'
+                e.currentTarget.style.boxShadow = '0 0 0 1px rgba(88,85,212,0.5), 0 12px 32px rgba(88,85,212,0.35)'
                 e.currentTarget.style.transform = 'translateY(-1px)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.25)'
+                e.currentTarget.style.boxShadow = '0 0 0 1px rgba(88,85,212,0.4), 0 8px 24px rgba(88,85,212,0.25)'
                 e.currentTarget.style.transform = 'translateY(0)'
               }}
             >
@@ -396,9 +396,9 @@ export default function SignInPage() {
             <Link
               href="/sign-up"
               className="transition-colors duration-150"
-              style={{ color: '#818cf8' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#a5b4fc')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#818cf8')}
+              style={{ color: '#8B87E6' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#C4C2F0')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#8B87E6')}
             >
               Sign up free →
             </Link>

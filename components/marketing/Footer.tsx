@@ -83,8 +83,8 @@ export default function Footer() {
                   outline: 'none',
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)'
+                  e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88,85,212,0.1)'
                 }}
                 onBlur={(e) => {
                   e.currentTarget.style.borderColor = 'var(--color-border-strong)'

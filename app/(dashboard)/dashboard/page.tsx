@@ -7,7 +7,7 @@ import { TopBar } from '@/components/dashboard/TopBar'
 import { ContentIdeasFeed, type ContentIdea } from '@/components/dashboard/ContentIdeasFeed'
 
 /* ─── Sparkline ───────────────────────────────────────────────────────────── */
-function Sparkline({ data, color = '#6366f1' }: { data: number[]; color?: string }) {
+function Sparkline({ data, color = '#5855D4' }: { data: number[]; color?: string }) {
   const max = Math.max(...data)
   const min = Math.min(...data)
   const range = max - min || 1
@@ -120,7 +120,7 @@ function buildStats(idea: ContentIdea | null): Stat[] {
         period: 'views if posted at peak',
         icon: Eye,
         sparkData: sparkReach,
-        color: '#6366f1',
+        color: '#5855D4',
       },
       {
         label: 'Engagement Rate',
@@ -142,7 +142,7 @@ function buildStats(idea: ContentIdea | null): Stat[] {
         period: 'upload your first video',
         icon: Video,
         sparkData: [0, 0, 0, 0, 0, 0, 0],
-        color: '#8b5cf6',
+        color: '#5855D4',
       },
       {
         label: 'Best Post Window',
@@ -180,7 +180,7 @@ function buildStats(idea: ContentIdea | null): Stat[] {
       period: 'on 30s videos in your niche',
       icon: Clock,
       sparkData: [6, 9, 11, 13, 14, 16, 18],
-      color: '#6366f1',
+      color: '#5855D4',
     },
     {
       label: 'Viewer → Follower',
@@ -191,7 +191,7 @@ function buildStats(idea: ContentIdea | null): Stat[] {
       period: 'convert after 3+ videos seen',
       icon: BarChart2,
       sparkData: [0.4, 1.0, 1.6, 2.2, 2.6, 3.0, 3.2],
-      color: '#8b5cf6',
+      color: '#5855D4',
     },
     {
       label: 'Critical Hook Window',
@@ -278,7 +278,7 @@ function PostingTimeChart({ platform }: { platform: string }) {
                   height: `${Math.round(slot.score * 52)}px`,
                   background: isBest
                     ? 'linear-gradient(to top, #f59e0b, #fbbf24)'
-                    : 'rgba(99,102,241,0.25)',
+                    : 'rgba(88,85,212,0.25)',
                   boxShadow: isBest ? '0 0 8px rgba(245,158,11,0.4)' : 'none',
                   transition: 'all 0.2s',
                   minHeight: 4,
@@ -333,13 +333,13 @@ function IdeaAnalyticsPanel({ idea, onClose }: { idea: ContentIdea; onClose: () 
   return (
     <div
       className="flex flex-col gap-5 p-5 rounded-2xl"
-      style={{ background: '#111113', border: '0.5px solid rgba(99,102,241,0.2)', boxShadow: '0 0 0 1px rgba(99,102,241,0.06), 0 8px 32px rgba(0,0,0,0.3)' }}
+      style={{ background: '#111113', border: '0.5px solid rgba(88,85,212,0.2)', boxShadow: '0 0 0 1px rgba(88,85,212,0.06), 0 8px 32px rgba(0,0,0,0.3)' }}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6366f1' }}>Idea forecast</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#5855D4' }}>Idea forecast</span>
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ background: `${trendColor}15`, color: trendColor, border: `0.5px solid ${trendColor}30` }}>
               {trendEmoji} {idea.trend}
             </span>
@@ -362,9 +362,9 @@ function IdeaAnalyticsPanel({ idea, onClose }: { idea: ContentIdea; onClose: () 
       {/* Stats grid */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: 'Est. reach', value: `${formatCompact(lo)}–${formatCompact(hi)}`, sub: 'views/video', color: '#6366f1' },
+          { label: 'Est. reach', value: `${formatCompact(lo)}–${formatCompact(hi)}`, sub: 'views/video', color: '#5855D4' },
           { label: 'Engagement', value: `${eng}%`, sub: 'likes + saves', color: '#4ADE80' },
-          { label: 'Format', value: idea.format === 'talking-head' ? 'Talk' : idea.format === 'b-roll' ? 'B-roll' : idea.format === 'tutorial' ? 'Tutorial' : 'Text', sub: idea.format.replace(/-/g, ' '), color: '#8b5cf6' },
+          { label: 'Format', value: idea.format === 'talking-head' ? 'Talk' : idea.format === 'b-roll' ? 'B-roll' : idea.format === 'tutorial' ? 'Tutorial' : 'Text', sub: idea.format.replace(/-/g, ' '), color: '#5855D4' },
         ].map(item => (
           <div key={item.label} className="flex flex-col gap-1 p-3 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
             <p style={{ fontSize: 10, fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.label}</p>
@@ -387,9 +387,9 @@ function IdeaAnalyticsPanel({ idea, onClose }: { idea: ContentIdea; onClose: () 
                 onClick={() => setActivePlatform(p)}
                 className="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all duration-150"
                 style={{
-                  background: activePlatform === p ? 'rgba(99,102,241,0.12)' : '#18181C',
-                  border: activePlatform === p ? '0.5px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.07)',
-                  color: activePlatform === p ? '#a5b4fc' : '#52525B',
+                  background: activePlatform === p ? 'rgba(88,85,212,0.12)' : '#18181C',
+                  border: activePlatform === p ? '0.5px solid rgba(88,85,212,0.4)' : '0.5px solid rgba(255,255,255,0.07)',
+                  color: activePlatform === p ? '#C4C2F0' : '#52525B',
                 }}
               >
                 {PLATFORM_LABEL[p]}
@@ -504,10 +504,10 @@ function WeekCalendar() {
       {/* Today's callout */}
       {todayBest && (
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-          style={{ background: `${PLATFORM_COLORS[todayBest.platform] ?? '#6366f1'}0d`, border: `0.5px solid ${PLATFORM_COLORS[todayBest.platform] ?? '#6366f1'}35` }}>
-          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PLATFORM_COLORS[todayBest.platform] ?? '#6366f1', boxShadow: `0 0 6px ${PLATFORM_COLORS[todayBest.platform] ?? '#6366f1'}80` }} />
+          style={{ background: `${PLATFORM_COLORS[todayBest.platform] ?? '#5855D4'}0d`, border: `0.5px solid ${PLATFORM_COLORS[todayBest.platform] ?? '#5855D4'}35` }}>
+          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PLATFORM_COLORS[todayBest.platform] ?? '#5855D4', boxShadow: `0 0 6px ${PLATFORM_COLORS[todayBest.platform] ?? '#5855D4'}80` }} />
           <div className="flex-1 min-w-0">
-            <span style={{ fontSize: 12, fontWeight: 700, color: PLATFORM_COLORS[todayBest.platform] ?? '#a5b4fc' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: PLATFORM_COLORS[todayBest.platform] ?? '#C4C2F0' }}>
               Post on {todayBest.platform} at {todayBest.time} today
             </span>
             {todaySlots.length > 1 && (
@@ -516,7 +516,7 @@ function WeekCalendar() {
               </span>
             )}
           </div>
-          <span style={{ fontSize: 10, fontWeight: 700, color: PLATFORM_COLORS[todayBest.platform] ?? '#a5b4fc', padding: '2px 7px', borderRadius: 5, background: `${PLATFORM_COLORS[todayBest.platform] ?? '#6366f1'}18`, flexShrink: 0 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: PLATFORM_COLORS[todayBest.platform] ?? '#C4C2F0', padding: '2px 7px', borderRadius: 5, background: `${PLATFORM_COLORS[todayBest.platform] ?? '#5855D4'}18`, flexShrink: 0 }}>
             {Math.round(todayBest.score * 100)}% reach
           </span>
         </div>
@@ -533,20 +533,20 @@ function WeekCalendar() {
               key={day}
               className="flex flex-col gap-1.5 p-2.5 rounded-xl transition-all duration-200"
               style={{
-                background: isToday ? 'rgba(99,102,241,0.08)' : '#111113',
-                border: `0.5px solid ${isToday ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.05)'}`,
+                background: isToday ? 'rgba(88,85,212,0.08)' : '#111113',
+                border: `0.5px solid ${isToday ? 'rgba(88,85,212,0.3)' : 'rgba(255,255,255,0.05)'}`,
                 opacity: isPast ? 0.45 : 1,
               }}
             >
               <div className="flex flex-col items-center gap-0.5">
-                <span style={{ fontSize: 10, fontWeight: 600, color: isToday ? '#818cf8' : '#52525B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{day}</span>
-                {isToday && <div className="w-1 h-1 rounded-full" style={{ background: '#6366f1' }} />}
+                <span style={{ fontSize: 10, fontWeight: 600, color: isToday ? '#8B87E6' : '#52525B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{day}</span>
+                {isToday && <div className="w-1 h-1 rounded-full" style={{ background: '#5855D4' }} />}
               </div>
 
               {topSlot ? (
                 <div className="flex flex-col gap-1">
-                  <div className="w-full h-1 rounded-full" style={{ background: PLATFORM_COLORS[topSlot.platform] ?? '#6366f1', opacity: topSlot.score }} />
-                  <p style={{ fontSize: 9, color: PLATFORM_COLORS[topSlot.platform] ?? '#a5b4fc', fontWeight: 700, textAlign: 'center', lineHeight: 1.2 }}>
+                  <div className="w-full h-1 rounded-full" style={{ background: PLATFORM_COLORS[topSlot.platform] ?? '#5855D4', opacity: topSlot.score }} />
+                  <p style={{ fontSize: 9, color: PLATFORM_COLORS[topSlot.platform] ?? '#C4C2F0', fontWeight: 700, textAlign: 'center', lineHeight: 1.2 }}>
                     {topSlot.platform.replace('Instagram', 'Insta')}
                   </p>
                   <p style={{ fontSize: 9, color: '#52525B', textAlign: 'center' }}>{topSlot.time}</p>
@@ -590,14 +590,14 @@ function WeekCalendar() {
 
 /* ─── Quick Actions bar ───────────────────────────────────────────────────── */
 const QUICK_ACTIONS = [
-  { label: 'Create Video',  href: '/dashboard/videos',      Icon: Video,        color: '#6366f1', bg: 'rgba(99,102,241,0.1)',  border: 'rgba(99,102,241,0.25)' },
-  { label: 'Repurpose',     href: '/dashboard/repurpose',   Icon: Repeat2,      color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.25)' },
+  { label: 'Create Video',  href: '/dashboard/videos',      Icon: Video,        color: '#5855D4', bg: 'rgba(88,85,212,0.1)',  border: 'rgba(88,85,212,0.25)' },
+  { label: 'Repurpose',     href: '/dashboard/repurpose',   Icon: Repeat2,      color: '#5855D4', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.25)' },
   { label: 'Viral Score',   href: '/dashboard/viral-score', Icon: Zap,          color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
   { label: '7-Day Planner', href: '/dashboard/planner',     Icon: CalendarDays, color: '#22c55e', bg: 'rgba(34,197,94,0.1)',  border: 'rgba(34,197,94,0.25)'  },
   { label: 'Feed',          href: '/dashboard/feed',        Icon: Users,        color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)', border: 'rgba(14,165,233,0.25)' },
   { label: 'Analyze Website', href: '/dashboard/website',   Icon: Globe,        color: '#ef4444', bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.25)'  },
   { label: 'AI Studio',      href: '/dashboard/higgsfield', Icon: Wand2,        color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)' },
-  { label: 'FAQ',            href: '/dashboard/faq',        Icon: HelpCircle,   color: '#818cf8', bg: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)' },
+  { label: 'FAQ',            href: '/dashboard/faq',        Icon: HelpCircle,   color: '#8B87E6', bg: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)' },
 ]
 
 function QuickActionsBar() {
@@ -693,9 +693,9 @@ function PlatformHealth() {
 /* ─── Statistics tab content ──────────────────────────────────────────────── */
 // Source: TikTok Creator Analytics benchmarks for small business accounts
 const BENCHMARK_ROWS: { label: string; smb: string; avg: string; top: string; color: string }[] = [
-  { label: 'Monthly video views',       smb: '500–3K',   avg: '8K–25K',  top: '100K+',  color: '#6366f1' },
+  { label: 'Monthly video views',       smb: '500–3K',   avg: '8K–25K',  top: '100K+',  color: '#5855D4' },
   { label: 'FYP traffic share',         smb: '55–65%',   avg: '68–75%',  top: '82%+',   color: '#4ADE80' },
-  { label: 'Avg watch time (30s video)',smb: '8–12s',    avg: '14–18s',  top: '22s+',   color: '#8b5cf6' },
+  { label: 'Avg watch time (30s video)',smb: '8–12s',    avg: '14–18s',  top: '22s+',   color: '#5855D4' },
   { label: 'Follower growth / month',   smb: '30–200',   avg: '500–2K',  top: '10K+',   color: '#f59e0b' },
   { label: 'Profile views / month',     smb: '100–600',  avg: '2K–8K',   top: '50K+',   color: '#06b6d4' },
   { label: 'Like rate',                 smb: '3–5%',     avg: '6–9%',    top: '12%+',   color: '#f87171' },
@@ -704,8 +704,8 @@ const BENCHMARK_ROWS: { label: string; smb: string; avg: string; top: string; co
 // TikTok Creator Analytics — traffic source breakdown (industry average)
 const TIKTOK_TRAFFIC_SOURCES = [
   { source: 'For You Page',   pct: 71, color: '#4ADE80',  desc: 'Algorithm-driven discovery' },
-  { source: 'Following',      pct: 15, color: '#6366f1',  desc: 'Existing follower views' },
-  { source: 'Profile',        pct: 8,  color: '#8b5cf6',  desc: 'Direct profile visits' },
+  { source: 'Following',      pct: 15, color: '#5855D4',  desc: 'Existing follower views' },
+  { source: 'Profile',        pct: 8,  color: '#5855D4',  desc: 'Direct profile visits' },
   { source: 'Search',         pct: 4,  color: '#f59e0b',  desc: 'Keyword searches' },
   { source: 'Sound / Trend',  pct: 2,  color: '#06b6d4',  desc: 'Trending audio discovery' },
 ]
@@ -713,24 +713,24 @@ const TIKTOK_TRAFFIC_SOURCES = [
 // TikTok video completion rates by length
 const COMPLETION_BY_LENGTH = [
   { length: '7–10s',  completion: 84, label: 'Micro-clips',   color: '#4ADE80' },
-  { length: '15s',    completion: 71, label: 'Short-form',    color: '#6366f1' },
-  { length: '30s',    completion: 52, label: 'Standard',      color: '#8b5cf6' },
+  { length: '15s',    completion: 71, label: 'Short-form',    color: '#5855D4' },
+  { length: '30s',    completion: 52, label: 'Standard',      color: '#5855D4' },
   { length: '60s',    completion: 38, label: 'Extended',      color: '#f59e0b' },
   { length: '3–5min', completion: 24, label: 'Long-form',     color: '#f87171' },
 ]
 
 const FORMAT_PERFORMANCE: { format: string; avgViews: string; engRate: string; difficulty: string; color: string }[] = [
-  { format: 'Talking Head',   avgViews: '2–8K',   engRate: '4.2%', difficulty: 'Easy',   color: '#6366f1' },
+  { format: 'Talking Head',   avgViews: '2–8K',   engRate: '4.2%', difficulty: 'Easy',   color: '#5855D4' },
   { format: 'B-Roll + VO',    avgViews: '5–20K',  engRate: '5.8%', difficulty: 'Medium', color: '#4ADE80' },
   { format: 'Tutorial',       avgViews: '8–35K',  engRate: '7.1%', difficulty: 'Medium', color: '#f59e0b' },
-  { format: 'Text-on-screen', avgViews: '3–12K',  engRate: '6.4%', difficulty: 'Easy',   color: '#8b5cf6' },
+  { format: 'Text-on-screen', avgViews: '3–12K',  engRate: '6.4%', difficulty: 'Easy',   color: '#5855D4' },
   { format: 'POV / Story',    avgViews: '10–50K', engRate: '8.9%', difficulty: 'Easy',   color: '#f87171' },
 ]
 
 const GROWTH_MILESTONES: { followers: string; label: string; tip: string; color: string }[] = [
   { followers: '100',   label: 'First 100',    tip: 'Post 3×/week for 2–3 weeks. Focus on one platform.',         color: '#52525B' },
-  { followers: '500',   label: '500 followers', tip: 'Use trending audio and niche hashtags consistently.',        color: '#8b5cf6' },
-  { followers: '1K',    label: '1K milestone',  tip: 'Collab with one similar creator. Cross-post your best hit.', color: '#6366f1' },
+  { followers: '500',   label: '500 followers', tip: 'Use trending audio and niche hashtags consistently.',        color: '#5855D4' },
+  { followers: '1K',    label: '1K milestone',  tip: 'Collab with one similar creator. Cross-post your best hit.', color: '#5855D4' },
   { followers: '5K',    label: '5K reach',      tip: 'Run a giveaway or challenge. Batch-create 10 videos at once.', color: '#4ADE80' },
   { followers: '10K+',  label: 'Brand deals',   tip: 'Micro-influencer territory — brands pay $50–$500/post.',     color: '#f59e0b' },
 ]
@@ -938,7 +938,7 @@ export default function DashboardPage() {
                 style={{ color: activeTab === tab ? '#FAFAFA' : '#52525B', background: 'transparent', border: 'none' }}>
                 {tab}
                 {activeTab === tab && (
-                  <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6)' }} />
+                  <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg,#5855D4,#5855D4)' }} />
                 )}
               </button>
             ))}

@@ -69,18 +69,18 @@ function BusinessAvatar({ name, size = 32 }: { name: string; size?: number }) {
 
   // Deterministic color from name
   const colors = [
-    'from-indigo-500 to-violet-600',
-    'from-violet-500 to-purple-600',
-    'from-blue-500 to-cyan-600',
-    'from-emerald-500 to-teal-600',
-    'from-rose-500 to-pink-600',
+    'bg-[#5855D4]',
+    'bg-[#3B4555]',
+    'bg-[#2D3748]',
+    'bg-[#374151]',
+    'bg-[#1F2937]',
   ]
   const colorIndex = name.charCodeAt(0) % colors.length
 
   return (
     <div
       className={cn(
-        'flex-shrink-0 rounded-[8px] bg-gradient-to-br flex items-center justify-center font-semibold text-white',
+        'flex-shrink-0 rounded-[8px] flex items-center justify-center font-semibold text-white',
         colors[colorIndex]
       )}
       style={{ width: size, height: size, fontSize: size * 0.38 }}
@@ -115,7 +115,7 @@ function NavTooltip({
           sideOffset={8}
           className={cn(
             'z-50 rounded-[6px] px-2.5 py-1.5',
-            'bg-[#18181C] border border-white/10',
+            'bg-[#21262D] border border-white/10',
             'text-[13px] font-medium text-[#FAFAFA]',
             'shadow-lg',
             'select-none',
@@ -124,7 +124,7 @@ function NavTooltip({
           )}
         >
           {label}
-          <Tooltip.Arrow className="fill-[#18181C]" />
+          <Tooltip.Arrow className="fill-[#21262D]" />
         </Tooltip.Content>
       </Tooltip.Portal>
     </Tooltip.Root>
@@ -152,9 +152,10 @@ export function Sidebar({
           width: collapsed ? 60 : 240,
           transition: 'width 220ms cubic-bezier(0.23,1,0.32,1)',
           willChange: 'width',
-          background: 'linear-gradient(180deg, #111113 0%, #0e0e10 100%)',
+          background: '#0D1117',
+          borderColor: 'var(--color-border)',
         }}
-        className="relative flex flex-col h-full border-r border-white/[0.06] overflow-hidden flex-shrink-0"
+        className="relative flex flex-col h-full border-r overflow-hidden flex-shrink-0"
         aria-label="Main navigation"
       >
         {/* ── Top section ── */}
@@ -186,7 +187,7 @@ export function Sidebar({
               'flex-shrink-0 w-6 h-6 rounded-[6px] flex items-center justify-center',
               'text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#18181C]',
               'transition-colors duration-160',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5855D4]/60',
             )}
           >
             {collapsed ? (
@@ -215,22 +216,21 @@ export function Sidebar({
                     'relative flex items-center gap-3 rounded-[8px] h-9 px-2.5',
                     'text-[13px] font-medium select-none',
                     'transition-all duration-160',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5855D4]/60',
                     isActive
-                      ? ['text-[#a5b4fc]']
-                      : ['text-[#52525B]', 'hover:bg-white/[0.04]', 'hover:text-[#A1A1AA]']
+                      ? ['text-[#C4C2F0]']
+                      : ['text-[#52525B]', 'hover:bg-white/[0.04]', 'hover:text-[#8B949E]']
                   )}
                   style={{
-                    background: isActive ? 'linear-gradient(90deg, rgba(99,102,241,0.12) 0%, rgba(99,102,241,0.04) 100%)' : undefined,
-                    boxShadow: isActive ? 'inset 2px 0 0 0 #6366f1, 0 0 12px rgba(99,102,241,0.08)' : undefined,
+                    background: isActive ? 'rgba(88, 85, 212, 0.08)' : undefined,
+                    boxShadow: isActive ? 'inset 2px 0 0 0 #5855D4' : undefined,
                   }}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon
                     className="flex-shrink-0 w-4 h-4"
                     style={{
-                      color: isActive ? '#818cf8' : undefined,
-                      filter: isActive ? 'drop-shadow(0 0 4px rgba(99,102,241,0.5))' : undefined,
+                      color: isActive ? '#8B87E6' : undefined,
                     }}
                   />
                   <span
@@ -257,7 +257,7 @@ export function Sidebar({
             <div className="flex items-center gap-2.5 px-1 py-1 rounded-[8px] hover:bg-[#18181C] transition-colors duration-160 cursor-pointer">
               {/* User avatar */}
               <div
-                className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-semibold"
+                className="flex-shrink-0 w-7 h-7 rounded-full bg-[#5855D4] flex items-center justify-center text-white font-semibold"
                 style={{ fontSize: 11 }}
               >
                 {userEmail[0]?.toUpperCase() ?? 'U'}

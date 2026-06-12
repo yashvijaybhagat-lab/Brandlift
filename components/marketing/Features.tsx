@@ -66,7 +66,7 @@ function FeatureSection({
 
 /* ─── Smart Onboarding Mockup ────────────────────────────────────────────── */
 /* ─── Glow mockup wrapper ─────────────────────────────────────────────────── */
-function MockupFrame({ children, accent = '#6366f1' }: { children: React.ReactNode; accent?: string }) {
+function MockupFrame({ children, accent = '#5855D4' }: { children: React.ReactNode; accent?: string }) {
   return (
     <div className="relative rounded-[20px] p-[1px]"
       style={{
@@ -106,7 +106,7 @@ function OnboardingMockup() {
   }, [])
 
   return (
-    <MockupFrame accent="#6366f1">
+    <MockupFrame accent="#5855D4">
     <div
       id="onboarding-mockup"
       className="p-6 flex flex-col gap-5"
@@ -153,8 +153,8 @@ function OnboardingMockup() {
           <div
             className="flex items-start gap-2.5 p-3 rounded-interactive"
             style={{
-              background: 'rgba(99,102,241,0.06)',
-              border: '0.5px solid rgba(99,102,241,0.2)',
+              background: 'rgba(88,85,212,0.06)',
+              border: '0.5px solid rgba(88,85,212,0.2)',
             }}
           >
             <div
@@ -165,7 +165,7 @@ function OnboardingMockup() {
             </div>
             <div>
               <p className="text-xs mb-0.5" style={{ color: 'var(--color-primary)' }}>
-                AI is refining...
+                Refining...
               </p>
               <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                 &ldquo;Premium barbershop creating sharp looks and lasting confidence for modern men.&rdquo;
@@ -184,7 +184,7 @@ function OnboardingMockup() {
             style={{
               background: i === 0 ? 'var(--color-primary)' : 'var(--color-border-strong)',
               transition: 'background 200ms var(--ease-out)',
-              boxShadow: i === 0 ? '0 0 8px rgba(99,102,241,0.6)' : undefined,
+              boxShadow: i === 0 ? '0 0 8px rgba(88,85,212,0.6)' : undefined,
             }}
           />
         ))}
@@ -224,7 +224,7 @@ const CONTENT_IDEAS = [
 
 function ContentMockup() {
   return (
-    <MockupFrame accent="#8b5cf6">
+    <MockupFrame accent="#5855D4">
     <div
       className="p-5 grid grid-cols-2 gap-3"
       style={{ background: 'var(--color-surface)' }}
@@ -237,7 +237,7 @@ function ContentMockup() {
             background: 'var(--color-surface-elevated)',
             border: '0.5px solid var(--color-border)',
           }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(139,92,246,0.3)' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(88,85,212,0.3)' }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)' }}
         >
           <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text)' }}>
@@ -394,13 +394,13 @@ export default function Features() {
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
             style={{
-              background: 'rgba(99,102,241,0.08)',
-              border: '0.5px solid rgba(99,102,241,0.2)',
+              background: 'rgba(88,85,212,0.08)',
+              border: '0.5px solid rgba(88,85,212,0.2)',
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: '#818cf8',
+              color: '#8B87E6',
             }}
           >
             Platform features
@@ -418,12 +418,12 @@ export default function Features() {
           >
             Everything you need.
             <br />
-            <span style={{ background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 45%, #a78bfa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            <span style={{ background: 'linear-gradient(135deg, #8B87E6 0%, #5855D4 45%, #a78bfa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               Nothing you don&apos;t.
             </span>
           </h2>
           <p style={{ fontSize: 16, color: '#71717A', maxWidth: '46ch', lineHeight: 1.65 }}>
-            From smart onboarding to AI-powered video production — one platform that does the work of a full marketing team.
+            From smart onboarding to automated video production — one platform that does the work of a full marketing team.
           </p>
         </ScrollReveal>
 

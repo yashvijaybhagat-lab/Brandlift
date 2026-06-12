@@ -292,12 +292,12 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
 
   /* ── Render ───────────────────────────────────────────── */
   return (
-    <div className="flex flex-col w-full h-full" style={{ background: '#09090B', minHeight: '100vh' }}>
+    <div className="flex flex-col w-full h-full" style={{ background: '#0D1117', minHeight: '100vh' }}>
 
       {/* ── Header ──────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4" style={{ color: '#818cf8' }} />
+          <Sparkles className="w-4 h-4" style={{ color: '#8B87E6' }} />
           <span style={{ fontSize: 14, fontWeight: 700, color: '#FAFAFA', letterSpacing: '-0.02em' }}>Smart Edit</span>
           <span style={{ fontSize: 11, color: '#52525B', fontFamily: 'monospace' }}>{duration.toFixed(1)}s</span>
         </div>
@@ -335,7 +335,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
           </button>
           <button onClick={() => onApply(editState)}
             className="px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
-            style={{ background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.3)' }}>
+            style={{ background: 'rgba(88,85,212,0.15)', color: '#C4C2F0', border: '0.5px solid rgba(88,85,212,0.3)' }}>
             Apply &amp; Export
           </button>
           <button onClick={onClose}
@@ -387,7 +387,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                 letterSpacing: '-0.01em',
                 textAlign: 'center',
                 padding: o.style === 'cta' ? '6px 16px' : '0',
-                background: o.style === 'cta' ? 'rgba(99,102,241,0.85)' : 'transparent',
+                background: o.style === 'cta' ? 'rgba(88,85,212,0.85)' : 'transparent',
                 borderRadius: o.style === 'cta' ? 8 : 0,
               }}>{o.text}</span>
             </div>
@@ -402,7 +402,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
               left:   `${(seg.start / duration) * 100}%`,
               width:  `${((seg.end - seg.start) / duration) * 100}%`,
               height: '100%',
-              background: seg.speed !== 1.0 ? 'rgba(250,204,21,0.7)' : 'rgba(99,102,241,0.6)',
+              background: seg.speed !== 1.0 ? 'rgba(250,204,21,0.7)' : 'rgba(88,85,212,0.6)',
             }} />
           ))}
         </div>
@@ -417,7 +417,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
             {tab === 'chat' ? '💬 Chat' : tab === 'history' ? '📋 History' : '🎬 Timeline'}
             {activeTab === tab && (
               <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full"
-                style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6)' }} />
+                style={{ background: '#5855D4' }} />
             )}
           </button>
         ))}
@@ -435,7 +435,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className="max-w-[85%] rounded-2xl px-4 py-2.5" style={{
                     background: msg.role === 'user'
-                      ? 'linear-gradient(135deg,#6366f1,#8b5cf6)'
+                      ? '#5855D4'
                       : msg.kind === 'error'       ? 'rgba(239,68,68,0.12)'
                       : msg.kind === 'clarify'     ? 'rgba(250,204,21,0.08)'
                       : msg.kind === 'unsupported' ? 'rgba(249,115,22,0.1)'
@@ -475,7 +475,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                     <div className="flex gap-1.5 items-center">
                       {[0, 1, 2].map(i => (
                         <div key={i} className="w-1.5 h-1.5 rounded-full" style={{
-                          background: '#6366f1',
+                          background: '#5855D4',
                           animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
                         }} />
                       ))}
@@ -499,7 +499,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                 ].map(p => (
                   <button key={p} onClick={() => sendPrompt(p)} disabled={isLoading}
                     className="px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all"
-                    style={{ background: 'rgba(99,102,241,0.08)', color: '#818cf8', border: '0.5px solid rgba(99,102,241,0.2)' }}>
+                    style={{ background: 'rgba(88,85,212,0.08)', color: '#8B87E6', border: '0.5px solid rgba(88,85,212,0.2)' }}>
                     {p}
                   </button>
                 ))}
@@ -528,7 +528,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                   disabled={isLoading || !input.trim()}
                   className="w-10 h-10 flex items-center justify-center rounded-xl flex-shrink-0 transition-all"
                   style={{
-                    background: input.trim() && !isLoading ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.06)',
+                    background: input.trim() && !isLoading ? '#5855D4' : 'rgba(255,255,255,0.06)',
                     color: input.trim() && !isLoading ? '#fff' : '#52525B',
                   }}>
                   <Send className="w-4 h-4" />

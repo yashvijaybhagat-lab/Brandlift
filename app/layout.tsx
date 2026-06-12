@@ -28,6 +28,10 @@ export const metadata: Metadata = {
     'local business website',
     'AI content generator',
   ],
+  icons: {
+    icon: '/brandlift-favicon.png',
+    apple: '/brandlift-favicon.png',
+  },
   authors: [{ name: 'BrandLift' }],
   creator: 'BrandLift',
   metadataBase: new URL('https://brandlift.app'),
@@ -61,7 +65,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0A0A0B',
+  themeColor: '#0D1117',
   colorScheme: 'dark',
   width: 'device-width',
   initialScale: 1,
