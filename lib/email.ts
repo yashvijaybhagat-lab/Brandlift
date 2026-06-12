@@ -6,7 +6,7 @@ function getResend() {
   return new Resend(key)
 }
 
-const FROM = 'BrandLift <updates@brandlift.dev>'
+const FROM = 'BrandLift <contact@brandlift.dev>'
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://brandlift.dev'
 
 function unsubscribeUrl(email: string) {

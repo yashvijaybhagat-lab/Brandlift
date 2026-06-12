@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
 import { Sparkles } from 'lucide-react'
 
-const FOUNDER_EMAIL = 'jay.bhagat@gmail.com'
+const FOUNDER_EMAIL = 'ybhagat2011@gmail.com'
 
 type SendState = 'idle' | 'sending' | 'sent' | 'error'
 type GenState = 'idle' | 'generating' | 'error'
