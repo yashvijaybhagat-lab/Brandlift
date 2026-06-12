@@ -201,7 +201,9 @@ export function Sidebar({
 
         {/* ── Nav items ── */}
         <nav className="flex flex-col gap-0.5 px-2 pt-2 flex-1" role="navigation">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter(item =>
+            item.href !== '/dashboard/newsletter' || userEmail === 'jay.bhagat@gmail.com'
+          ).map((item) => {
             const Icon = item.icon
             // Exact match for dashboard, prefix match for others
             const isActive =
