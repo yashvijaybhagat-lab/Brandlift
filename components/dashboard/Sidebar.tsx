@@ -17,6 +17,7 @@ import {
   CalendarDays,
   HelpCircle,
   Wand2,
+  Mail,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
@@ -52,6 +53,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Planner',     href: '/dashboard/planner',    icon: CalendarDays },
   { label: 'AI Studio',   href: '/dashboard/higgsfield',  icon: Wand2 },
   { label: 'FAQ',         href: '/dashboard/faq',        icon: HelpCircle },
+  { label: 'Newsletter',  href: '/dashboard/newsletter', icon: Mail },
   { label: 'Settings',    href: '/dashboard/settings',   icon: Settings },
 ]
 

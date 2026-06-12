@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { getServerSupabase } from '@/lib/supabase'
 import { sendProductUpdateEmail } from '@/lib/email'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
+import { founderRequired } from '@/lib/founderAuth'
 
 export const dynamic = 'force-dynamic'
 
-const FOUNDER_EMAIL = process.env.FOUNDER_EMAIL ?? 'jay.bhagat@gmail.com'
-
 export async function POST(req: NextRequest) {
-  const session = await getServerSession()
-  if (!session?.user?.email || session.user.email !== FOUNDER_EMAIL) {
+  const { authorized } = founderRequired(req)
+  if (!authorized) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
