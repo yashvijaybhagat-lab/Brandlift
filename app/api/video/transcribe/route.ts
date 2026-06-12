@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
+import { getServerSession } from 'next-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +49,10 @@ export async function POST(request: NextRequest) {
   const ip = getIp(request)
   const rl = rateLimit(`transcribe:${ip}`, 5, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
+  const session = await getServerSession()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Sign in to use this feature' }, { status: 401 })
+  }
 
   const { videoUrl } = await request.json()
   if (!videoUrl) return NextResponse.json({ error: 'videoUrl required' }, { status: 400 })

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
+import { getServerSession } from 'next-auth'
 
 export const maxDuration = 60
 
@@ -19,6 +20,10 @@ export async function POST(req: NextRequest) {
   const ip = getIp(req)
   const rl = rateLimit(`tts:${ip}`, 8, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
+  const session = await getServerSession()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Sign in to use this feature' }, { status: 401 })
+  }
 
   const token = process.env.REPLICATE_API_TOKEN
   if (!token || token === 'your_replicate_token') {

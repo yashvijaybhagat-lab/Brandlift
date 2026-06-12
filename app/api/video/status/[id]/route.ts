@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const session = await getServerSession()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Sign in to use this feature' }, { status: 401 })
+  }
+
   const token = process.env.REPLICATE_API_TOKEN
   if (!token || token === 'your_replicate_token') {
     return NextResponse.json({ error: 'REPLICATE_API_TOKEN not configured' }, { status: 503 })

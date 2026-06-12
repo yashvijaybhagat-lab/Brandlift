@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { geminiGenerate } from '@/lib/gemini'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
+import { getServerSession } from 'next-auth'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30
@@ -18,6 +19,10 @@ export async function POST(req: NextRequest) {
   const ip = getIp(req)
   const rl  = rateLimit(`repurpose:${ip}`, 10, 60_000 * 60)
   if (!rl.success) return tooManyRequests(rl.reset)
+  const session = await getServerSession()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Sign in to use this feature' }, { status: 401 })
+  }
 
   let body: { script?: string; topic?: string; businessName?: string; niche?: string }
   try { body = await req.json() } catch {
