@@ -17,7 +17,6 @@ import {
   CalendarDays,
   HelpCircle,
   Wand2,
-  Mail,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
@@ -53,7 +52,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Planner',     href: '/dashboard/planner',    icon: CalendarDays },
   { label: 'AI Studio',   href: '/dashboard/higgsfield',  icon: Wand2 },
   { label: 'FAQ',         href: '/dashboard/faq',        icon: HelpCircle },
-  { label: 'Newsletter',  href: '/dashboard/newsletter', icon: Mail },
   { label: 'Settings',    href: '/dashboard/settings',   icon: Settings },
 ]
 
@@ -201,9 +199,7 @@ export function Sidebar({
 
         {/* ── Nav items ── */}
         <nav className="flex flex-col gap-0.5 px-2 pt-2 flex-1" role="navigation">
-          {NAV_ITEMS.filter(item =>
-            item.href !== '/dashboard/newsletter' || userEmail === 'ybhagat2011@gmail.com'
-          ).map((item) => {
+          {NAV_ITEMS.map((item) => {
             const Icon = item.icon
             // Exact match for dashboard, prefix match for others
             const isActive =
