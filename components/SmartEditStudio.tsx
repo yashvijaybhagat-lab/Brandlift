@@ -16,7 +16,8 @@ import {
   initialEditState, applyPlanToState, opToEnglish,
 } from '@/lib/editPlan'
 import TimelineEditor from '@/components/TimelineEditor'
-import { Send, Undo2, Redo2, X, ChevronDown, ChevronUp, Clock, Sparkles } from 'lucide-react'
+import { Send, Undo2, Redo2, X, ChevronDown, ChevronUp, Clock, Sparkles, Zap } from 'lucide-react'
+import { analyzeSource } from '@/lib/enhancePipeline'
 
 /* ── Types ─────────────────────────────────────────────── */
 
@@ -66,6 +67,11 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
   ])
   const [input,       setInput]       = useState('')
   const [isLoading,   setIsLoading]   = useState(false)
+
+  // Enhance
+  const [enhanceStatus,   setEnhanceStatus]   = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [enhanceProgress, setEnhanceProgress] = useState(0)
+  const [enhancedUrl,     setEnhancedUrl]     = useState<string | null>(null)
 
   // UI
   const [activeTab,   setActiveTab]   = useState<'chat' | 'history' | 'timeline'>('chat')
@@ -219,6 +225,61 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
     }
   }, [isLoading, messages, editState, duration])
 
+  const handleEnhance = useCallback(async () => {
+    if (enhanceStatus === 'loading') return
+    setEnhanceStatus('loading')
+    setEnhanceProgress(5)
+
+    try {
+      const v = videoRef.current
+      const analysis = analyzeSource({
+        width:    v?.videoWidth  ?? 1080,
+        height:   v?.videoHeight ?? 1920,
+        fps:      30,
+        duration,
+      })
+
+      const res = await fetch('/api/video/enhance', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl, analysis }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Enhance failed')
+
+      if (data.status === 'succeeded' && data.outputUrl) {
+        setEnhancedUrl(data.outputUrl)
+        setEnhanceStatus('done')
+        setEnhanceProgress(100)
+        return
+      }
+
+      // Poll until done
+      const predId = data.id
+      let attempts = 0
+      while (attempts < 120) {
+        await new Promise(r => setTimeout(r, 3000))
+        const poll = await fetch(`/api/video/enhance/status/${predId}`)
+        const pollData = await poll.json()
+        setEnhanceProgress(pollData.progress ?? enhanceProgress)
+        if (pollData.status === 'succeeded' && pollData.outputUrl) {
+          setEnhancedUrl(pollData.outputUrl)
+          setEnhanceStatus('done')
+          setEnhanceProgress(100)
+          return
+        }
+        if (pollData.status === 'failed' || pollData.fallback) {
+          throw new Error(pollData.error ?? 'Upscale failed')
+        }
+        attempts++
+      }
+      throw new Error('Timed out waiting for enhance')
+    } catch (err) {
+      setEnhanceStatus('error')
+      console.error('Enhance error:', err)
+    }
+  }, [enhanceStatus, videoUrl, duration, enhanceProgress])
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPrompt(input) }
   }
@@ -251,6 +312,27 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
             style={{ background: redoStack.length ? 'rgba(255,255,255,0.06)' : 'transparent', color: redoStack.length ? '#A1A1AA' : '#3f3f46', border: '0.5px solid rgba(255,255,255,0.07)' }}>
             <Redo2 className="w-3 h-3" /> Redo
           </button>
+          <button
+            onClick={handleEnhance}
+            disabled={enhanceStatus === 'loading'}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+            style={{
+              background: enhanceStatus === 'done'    ? 'rgba(34,197,94,0.15)'
+                        : enhanceStatus === 'error'   ? 'rgba(239,68,68,0.12)'
+                        : enhanceStatus === 'loading' ? 'rgba(250,204,21,0.1)'
+                        : 'rgba(255,255,255,0.06)',
+              color: enhanceStatus === 'done'    ? '#86efac'
+                   : enhanceStatus === 'error'   ? '#fca5a5'
+                   : enhanceStatus === 'loading' ? '#fde68a'
+                   : '#A1A1AA',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+            }}>
+            <Zap className="w-3 h-3" />
+            {enhanceStatus === 'loading' ? `${enhanceProgress}%`
+             : enhanceStatus === 'done'   ? '4K ✓'
+             : enhanceStatus === 'error'  ? 'Failed'
+             : 'Enhance 4K'}
+          </button>
           <button onClick={() => onApply(editState)}
             className="px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
             style={{ background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.3)' }}>
@@ -268,7 +350,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
       <div className="relative w-full" style={{ background: '#000', aspectRatio: '9/16', maxHeight: '50vh', overflow: 'hidden' }}>
         <video
           ref={videoRef}
-          src={videoUrl}
+          src={enhancedUrl ?? videoUrl}
           onTimeUpdate={handleTimeUpdate}
           controls
           playsInline
