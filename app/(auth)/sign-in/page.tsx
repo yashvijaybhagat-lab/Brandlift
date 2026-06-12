@@ -111,7 +111,7 @@ function LeftPanel() {
       <div className="absolute inset-0">
         <FloatCard icon={Eye} label="Monthly reach" value="142K" delta="+28%" delay={0.3} x={-80} y={-140} />
         <FloatCard icon={Video} label="Videos published" value="8" delta="+3" delay={0.45} x={80} y={-40} />
-        <FloatCard icon={TrendingUp} label="Avg. engagement" value="4.2%" delta="+0.8pp" delay={0.6} x={-60} y={100} />
+        <FloatCard icon={TrendingUp} label="Avg. engagement" value="4.2%" delta="+0.8%" delay={0.6} x={-60} y={100} />
         <FloatCard icon={Lightbulb} label="Ideas saved" value="24" delta="+12" delay={0.75} x={100} y={170} />
       </div>
 
