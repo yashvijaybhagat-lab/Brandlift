@@ -5,7 +5,7 @@ import { sanitizeText } from '@/lib/sanitize'
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req)
-  const rl = rateLimit(`onboard-desc:${ip}`, 20, 60 * 60_000)
+  const rl = await rateLimit(`onboard-desc:${ip}`, 20, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   let body: { description?: unknown; businessName?: unknown }

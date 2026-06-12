@@ -13,7 +13,7 @@ const PLATFORM_INSTRUCTIONS: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req)
-  const rl = rateLimit(`post-copy:${ip}`, 20, 60 * 60_000)
+  const rl = await rateLimit(`post-copy:${ip}`, 20, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
   const session = await getServerSession()
   if (!session?.user?.email) {

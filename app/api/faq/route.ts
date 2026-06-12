@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const rl = rateLimit(`faq:${session.user.email}`, 8, 60 * 60 * 1000)
+  const rl = await rateLimit(`faq:${session.user.email}`, 8, 60 * 60 * 1000)
   if (!rl.success) {
     return NextResponse.json({ error: 'Rate limit exceeded — try again in an hour' }, { status: 429 })
   }

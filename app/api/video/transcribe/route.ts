@@ -47,7 +47,7 @@ function parseToSegments(output: WOutput): { text: string; start: number; end: n
 
 export async function POST(request: NextRequest) {
   const ip = getIp(request)
-  const rl = rateLimit(`transcribe:${ip}`, 5, 60 * 60_000)
+  const rl = await rateLimit(`transcribe:${ip}`, 5, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
   const session = await getServerSession()
   if (!session?.user?.email) {

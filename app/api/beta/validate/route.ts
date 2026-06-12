@@ -21,7 +21,7 @@ function withSession(code: string, body: object): NextResponse {
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req)
-  const rl = rateLimit(`beta:${ip}`, 5, 15 * 60_000)
+  const rl = await rateLimit(`beta:${ip}`, 5, 15 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   const body = await req.json().catch(() => ({}))

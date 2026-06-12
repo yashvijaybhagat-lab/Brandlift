@@ -9,7 +9,7 @@ export const maxDuration = 30
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req)
-  const rl = rateLimit(`ideas:${ip}`, 20, 60 * 60_000)  // 20/hour — Gemini quota
+  const rl = await rateLimit(`ideas:${ip}`, 20, 60 * 60_000)  // 20/hour — Gemini quota
   if (!rl.success) return tooManyRequests(rl.reset)
   // Load business profile for this user
   let profileContext = 'A small local business looking to grow on social media.'

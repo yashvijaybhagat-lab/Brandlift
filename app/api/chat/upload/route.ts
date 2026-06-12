@@ -12,7 +12,7 @@ const ALLOWED_TYPES = [
 
 export async function GET(request: NextRequest) {
   const ip = getIp(request)
-  const rl = rateLimit(`chat-upload:${ip}`, 20, 60 * 60_000)
+  const rl = await rateLimit(`chat-upload:${ip}`, 20, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   const { searchParams } = new URL(request.url)

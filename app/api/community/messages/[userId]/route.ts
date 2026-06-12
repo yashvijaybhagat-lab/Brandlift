@@ -53,7 +53,7 @@ export async function POST(
   { params }: { params: { userId: string } }
 ) {
   const ip = getIp(req)
-  const rl = rateLimit(`community-msg:${ip}`, 60, 60_000)
+  const rl = await rateLimit(`community-msg:${ip}`, 60, 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   const session = await getServerSession()

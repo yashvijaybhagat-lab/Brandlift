@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req)
-  const rl = rateLimit(`score:${ip}`, 30, 60 * 60_000)
+  const rl = await rateLimit(`score:${ip}`, 30, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
   const session = await getServerSession()
   if (!session?.user?.email) {

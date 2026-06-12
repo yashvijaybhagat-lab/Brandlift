@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   const ip = getIp(request)
-  const rl = rateLimit(`video-upload:${ip}`, 20, 60 * 60_000)
+  const rl = await rateLimit(`video-upload:${ip}`, 20, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {

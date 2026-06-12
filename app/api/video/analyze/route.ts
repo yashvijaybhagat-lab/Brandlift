@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   }
 
   const ip = getIp(req)
-  const rl = rateLimit(`video-analyze:${ip}`, 60, 60 * 60_000)
+  const rl = await rateLimit(`video-analyze:${ip}`, 60, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   let body: {

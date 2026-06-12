@@ -8,7 +8,7 @@ export const maxDuration = 30
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req)
-  const rl = rateLimit(`script:${ip}`, 15, 60 * 60_000)  // 15/hour
+  const rl = await rateLimit(`script:${ip}`, 15, 60 * 60_000)  // 15/hour
   if (!rl.success) return tooManyRequests(rl.reset)
   const session = await getServerSession()
   if (!session?.user?.email) {

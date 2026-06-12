@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   const ip = getIp(req)
   // 10/hour — each prediction costs real Replicate credits
-  const rl = rateLimit(`enhance:${ip}`, 10, 60 * 60_000)
+  const rl = await rateLimit(`enhance:${ip}`, 10, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   const token = process.env.REPLICATE_API_TOKEN

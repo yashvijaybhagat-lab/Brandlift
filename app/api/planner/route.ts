@@ -22,7 +22,7 @@ export interface PlannerDay {
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req)
-  const rl  = rateLimit(`planner:${ip}`, 6, 60_000 * 60)
+  const rl = await rateLimit(`planner:${ip}`, 6, 60_000 * 60)
   if (!rl.success) return tooManyRequests(rl.reset)
   const session = await getServerSession()
   if (!session?.user?.email) {

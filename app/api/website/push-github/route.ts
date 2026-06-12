@@ -11,7 +11,7 @@ interface GitHubFileResponse {
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req)
-  const rl  = rateLimit(`website-push:${ip}`, 10, 60_000 * 60)
+  const rl = await rateLimit(`website-push:${ip}`, 10, 60_000 * 60)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   let body: {

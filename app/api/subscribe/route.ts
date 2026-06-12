@@ -8,7 +8,7 @@ const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req)
-  const rl = rateLimit(`subscribe:${ip}`, 5, 15 * 60_000)
+  const rl = await rateLimit(`subscribe:${ip}`, 5, 15 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   let body: { email?: unknown }

@@ -25,7 +25,7 @@ interface PexelsVideo {
 
 export async function GET(req: NextRequest) {
   const ip = getIp(req)
-  const rl = rateLimit(`pexels:${ip}`, 60, 60 * 60_000)
+  const rl = await rateLimit(`pexels:${ip}`, 60, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   const key = process.env.PEXELS_API_KEY

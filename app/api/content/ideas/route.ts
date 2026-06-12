@@ -56,7 +56,7 @@ Return ONLY a JSON array (no wrapper object, no markdown):
 
 export async function GET(request: NextRequest) {
   const ip = getIp(request)
-  const rl = rateLimit(`content-ideas:${ip}`, 30, 60 * 60_000)
+  const rl = await rateLimit(`content-ideas:${ip}`, 30, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
   const session = await getServerSession()
   if (!session?.user?.email) {

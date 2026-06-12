@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const founderCode = req.headers.get('x-founder-code')
   const founder = isFounderCode(founderCode)
   if (!founder.valid) {
-    const rl = rateLimit(`chat:${ip}`, 30, 60_000)
+    const rl = await rateLimit(`chat:${ip}`, 30, 60_000)
     if (!rl.success) return tooManyRequests(rl.reset)
   }
 

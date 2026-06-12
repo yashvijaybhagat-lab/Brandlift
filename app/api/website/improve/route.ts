@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req)
-  const rl  = rateLimit(`website-improve:${ip}`, 20, 60_000 * 60)
+  const rl = await rateLimit(`website-improve:${ip}`, 20, 60_000 * 60)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   let body: { sectionName?: string; currentCopy?: string; context?: string; domain?: string }

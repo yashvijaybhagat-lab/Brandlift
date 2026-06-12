@@ -48,7 +48,7 @@ export async function GET(
   }
 
   const ip = getIp(req)
-  const rl = rateLimit(`enhance-status:${ip}`, 300, 60 * 60_000)
+  const rl = await rateLimit(`enhance-status:${ip}`, 300, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   const token = process.env.REPLICATE_API_TOKEN

@@ -36,7 +36,7 @@ async function isPositive(quote: string): Promise<boolean> {
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req)
-  const rl = rateLimit(`reviews-submit:${ip}`, 3, 60 * 60_000)
+  const rl = await rateLimit(`reviews-submit:${ip}`, 3, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
   let body: ReviewPayload
