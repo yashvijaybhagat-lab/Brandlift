@@ -33,7 +33,7 @@ export default function Footer() {
     <footer
       aria-label="Site footer"
       className="py-16"
-      style={{ borderTop: '0.5px solid var(--color-border)' }}
+      style={{ background: 'var(--base)', borderTop: '1px solid var(--border-subtle)' }}
     >
       <div className="max-w-6xl mx-auto px-6 flex flex-col gap-12">
         {/* Email capture */}
@@ -41,22 +41,23 @@ export default function Footer() {
           <div className="flex flex-col gap-1.5">
             <h3
               className="text-heading"
-              style={{ fontSize: 'clamp(18px, 2.5vw, 22px)', color: 'var(--color-text)' }}
+              style={{ fontSize: 'clamp(18px, 2.5vw, 22px)', color: 'var(--text-primary)' }}
             >
               Get content tips for your {BUSINESS_TYPES[typeIndex]}
             </h3>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
               Weekly ideas, trends, and hooks — curated for your industry. No spam.
             </p>
           </div>
 
           {submitted ? (
             <div
-              className="flex items-center gap-2 px-4 py-2.5 rounded-interactive text-sm"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm"
               style={{
-                background: 'rgba(74,222,128,0.08)',
-                border: '0.5px solid rgba(74,222,128,0.2)',
-                color: 'var(--color-success)',
+                background: 'rgba(16,185,129,0.08)',
+                border: '1px solid rgba(16,185,129,0.2)',
+                color: 'var(--success)',
+                borderRadius: 'var(--radius)',
               }}
             >
               <span aria-hidden>✓</span>
@@ -77,10 +78,12 @@ export default function Footer() {
                 aria-label="Your email address"
                 className="flex-1 min-w-0 px-4 py-2.5 rounded-interactive text-sm"
                 style={{
-                  background: 'var(--color-surface-elevated)',
-                  border: '0.5px solid var(--color-border-strong)',
-                  color: 'var(--color-text)',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border-default)',
+                  color: 'var(--text-primary)',
                   outline: 'none',
+                  height: 40,
+                  borderRadius: 'var(--radius)',
                 }}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)'
@@ -93,8 +96,8 @@ export default function Footer() {
               />
               <button
                 type="submit"
-                className="pressable px-4 py-2.5 rounded-interactive text-sm font-medium flex-shrink-0"
-                style={{ background: 'var(--color-primary)', color: '#0A0A0B' }}
+                className="btn-primary flex-shrink-0"
+                style={{ height: 40 }}
               >
                 Subscribe
               </button>
@@ -103,7 +106,7 @@ export default function Footer() {
         </div>
 
         {/* Divider */}
-        <div style={{ height: '0.5px', background: 'var(--color-border)' }} role="separator" />
+        <div style={{ height: '1px', background: 'var(--border-subtle)' }} role="separator" />
 
         {/* Bottom bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -112,11 +115,11 @@ export default function Footer() {
             <Link
               href="/"
               className="text-sm font-medium"
-              style={{ color: 'var(--color-primary)' }}
+              style={{ color: 'var(--text-primary)' }}
             >
               BrandLift
             </Link>
-            <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
               © {new Date().getFullYear()} BrandLift. All rights reserved.
             </span>
           </div>
@@ -135,15 +138,15 @@ export default function Footer() {
                     href={href}
                     className="text-xs transition-colors"
                     style={{
-                      color: 'var(--color-text-muted)',
+                      color: 'var(--text-muted)',
                       transitionDuration: '160ms',
                       transitionTimingFunction: 'var(--ease-out)',
                     }}
                     onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.color = 'var(--color-text-secondary)'
+                      (e.currentTarget as HTMLAnchorElement).style.color = 'var(--text-secondary)'
                     }}
                     onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.color = 'var(--color-text-muted)'
+                      (e.currentTarget as HTMLAnchorElement).style.color = 'var(--text-muted)'
                     }}
                   >
                     {label}
@@ -154,7 +157,7 @@ export default function Footer() {
           </nav>
 
           {/* Made by */}
-          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
             Made by Yash Bhagat &amp; Ansh Thakar
           </span>
 

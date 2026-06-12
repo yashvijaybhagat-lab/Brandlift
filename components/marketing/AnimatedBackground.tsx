@@ -1,93 +1,22 @@
 'use client'
-import { useScroll, useTransform, motion } from 'motion/react'
 
 export function AnimatedBackground() {
-  const { scrollYProgress } = useScroll()
-  const opacity = useTransform(scrollYProgress, [0, 0.65, 1], [1, 0.5, 0.1])
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.12])
-  const blobY = useTransform(scrollYProgress, [0, 1], [0, 80])
-
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-      {/* Dot matrix */}
+      {/* Top-center radial glow */}
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
+          background: 'radial-gradient(ellipse 60% 40% at 50% 0%, rgba(88,85,212,0.08) 0%, transparent 70%)',
         }}
       />
 
-      {/* Animated blob layer */}
-      <motion.div className="absolute inset-0" style={{ opacity, scale }}>
-        {/* Top-left primary blob */}
-        <motion.div
-          className="absolute rounded-full"
-          style={{
-            y: blobY,
-            top: '-30%',
-            left: '-20%',
-            width: '70%',
-            height: '80%',
-            background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.22) 0%, transparent 68%)',
-            filter: 'blur(55px)',
-          }}
-          animate={{ x: [0, 35, -18, 0], y: [0, -25, 22, 0], scale: [1, 1.04, 0.97, 1] }}
-          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        {/* Bottom-right violet blob */}
-        <motion.div
-          className="absolute rounded-full"
-          style={{
-            bottom: '-20%',
-            right: '-15%',
-            width: '60%',
-            height: '65%',
-            background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.17) 0%, transparent 68%)',
-            filter: 'blur(75px)',
-          }}
-          animate={{ x: [0, -45, 22, 0], y: [0, 35, -18, 0], scale: [1, 1.07, 0.94, 1] }}
-          transition={{ duration: 29, repeat: Infinity, ease: 'easeInOut', delay: 6 }}
-        />
-
-        {/* Center soft accent */}
-        <motion.div
-          className="absolute rounded-full"
-          style={{
-            top: '25%',
-            left: '28%',
-            width: '48%',
-            height: '50%',
-            background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.10) 0%, transparent 68%)',
-            filter: 'blur(90px)',
-          }}
-          animate={{ x: [0, 20, -12, 0], y: [0, -18, 28, 0] }}
-          transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut', delay: 11 }}
-        />
-
-        {/* Top-right warm accent blob */}
-        <motion.div
-          className="absolute rounded-full"
-          style={{
-            top: '-10%',
-            right: '-10%',
-            width: '40%',
-            height: '45%',
-            background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.12) 0%, transparent 70%)',
-            filter: 'blur(80px)',
-          }}
-          animate={{ x: [0, -20, 15, 0], y: [0, 20, -10, 0] }}
-          transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
-        />
-      </motion.div>
-
-      {/* Horizontal vignette fade at bottom */}
+      {/* Dot grid */}
       <div
-        className="absolute bottom-0 left-0 right-0"
+        className="absolute inset-0"
         style={{
-          height: '35%',
-          background: 'linear-gradient(to bottom, transparent, #0A0A0B)',
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
         }}
       />
 
@@ -95,8 +24,7 @@ export function AnimatedBackground() {
       <div
         className="absolute inset-0"
         style={{
-          background:
-            'radial-gradient(ellipse 90% 85% at 50% 45%, transparent 55%, #0A0A0B 100%)',
+          background: 'radial-gradient(ellipse 90% 85% at 50% 45%, transparent 55%, #0B1120 100%)',
         }}
       />
     </div>

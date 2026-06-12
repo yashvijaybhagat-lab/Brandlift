@@ -14,8 +14,8 @@ interface Review {
 }
 
 /* ─── Card accent palette ────────────────────────────────────────────────── */
-const ACCENTS = ['#5855D4', '#5855D4', '#06b6d4', '#4ADE80', '#f59e0b', '#f472b6']
-const RESULT_COLORS = ['#4ADE80', '#a78bfa', '#f59e0b', '#60a5fa', '#f87171', '#4ADE80']
+const ACCENTS = ['#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4']
+const RESULT_COLORS = ['#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4']
 
 /* ─── Count-up hook ──────────────────────────────────────────────────────── */
 function useCountUp(target: number, duration: number, started: boolean) {
@@ -47,14 +47,14 @@ function Marquee() {
   return (
     <div className="relative overflow-hidden w-full" aria-hidden>
       <div className="absolute left-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(to right, #0D1117, transparent)' }} />
+        style={{ background: 'linear-gradient(to right, #0B1120, transparent)' }} />
       <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(to left, #0D1117, transparent)' }} />
+        style={{ background: 'linear-gradient(to left, #0B1120, transparent)' }} />
       <div className="flex items-center gap-2.5 py-1"
         style={{ width: 'max-content', animation: 'marqueeScroll 35s linear infinite' }}>
         {items.map((biz, i) => (
           <span key={i} className="whitespace-nowrap text-[12px] px-3 py-1.5 rounded-full flex-shrink-0"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.07)', color: '#71717A' }}>
+            style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
             {biz}
           </span>
         ))}
@@ -84,47 +84,29 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
   const initials    = review.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   return (
     <div
-      className="flex flex-col gap-4 p-5 rounded-2xl transition-all duration-200 relative overflow-hidden"
-      style={{ background: '#111113', border: `0.5px solid rgba(255,255,255,0.07)`, boxShadow: '0 2px 16px rgba(0,0,0,0.25)' }}
-      onMouseEnter={e => {
-        const el = e.currentTarget as HTMLElement
-        el.style.borderColor = `${color}35`
-        el.style.background = '#141416'
-        el.style.transform = 'translateY(-2px)'
-        el.style.boxShadow = `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${color}15`
-      }}
-      onMouseLeave={e => {
-        const el = e.currentTarget as HTMLElement
-        el.style.borderColor = 'rgba(255,255,255,0.07)'
-        el.style.background = '#111113'
-        el.style.transform = 'translateY(0)'
-        el.style.boxShadow = '0 2px 16px rgba(0,0,0,0.25)'
-      }}
+      className="flex flex-col gap-4 p-6 transition-all duration-150"
+      style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius)', padding: 24 }}
     >
-      {/* Subtle top glow */}
-      <div className="absolute top-0 left-0 right-0 h-px pointer-events-none" style={{ background: `linear-gradient(90deg, transparent, ${color}40, transparent)` }} aria-hidden />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-16 pointer-events-none" style={{ background: `radial-gradient(ellipse at top, ${color}12, transparent 70%)` }} aria-hidden />
-
       {review.result && (
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full w-fit"
-          style={{ background: `${resultColor}12`, border: `0.5px solid ${resultColor}35` }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: resultColor, letterSpacing: '0.03em' }}>↑ {review.result}</span>
+          style={{ background: 'var(--accent-subtle)', border: '1px solid var(--accent-border)' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.03em' }}>↑ {review.result}</span>
         </div>
       )}
-      <p style={{ fontSize: 13, color: '#A1A1AA', lineHeight: 1.75, flex: 1 }}>
+      <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.75, flex: 1 }}>
         &ldquo;{review.quote}&rdquo;
       </p>
-      <div className="flex items-center gap-3 pt-2" style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+      <div className="flex items-center gap-3 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
         <div className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-          style={{ background: `linear-gradient(135deg, ${color}30, ${color}15)`, color, border: `0.5px solid ${color}45`, boxShadow: `0 0 12px ${color}20` }}>
+          style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--accent-border)' }}>
           {initials}
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#E4E4E7' }}>{review.name}</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{review.name}</p>
             <Stars />
           </div>
-          <p style={{ fontSize: 11, color: '#52525B', lineHeight: 1.3 }}>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.3 }}>
             {review.business}{review.location ? ` · ${review.location}` : ''}
           </p>
         </div>
@@ -136,13 +118,13 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
 /* ─── Empty slot placeholder ─────────────────────────────────────────────── */
 function EmptySlot() {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 p-8 rounded-2xl text-center"
-      style={{ border: '1px dashed rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.01)', minHeight: 180 }}>
+    <div className="flex flex-col items-center justify-center gap-2 p-8 text-center"
+      style={{ border: '1px dashed var(--border-subtle)', background: 'transparent', borderRadius: 'var(--radius)', minHeight: 180 }}>
       <div className="w-7 h-7 rounded-full flex items-center justify-center"
-        style={{ background: 'rgba(88,85,212,0.07)', border: '0.5px solid rgba(88,85,212,0.15)' }}>
-        <span style={{ fontSize: 15, color: '#5855D4', lineHeight: 1 }}>+</span>
+        style={{ background: 'var(--accent-subtle)', border: '1px solid var(--accent-border)' }}>
+        <span style={{ fontSize: 15, color: 'var(--accent)', lineHeight: 1 }}>+</span>
       </div>
-      <p style={{ fontSize: 12, color: '#3f3f46', lineHeight: 1.5, maxWidth: '20ch' }}>
+      <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, maxWidth: '20ch' }}>
         Your result could be featured here
       </p>
     </div>
@@ -203,10 +185,10 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
   }
 
   const inputStyle = {
-    background: '#0A0A0B',
-    border: '0.5px solid rgba(255,255,255,0.1)',
-    color: '#E4E4E7',
-    borderRadius: 10,
+    background: 'var(--surface)',
+    border: '1px solid var(--border-default)',
+    color: 'var(--text-primary)',
+    borderRadius: 'var(--radius)',
     fontSize: 13,
     outline: 'none',
     width: '100%',
@@ -218,24 +200,24 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
       {/* Toggle button */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150 w-full"
-        style={{ background: open ? 'rgba(88,85,212,0.2)' : 'rgba(88,85,212,0.1)', border: '0.5px solid rgba(88,85,212,0.3)', color: '#a5b4fc' }}
+        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-[13px] font-semibold transition-all duration-150 w-full"
+        style={{ background: open ? 'var(--accent-subtle)' : 'var(--accent-subtle)', border: '1px solid var(--accent-border)', color: 'var(--text-secondary)', borderRadius: 'var(--radius)' }}
       >
         {open ? '✕ Close' : 'Share your story →'}
       </button>
 
       {/* Form panel */}
       {open && (
-        <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ background: '#0D0D0F', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+        <div className="flex flex-col gap-3 p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius)' }}>
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <label style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>Your name *</label>
+              <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Your name *</label>
               <input value={name} onChange={e => setName(e.target.value)} placeholder="Jane D." style={inputStyle}
                 onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
             </div>
             <div className="flex flex-col gap-1">
-              <label style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>Business name *</label>
+              <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Business name *</label>
               <input value={business} onChange={e => setBusiness(e.target.value)} placeholder="Jane's Bakery" style={inputStyle}
                 onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
@@ -244,13 +226,13 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
 
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <label style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>Location <span style={{ color: '#3f3f46' }}>(optional)</span></label>
+              <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Location <span style={{ color: 'var(--text-muted)' }}>(optional)</span></label>
               <input value={location} onChange={e => setLocation(e.target.value)} placeholder="Austin, TX" style={inputStyle}
                 onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
             </div>
             <div className="flex flex-col gap-1">
-              <label style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>Result <span style={{ color: '#3f3f46' }}>(optional)</span></label>
+              <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Result <span style={{ color: 'var(--text-muted)' }}>(optional)</span></label>
               <input value={result} onChange={e => setResult(e.target.value)} placeholder="500 new followers" style={inputStyle}
                 onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
@@ -258,7 +240,7 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>Your story * <span style={{ color: '#3f3f46' }}>({quote.length}/600)</span></label>
+            <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Your story * <span style={{ color: 'var(--text-muted)' }}>({quote.length}/600)</span></label>
             <textarea
               value={quote} onChange={e => setQuote(e.target.value.slice(0, 600))} rows={4}
               placeholder="What did you post? What happened? Be specific — real stories get featured."
@@ -275,18 +257,13 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
           <button
             onClick={submit}
             disabled={state === 'submitting'}
-            className="px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150"
-            style={{
-              background: state === 'submitting' ? 'rgba(88,85,212,0.3)' : 'rgba(88,85,212,0.15)',
-              border: '0.5px solid rgba(88,85,212,0.35)',
-              color: state === 'submitting' ? '#8B87E6' : '#a5b4fc',
-              cursor: state === 'submitting' ? 'default' : 'pointer',
-            }}
+            className="btn-primary"
+            style={{ opacity: state === 'submitting' ? 0.6 : 1, cursor: state === 'submitting' ? 'default' : 'pointer', width: '100%', justifyContent: 'center' }}
           >
             {state === 'submitting' ? 'Submitting…' : 'Submit review'}
           </button>
 
-          <p style={{ fontSize: 11, color: '#3f3f46', lineHeight: 1.5 }}>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5 }}>
             Positive, genuine reviews are published automatically. No editing — your words stay your words.
           </p>
         </div>
@@ -324,22 +301,22 @@ export default function SocialProof() {
 
   return (
     <section ref={sectionRef} aria-label="Social proof" className="py-20 overflow-hidden"
-      style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+      style={{ background: 'var(--base)', borderTop: '1px solid var(--border-subtle)' }}>
       <div className="max-w-6xl mx-auto px-6 flex flex-col gap-14">
 
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
-            style={{ background: 'rgba(88,85,212,0.08)', border: '0.5px solid rgba(88,85,212,0.2)' }}>
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#4ADE80', boxShadow: '0 0 0 3px rgba(74,222,128,0.2)', display: 'inline-block' }} />
-            <span style={{ fontSize: 11, color: '#8B87E6', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+            style={{ background: 'var(--accent-subtle)', border: '1px solid var(--accent-border)' }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--success)', display: 'inline-block' }} />
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
               Real businesses. Real results.
             </span>
           </div>
-          <p style={{ fontSize: 'clamp(26px,3.5vw,36px)', fontWeight: 800, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.1, fontFamily: 'var(--font-display)' }}>
+          <p style={{ fontSize: 'clamp(26px,3.5vw,36px)', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1.1, fontFamily: 'var(--font-display)' }}>
             Small businesses are growing<br />with BrandLift.
           </p>
-          <p style={{ fontSize: 14, color: '#71717A', maxWidth: '44ch', lineHeight: 1.6 }}>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', maxWidth: '44ch', lineHeight: 1.6 }}>
             From barbershops to food trucks — creators using BrandLift to 10× their content without hiring an editor.
           </p>
         </div>
@@ -365,17 +342,17 @@ export default function SocialProof() {
         {/* CTA + submission form */}
         <div className="flex flex-col gap-5 max-w-lg mx-auto w-full">
           <div className="flex flex-col gap-2 text-center">
-            <p style={{ fontSize: 14, fontWeight: 600, color: '#E4E4E7' }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
               {reviews.length > 0 ? 'Got results? Add your story.' : 'Used BrandLift? Share what happened.'}
             </p>
-            <p style={{ fontSize: 13, color: '#52525B', lineHeight: 1.55 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.55 }}>
               Genuine positive reviews go live automatically. No wait, no approval process.
             </p>
           </div>
           <SubmitForm onSuccess={fetchReviews} />
-          <p style={{ fontSize: 11, color: '#3f3f46', textAlign: 'center' }}>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
             Or email us directly at{' '}
-            <a href="mailto:contact@brandlift.dev" style={{ color: '#52525B', textDecoration: 'underline' }}>
+            <a href="mailto:contact@brandlift.dev" style={{ color: 'var(--text-secondary)', textDecoration: 'underline' }}>
               contact@brandlift.dev
             </a>
           </p>
@@ -384,16 +361,16 @@ export default function SocialProof() {
         {/* Onboarding stat + marquee */}
         <div className="flex flex-col gap-8">
           <div className="flex justify-center"
-            style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)', paddingTop: 32 }}>
+            style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 32 }}>
             <div className="flex flex-col items-center gap-1 text-center">
-              <span style={{ fontSize: 'clamp(24px,3.5vw,36px)', fontWeight: 700, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1, fontFamily: 'var(--font-display)' }}>
+              <span style={{ fontSize: 'clamp(24px,3.5vw,36px)', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1, fontFamily: 'var(--font-display)' }}>
                 ~{useCountUp(8, 1200, started)} min
               </span>
-              <span style={{ fontSize: 12, color: '#52525B', fontWeight: 500 }}>average onboarding time</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>average onboarding time</span>
             </div>
           </div>
           <div className="flex flex-col gap-3">
-            <p style={{ fontSize: 11, color: '#3f3f46', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Built for every local business</p>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Built for every local business</p>
             <Marquee />
           </div>
         </div>

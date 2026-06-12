@@ -22,20 +22,20 @@ function UploadMockup({ active }: { active: boolean }) {
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-3"
-      style={{ background: 'var(--color-surface)', border: '0.5px solid var(--color-border)' }}
+      style={{ background: 'var(--color-surface)', border: '1px solid var(--border-subtle)' }}
     >
       <div
         className="rounded-xl flex flex-col items-center justify-center gap-3 py-8 transition-all duration-500"
         style={{
           border: `1.5px dashed ${active ? 'rgba(88,85,212,0.5)' : 'rgba(255,255,255,0.1)'}`,
-          background: active ? 'rgba(88,85,212,0.04)' : 'transparent',
+          background: active ? 'var(--accent-subtle)' : 'transparent',
         }}
       >
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500"
           style={{ background: active ? 'rgba(88,85,212,0.15)' : 'rgba(255,255,255,0.05)' }}
         >
-          <Upload className="w-5 h-5" style={{ color: active ? '#5855D4' : '#52525B' }} />
+          <Upload className="w-5 h-5" style={{ color: active ? 'var(--accent)' : 'var(--text-muted)' }} />
         </div>
         <div className="text-center">
           <p className="text-[13px] font-medium" style={{ color: active ? '#FAFAFA' : '#71717A' }}>
@@ -49,14 +49,14 @@ function UploadMockup({ active }: { active: boolean }) {
         className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-700"
         style={{
           background: 'var(--color-surface-elevated)',
-          border: '0.5px solid var(--color-border)',
+          border: '1px solid var(--border-subtle)',
           opacity: active ? 1 : 0.3,
           transform: active ? 'translateY(0)' : 'translateY(4px)',
         }}
       >
         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(88,85,212,0.1)' }}>
-          <span style={{ fontSize: 14 }}>🎬</span>
+          style={{ background: 'var(--accent-subtle)', border: '1px solid var(--accent-border)' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--accent)' }} aria-hidden><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[12px] font-medium truncate" style={{ color: '#FAFAFA' }}>barbershop_raw.mp4</p>
@@ -98,7 +98,7 @@ function ProcessMockup({ active }: { active: boolean }) {
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-4"
-      style={{ background: 'var(--color-surface)', border: '0.5px solid var(--color-border)' }}
+      style={{ background: 'var(--color-surface)', border: '1px solid var(--border-subtle)' }}
     >
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -152,7 +152,7 @@ function ExportMockup({ active }: { active: boolean }) {
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-3"
-      style={{ background: 'var(--color-surface)', border: '0.5px solid var(--color-border)' }}
+      style={{ background: 'var(--color-surface)', border: '1px solid var(--border-subtle)' }}
     >
       <div className="flex items-center justify-between mb-1">
         <span className="text-[12px] font-medium" style={{ color: active ? '#FAFAFA' : '#52525B' }}>
@@ -160,7 +160,7 @@ function ExportMockup({ active }: { active: boolean }) {
         </span>
         <span
           className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-          style={{ background: active ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.04)', color: active ? '#4ADE80' : '#52525B', border: `0.5px solid ${active ? 'rgba(74,222,128,0.25)' : 'rgba(255,255,255,0.08)'}` }}
+          style={{ background: active ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.04)', color: active ? '#4ADE80' : '#52525B', border: `1px solid ${active ? 'rgba(16,185,129,0.25)' : 'var(--border-subtle)'}` }}
         >
           {active ? '4 formats' : 'pending'}
         </span>
@@ -235,7 +235,7 @@ export default function HowItWorks() {
       id="how-it-works"
       ref={ref}
       className="py-24"
-      style={{ borderTop: '0.5px solid var(--color-border)' }}
+      style={{ borderTop: '1px solid var(--border-subtle)' }}
     >
       <div className="max-w-6xl mx-auto px-6 flex flex-col gap-16">
         {/* Header */}
@@ -250,13 +250,13 @@ export default function HowItWorks() {
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
             style={{
-              background: 'rgba(88,85,212,0.08)',
-              border: '0.5px solid rgba(88,85,212,0.2)',
+              background: 'var(--accent-subtle)',
+              border: '1px solid var(--accent-border)',
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: '#8B87E6',
+              color: 'var(--text-muted)',
             }}
           >
             How it works
@@ -268,22 +268,13 @@ export default function HowItWorks() {
               fontSize: 'clamp(30px, 4.5vw, 48px)',
               letterSpacing: '-0.04em',
               lineHeight: 1.05,
-              color: '#FAFAFA',
+              color: 'var(--text-primary)',
             }}
           >
             From raw clip to polished content<br />
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #8B87E6 0%, #5855D4 45%, #5855D4 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              in under 3 minutes.
-            </span>
+            in under 3 minutes.
           </h2>
-          <p style={{ fontSize: 16, color: '#71717A', maxWidth: '44ch', lineHeight: 1.65 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: '44ch', lineHeight: 1.65 }}>
             No editing skills. No design software. No agency fees. Just your video, our tools, and results you can post today.
           </p>
         </div>

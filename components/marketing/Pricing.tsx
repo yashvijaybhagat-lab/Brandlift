@@ -43,25 +43,23 @@ const VALUE_PROPS = [
 export default function Pricing() {
   const router = useRouter()
   return (
-    <section id="pricing" aria-labelledby="pricing-heading" className="py-24" style={{ borderTop: '0.5px solid var(--color-border)' }}>
+    <section id="pricing" aria-labelledby="pricing-heading" className="py-24" style={{ borderTop: '1px solid var(--border-subtle)' }}>
       <div className="max-w-5xl mx-auto px-6 flex flex-col gap-14">
 
         {/* Header */}
         <ScrollReveal className="flex flex-col items-center gap-5 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-widest" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.25)', color: '#818cf8' }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] animate-pulse inline-block" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-widest" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--accent-border)', color: 'var(--text-secondary)' }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ background: 'var(--success)' }} />
             Beta · 100% Free
           </div>
           <h2
             id="pricing-heading"
-            style={{ fontSize: 'clamp(30px, 4vw, 48px)', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--color-text)', lineHeight: 1.05, fontFamily: 'var(--font-display)' }}
+            style={{ fontSize: 'clamp(30px, 4vw, 48px)', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--text-primary)', lineHeight: 1.05, fontFamily: 'var(--font-display)' }}
           >
             No subscriptions.<br />
-            <span style={{ background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 45%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              No paywalls. No catch.
-            </span>
+            No paywalls. No catch.
           </h2>
-          <p className="max-w-lg text-[15px] leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="max-w-lg text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             BrandLift is in private beta. Every feature — AI video, scripts, captions, website analysis, and exports — is completely free while we build.
           </p>
         </ScrollReveal>
@@ -73,34 +71,29 @@ export default function Pricing() {
             return (
               <ScrollReveal key={f.label} delay={i * 25}>
                 <div
-                  className="flex items-start gap-3 p-4 rounded-2xl transition-all duration-200 h-full relative overflow-hidden group"
-                  style={{ background: 'var(--color-surface)', border: '0.5px solid var(--color-border)' }}
+                  className="flex items-start gap-3 p-4 transition-all duration-150 h-full"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius)' }}
                   onMouseEnter={e => {
                     const el = e.currentTarget as HTMLElement
-                    el.style.borderColor = 'rgba(99,102,241,0.35)'
-                    el.style.background = 'var(--color-surface-elevated)'
-                    el.style.transform = 'translateY(-2px)'
-                    el.style.boxShadow = '0 8px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(99,102,241,0.1)'
+                    el.style.borderColor = 'var(--accent-border)'
+                    el.style.background = 'var(--surface-raised)'
                   }}
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLElement
-                    el.style.borderColor = 'var(--color-border)'
-                    el.style.background = 'var(--color-surface)'
-                    el.style.transform = 'translateY(0)'
-                    el.style.boxShadow = 'none'
+                    el.style.borderColor = 'var(--border-subtle)'
+                    el.style.background = 'var(--surface)'
                   }}
                 >
-                  <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent)', opacity: 0 }} />
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                    style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.25)', boxShadow: '0 0 12px rgba(99,102,241,0.15)' }}>
-                    <Icon className="w-4 h-4" style={{ color: '#818cf8' }} />
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                    style={{ background: 'var(--accent-subtle)', borderRadius: 'var(--radius)' }}>
+                    <Icon className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-[13px] font-semibold" style={{ color: 'var(--color-text)' }}>{f.label}</p>
-                      <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded" style={{ background: 'rgba(74,222,128,0.08)', color: '#4ADE80', border: '0.5px solid rgba(74,222,128,0.25)' }}>Free</span>
+                      <p className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{f.label}</p>
+                      <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded" style={{ background: 'rgba(16,185,129,0.08)', color: 'var(--success)', border: '1px solid rgba(16,185,129,0.2)' }}>Free</span>
                     </div>
-                    <p className="text-[12px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{f.desc}</p>
+                    <p className="text-[12px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{f.desc}</p>
                   </div>
                 </div>
               </ScrollReveal>
@@ -111,64 +104,44 @@ export default function Pricing() {
         {/* CTA card */}
         <ScrollReveal>
           <div
-            className="rounded-2xl p-8 flex flex-col items-center gap-6 text-center relative overflow-hidden"
+            className="p-8 flex flex-col items-center gap-6 text-center"
             style={{
-              background: 'linear-gradient(135deg, rgba(99,102,241,0.07) 0%, rgba(139,92,246,0.05) 100%)',
-              border: '0.5px solid rgba(99,102,241,0.25)',
-              boxShadow: '0 0 0 1px rgba(99,102,241,0.08), 0 32px 64px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)',
+              background: 'var(--surface)',
+              border: '1px solid var(--border-default)',
+              borderRadius: 'var(--radius-lg)',
             }}
           >
-            {/* Top edge highlight */}
-            <div className="absolute top-0 left-0 right-0 h-px pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent 10%, rgba(99,102,241,0.5) 50%, transparent 90%)' }} aria-hidden />
-            {/* Glow */}
-            <div
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-32 pointer-events-none"
-              aria-hidden
-              style={{
-                background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.18) 0%, transparent 70%)',
-                filter: 'blur(24px)',
-              }}
-            />
-            {/* Corner accents */}
-            <div className="absolute bottom-0 left-0 w-40 h-40 pointer-events-none" style={{ background: 'radial-gradient(ellipse at bottom-left, rgba(139,92,246,0.08) 0%, transparent 70%)' }} aria-hidden />
+            <p className="text-[22px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '-0.03em' }}>
+              Ready to 10x your content output?
+            </p>
+            <p className="text-[14px] max-w-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+              Early beta — every feature is free. Lock in your spot before paid plans launch.
+            </p>
 
-            <div className="relative z-10 flex flex-col items-center gap-4">
-              <p className="text-[22px] font-bold" style={{ color: '#FAFAFA', fontFamily: 'var(--font-display)', letterSpacing: '-0.03em' }}>
-                Ready to 10× your content output?
-              </p>
-              <p className="text-[14px] max-w-sm" style={{ color: '#71717A', lineHeight: 1.65 }}>
-                Early beta — every feature is free. Lock in your spot before paid plans launch.
-              </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+              {VALUE_PROPS.map(v => (
+                <span key={v} className="flex items-center gap-1.5 text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                  <Check className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--success)' }} />
+                  {v}
+                </span>
+              ))}
+            </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-                {VALUE_PROPS.map(v => (
-                  <span key={v} className="flex items-center gap-1.5 text-[12px]" style={{ color: '#A1A1AA' }}>
-                    <Check className="w-3 h-3 flex-shrink-0" style={{ color: '#4ADE80' }} />
-                    {v}
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
-                <button
-                  onClick={() => router.push('/sign-up')}
-                  className="px-8 py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all duration-200"
-                  style={{ background: 'linear-gradient(135deg, #6366f1 0%, #5558e8 100%)', boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.3)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.5), 0 12px 32px rgba(99,102,241,0.4)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.3)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}
-                >
-                  Claim your free spot →
-                </button>
-                <button
-                  onClick={() => router.push('/sign-in')}
-                  className="px-6 py-3.5 rounded-xl text-[14px] transition-all duration-150"
-                  style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', color: '#71717A' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#FAFAFA'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.18)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#71717A'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)' }}
-                >
-                  Sign in →
-                </button>
-              </div>
+            <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
+              <button
+                onClick={() => router.push('/sign-up')}
+                className="btn-primary"
+                style={{ height: 44, fontSize: 15, paddingLeft: 32, paddingRight: 32 }}
+              >
+                Claim your free spot
+              </button>
+              <button
+                onClick={() => router.push('/sign-in')}
+                className="btn-ghost"
+                style={{ height: 44, fontSize: 14 }}
+              >
+                Sign in
+              </button>
             </div>
           </div>
         </ScrollReveal>

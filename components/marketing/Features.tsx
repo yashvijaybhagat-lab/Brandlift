@@ -66,15 +66,15 @@ function FeatureSection({
 
 /* ─── Smart Onboarding Mockup ────────────────────────────────────────────── */
 /* ─── Glow mockup wrapper ─────────────────────────────────────────────────── */
-function MockupFrame({ children, accent = '#5855D4' }: { children: React.ReactNode; accent?: string }) {
+function MockupFrame({ children }: { children: React.ReactNode; accent?: string }) {
   return (
-    <div className="relative rounded-[20px] p-[1px]"
+    <div className="overflow-hidden"
       style={{
-        background: `linear-gradient(135deg, ${accent}35 0%, ${accent}10 50%, rgba(255,255,255,0.05) 100%)`,
-        boxShadow: `0 0 0 1px ${accent}10, 0 24px 60px rgba(0,0,0,0.45), 0 0 80px ${accent}08`,
+        border: '1px solid var(--border-default)',
+        borderRadius: 'var(--radius-lg)',
       }}
     >
-      <div className="rounded-[19px] overflow-hidden" style={{ background: 'var(--color-surface)' }}>
+      <div style={{ background: 'var(--surface)' }}>
         {children}
       </div>
     </div>
@@ -329,7 +329,7 @@ function PipelineMockup() {
       {/* Filename header */}
       <div
         className="flex items-center gap-2 pb-3"
-        style={{ borderBottom: '0.5px solid var(--color-border)' }}
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}
       >
         <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
           processing
@@ -394,13 +394,13 @@ export default function Features() {
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
             style={{
-              background: 'rgba(88,85,212,0.08)',
-              border: '0.5px solid rgba(88,85,212,0.2)',
+              background: 'var(--accent-subtle)',
+              border: '1px solid var(--accent-border)',
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: '#8B87E6',
+              color: 'var(--text-muted)',
             }}
           >
             Platform features
@@ -413,16 +413,14 @@ export default function Features() {
               fontSize: 'clamp(30px, 4.5vw, 52px)',
               letterSpacing: '-0.04em',
               lineHeight: 1.0,
-              color: '#FAFAFA',
+              color: 'var(--text-primary)',
             }}
           >
             Everything you need.
             <br />
-            <span style={{ background: 'linear-gradient(135deg, #8B87E6 0%, #5855D4 45%, #a78bfa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              Nothing you don&apos;t.
-            </span>
+            Nothing you don&apos;t.
           </h2>
-          <p style={{ fontSize: 16, color: '#71717A', maxWidth: '46ch', lineHeight: 1.65 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: '46ch', lineHeight: 1.65 }}>
             From smart onboarding to automated video production — one platform that does the work of a full marketing team.
           </p>
         </ScrollReveal>
@@ -462,7 +460,7 @@ export default function Features() {
         </FeatureSection>
 
         {/* Divider */}
-        <div style={{ height: '0.5px', background: 'var(--color-border)' }} role="separator" />
+        <div style={{ height: '1px', background: 'var(--border-subtle)' }} role="separator" />
 
         {/* 02 — Content Intelligence */}
         <FeatureSection reversed>
@@ -499,7 +497,7 @@ export default function Features() {
         </FeatureSection>
 
         {/* Divider */}
-        <div style={{ height: '0.5px', background: 'var(--color-border)' }} role="separator" />
+        <div style={{ height: '1px', background: 'var(--border-subtle)' }} role="separator" />
 
         {/* 03 — Video Transformation */}
         <FeatureSection>
