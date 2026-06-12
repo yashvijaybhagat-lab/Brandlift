@@ -324,10 +324,10 @@ export default function Hero() {
         
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 w-full py-20 lg:py-28">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <div className="max-w-6xl mx-auto px-8 w-full py-28 lg:py-36">
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           {/* Left column */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-8">
             {/* Eyebrow chip */}
             <Reveal delay={0}>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-pill text-sm w-fit"
@@ -355,16 +355,17 @@ export default function Hero() {
             </Reveal>
 
             {/* Headings */}
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
               <Reveal delay={80}>
                 <h1
                   id="hero-heading"
-                  className="text-heading"
                   style={{
-                    fontSize: 'clamp(36px, 5vw, 56px)',
-                    lineHeight: 1.1,
-                    color: 'var(--color-text)',
-                    letterSpacing: '-0.03em',
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 'clamp(42px, 6vw, 72px)',
+                    lineHeight: 1.05,
+                    color: '#E6EDF3',
+                    letterSpacing: '-0.04em',
+                    fontWeight: 800,
                   }}
                 >
                   You run a great business.
@@ -372,12 +373,14 @@ export default function Hero() {
               </Reveal>
               <Reveal delay={160}>
                 <h2
-                  className="text-heading m-0"
                   style={{
-                    fontSize: 'clamp(36px, 5vw, 56px)',
-                    lineHeight: 1.1,
-                    color: 'var(--color-primary)',
-                    letterSpacing: '-0.03em',
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 'clamp(42px, 6vw, 72px)',
+                    lineHeight: 1.05,
+                    color: '#5855D4',
+                    letterSpacing: '-0.04em',
+                    fontWeight: 800,
+                    margin: 0,
                   }}
                 >
                   Nobody knows it yet.
@@ -389,10 +392,11 @@ export default function Hero() {
             <Reveal delay={240}>
               <p
                 style={{
-                  fontSize: 'clamp(16px, 2vw, 20px)',
-                  color: 'var(--color-text-secondary)',
-                  lineHeight: 1.6,
-                  maxWidth: '44ch',
+                  fontSize: 'clamp(17px, 2vw, 22px)',
+                  color: '#8B949E',
+                  lineHeight: 1.65,
+                  maxWidth: '42ch',
+                  fontWeight: 400,
                 }}
               >
                 We build your digital presence and keep it running — you just show up.
@@ -401,32 +405,32 @@ export default function Hero() {
 
             {/* CTAs */}
             <Reveal delay={320}>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-4">
                 <Link
                   href="/sign-up"
-                  className="pressable inline-flex items-center gap-2 px-6 py-3 rounded-interactive text-sm font-medium"
+                  className="pressable inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-semibold"
                   style={{
-                    background: 'var(--color-primary)',
-                    color: '#0A0A0B',
+                    background: '#5855D4',
+                    color: '#FFFFFF',
+                    boxShadow: '0 0 0 1px rgba(88,85,212,0.4), 0 8px 24px rgba(88,85,212,0.3)',
                   }}
                 >
                   Get started free
                 </Link>
                 <a
                   href="#examples"
-                  className="pressable inline-flex items-center gap-1.5 px-5 py-3 rounded-interactive text-sm"
-                  style={{ color: 'var(--color-text-secondary)' }}
+                  className="pressable inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-[15px] font-medium"
+                  style={{ color: '#8B949E', border: '1px solid rgba(240,246,252,0.1)', background: 'rgba(240,246,252,0.04)' }}
                 >
-                  See an example
-                  <span aria-hidden>→</span>
+                  See examples →
                 </a>
               </div>
             </Reveal>
 
             {/* Trust line */}
             <Reveal delay={360}>
-              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                Free forever · No credit card · Setup in 5 minutes
+              <p style={{ fontSize: 13, color: '#484F58' }}>
+                Free to start · No credit card · Live in 5 minutes
               </p>
             </Reveal>
           </div>

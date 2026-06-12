@@ -91,7 +91,7 @@ function ContentScoreGauge({ score = 72 }: { score?: number }) {
             cy={24}
             r={radius}
             fill="none"
-            stroke="#6366f1"
+            stroke="#5855D4"
             strokeWidth={4}
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -129,33 +129,32 @@ export function TopBar() {
 
   return (
     <header
-      className="flex items-center h-13 px-6 sticky top-0 z-10 gap-4"
+      className="flex items-center px-8 sticky top-0 z-10 gap-4"
       style={{
-        height: 52,
-        background: 'rgba(10,10,11,0.85)',
+        height: 60,
+        background: 'rgba(13,17,23,0.9)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+        borderBottom: '1px solid rgba(240,246,252,0.08)',
       }}
     >
       {/* Left: page title */}
-      <div className="flex-1 min-w-0 flex items-center gap-3">
+      <div className="flex-1 min-w-0 flex items-center gap-4">
         <h1
           className="truncate"
           style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 17,
+            fontSize: 20,
             fontWeight: 700,
-            color: '#FAFAFA',
+            color: '#E6EDF3',
             letterSpacing: '-0.03em',
           }}
         >
           {title}
         </h1>
-        {/* Breadcrumb separator */}
-        <div className="h-3 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} aria-hidden />
-        <span style={{ fontSize: 12, color: '#3f3f46', fontFamily: 'var(--font-mono)' }}>
-          May 2026
+        <div className="h-4 w-px" style={{ background: 'rgba(240,246,252,0.1)' }} aria-hidden />
+        <span style={{ fontSize: 12, color: '#484F58', fontFamily: 'var(--font-mono)' }}>
+          Jun 2026
         </span>
       </div>
 
@@ -176,7 +175,7 @@ export function TopBar() {
           className={cn(
             'relative flex items-center justify-center w-8 h-8 rounded-lg',
             'transition-colors duration-150',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5855D4]/60',
           )}
           style={{ color: '#52525B', border: '0.5px solid rgba(255,255,255,0.07)' }}
           onMouseEnter={(e) => {
@@ -195,7 +194,7 @@ export function TopBar() {
           <Bell className="w-3.5 h-3.5" />
           <span
             className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-            style={{ background: '#6366f1', boxShadow: '0 0 4px rgba(99,102,241,0.6)' }}
+            style={{ background: '#5855D4', boxShadow: '0 0 4px rgba(88,85,212,0.6)' }}
             aria-hidden
           />
         </button>

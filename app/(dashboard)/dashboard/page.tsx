@@ -213,33 +213,32 @@ function StatCard({ stat }: { stat: Stat }) {
   const [hovered, setHovered] = React.useState(false)
   return (
     <article
-      className="relative flex flex-col gap-3 p-4 rounded-2xl overflow-hidden transition-all duration-200 cursor-default"
+      className="relative flex flex-col gap-4 p-6 rounded-2xl overflow-hidden transition-all duration-200 cursor-default"
       style={{
-        background: hovered ? '#141416' : '#111113',
-        border: `0.5px solid ${hovered ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.06)'}`,
-        boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.35)' : '0 2px 8px rgba(0,0,0,0.2)',
-        transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
+        background: hovered ? '#1C2128' : '#161B22',
+        border: `1px solid ${hovered ? 'rgba(240,246,252,0.18)' : 'rgba(240,246,252,0.08)'}`,
+        boxShadow: hovered ? '0 12px 40px rgba(0,0,0,0.4)' : '0 1px 4px rgba(0,0,0,0.3)',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className="absolute top-0 left-0 right-0 h-px transition-opacity duration-200" style={{ background: `linear-gradient(90deg, transparent, ${stat.color}60, transparent)`, opacity: hovered ? 1 : 0 }} aria-hidden />
       <div className="flex items-center justify-between">
-        <p style={{ fontSize: 11, fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{stat.label}</p>
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200" style={{ background: hovered ? `${stat.color}20` : '#18181C', border: `0.5px solid ${hovered ? `${stat.color}30` : 'rgba(255,255,255,0.06)'}` }}>
-          <Icon className="w-3.5 h-3.5" style={{ color: hovered ? stat.color : '#71717A' }} />
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-200" style={{ background: `${stat.color}18`, border: `1px solid ${stat.color}30` }}>
+          <Icon className="w-4 h-4" style={{ color: stat.color }} />
         </div>
+        <div className="flex-shrink-0"><Sparkline data={stat.sparkData} color={stat.color} /></div>
       </div>
-      <div className="flex items-end justify-between gap-2">
-        <span style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color: '#FAFAFA', letterSpacing: '-0.05em', lineHeight: 1 }}>{stat.value}</span>
-        <div className="flex-shrink-0 mb-0.5"><Sparkline data={stat.sparkData} color={stat.color} /></div>
+      <div>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.05em', lineHeight: 1, display: 'block' }}>{stat.value}</span>
+        <p style={{ fontSize: 13, fontWeight: 500, color: '#8B949E', marginTop: 4 }}>{stat.label}</p>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-semibold" style={{ color: stat.deltaPositive ? '#4ADE80' : '#F87171', background: stat.deltaPositive ? 'rgba(74,222,128,0.08)' : 'rgba(248,113,113,0.08)' }}>
-          <TrendingUp className="w-2.5 h-2.5" />
+      <div className="flex items-center gap-2 pt-1 border-t" style={{ borderColor: 'rgba(240,246,252,0.06)' }}>
+        <span className="inline-flex items-center gap-1 text-[12px] font-semibold" style={{ color: stat.deltaPositive ? '#3FB950' : '#F85149' }}>
+          <TrendingUp className="w-3 h-3" />
           {stat.delta}
         </span>
-        <span style={{ fontSize: 11, color: '#3f3f46' }}>{stat.period}</span>
+        <span style={{ fontSize: 12, color: '#484F58' }}>{stat.period}</span>
       </div>
     </article>
   )
@@ -333,7 +332,7 @@ function IdeaAnalyticsPanel({ idea, onClose }: { idea: ContentIdea; onClose: () 
   return (
     <div
       className="flex flex-col gap-5 p-5 rounded-2xl"
-      style={{ background: '#111113', border: '0.5px solid rgba(88,85,212,0.2)', boxShadow: '0 0 0 1px rgba(88,85,212,0.06), 0 8px 32px rgba(0,0,0,0.3)' }}
+      style={{ background: '#161B22', border: '1px solid rgba(88,85,212,0.25)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
@@ -492,7 +491,7 @@ function WeekCalendar() {
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Posting Schedule</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.02em' }}>Posting Schedule</h2>
           <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>Best platforms and times · updates every day</p>
         </div>
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
@@ -533,8 +532,8 @@ function WeekCalendar() {
               key={day}
               className="flex flex-col gap-1.5 p-2.5 rounded-xl transition-all duration-200"
               style={{
-                background: isToday ? 'rgba(88,85,212,0.08)' : '#111113',
-                border: `0.5px solid ${isToday ? 'rgba(88,85,212,0.3)' : 'rgba(255,255,255,0.05)'}`,
+                background: isToday ? 'rgba(88,85,212,0.1)' : '#161B22',
+                border: `1px solid ${isToday ? 'rgba(88,85,212,0.35)' : 'rgba(240,246,252,0.07)'}`,
                 opacity: isPast ? 0.45 : 1,
               }}
             >
@@ -602,18 +601,21 @@ const QUICK_ACTIONS = [
 
 function QuickActionsBar() {
   return (
-    <div className="flex items-center gap-2.5 flex-wrap">
-      {QUICK_ACTIONS.map(({ label, href, Icon, color, bg, border }) => (
-        <Link key={label} href={href}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12px] font-semibold transition-all duration-150 flex-shrink-0"
-          style={{ background: bg, border: `0.5px solid ${border}`, color }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.15)' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1)' }}
-        >
-          <Icon className="w-3.5 h-3.5" />
-          {label}
-        </Link>
-      ))}
+    <div className="flex flex-col gap-3">
+      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.02em' }}>Quick Actions</h2>
+      <div className="flex items-center gap-3 flex-wrap">
+        {QUICK_ACTIONS.map(({ label, href, Icon, color, bg, border }) => (
+          <Link key={label} href={href}
+            className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150 flex-shrink-0"
+            style={{ background: bg, border: `1px solid ${border}`, color }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1.15)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = 'brightness(1)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }
@@ -641,7 +643,7 @@ function PlatformHealth() {
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ fontSize: 13, fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.01em' }}>Platform Health</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.02em' }}>Platform Health</h2>
           <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>Opportunity scores for {dayName} — reorders each day</p>
         </div>
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
@@ -650,12 +652,12 @@ function PlatformHealth() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-4">
         {platforms.map(({ name, color, score, tip, status }, i) => (
-          <div key={name} className="flex flex-col gap-3 p-4 rounded-2xl transition-all duration-200"
-            style={{ background: '#111113', border: `0.5px solid ${i === 0 ? `${color}30` : 'rgba(255,255,255,0.06)'}` }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${color}30` }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = i === 0 ? `${color}30` : 'rgba(255,255,255,0.06)' }}
+          <div key={name} className="flex flex-col gap-4 p-6 rounded-2xl transition-all duration-200"
+            style={{ background: '#161B22', border: `1px solid ${i === 0 ? `${color}35` : 'rgba(240,246,252,0.08)'}` }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${color}35` }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = i === 0 ? `${color}35` : 'rgba(240,246,252,0.08)' }}
           >
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -786,7 +788,7 @@ function StatisticsTab() {
         <div className="grid grid-cols-5 gap-2">
           {COMPLETION_BY_LENGTH.map(v => (
             <div key={v.length} className="flex flex-col items-center gap-2 p-3 rounded-xl"
-              style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+              style={{ background: '#161B22', border: '1px solid rgba(240,246,252,0.08)' }}>
               <div className="relative w-12 h-12">
                 <svg width="48" height="48" viewBox="0 0 48 48" className="-rotate-90" aria-hidden>
                   <circle cx="24" cy="24" r="18" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3.5" />
@@ -845,7 +847,7 @@ function StatisticsTab() {
         <div className="flex flex-col gap-2">
           {FORMAT_PERFORMANCE.map(row => (
             <div key={row.format} className="flex items-center gap-4 p-3.5 rounded-xl transition-colors"
-              style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}
+              style={{ background: '#161B22', border: '1px solid rgba(240,246,252,0.08)' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${row.color}25` }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)' }}>
               <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: row.color, boxShadow: `0 0 6px ${row.color}60` }} />
@@ -926,19 +928,19 @@ export default function DashboardPage() {
     <div className="flex flex-col h-full">
       <TopBar />
       <div className="flex-1 overflow-auto">
-        <div className="max-w-5xl mx-auto px-6 py-6 flex flex-col gap-8">
+        <div className="max-w-5xl mx-auto px-8 py-10 flex flex-col gap-10">
 
           <QuickActionsBar />
 
           {/* Tab bar */}
-          <div className="flex items-center gap-1" style={{ borderBottom: '0.5px solid rgba(255,255,255,0.06)', paddingBottom: 0 }}>
+          <div className="flex items-center gap-1" style={{ borderBottom: '1px solid rgba(240,246,252,0.08)', paddingBottom: 0 }}>
             {(['overview', 'statistics'] as const).map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab)}
-                className="relative px-4 py-2.5 text-[12px] font-semibold capitalize transition-colors duration-150"
-                style={{ color: activeTab === tab ? '#FAFAFA' : '#52525B', background: 'transparent', border: 'none' }}>
+                className="relative px-5 py-3 text-[13px] font-semibold capitalize transition-colors duration-150"
+                style={{ color: activeTab === tab ? '#E6EDF3' : '#484F58', background: 'transparent', border: 'none' }}>
                 {tab}
                 {activeTab === tab && (
-                  <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg,#5855D4,#5855D4)' }} />
+                  <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: '#5855D4' }} />
                 )}
               </button>
             ))}
