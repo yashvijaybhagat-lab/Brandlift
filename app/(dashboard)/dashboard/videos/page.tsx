@@ -141,16 +141,16 @@ const SCRIPT_TEMPLATES = [
 ]
 
 const GENZ_IDEAS = [
-  { emoji: '👁️', title: 'POV: Only business NOT doing video', hook: 'POV: every competitor in your area is posting and you\'re still relying on word of mouth. It\'s giving 2009.', vibe: 'Relatable dread' },
-  { emoji: '😤', title: 'The Audacity of That Yelp Review', hook: 'Dramatic reading of the wildest review you ever got. Spoiler: they gave you 1 star because you were closed on Christmas.', vibe: 'Comedy gold' },
-  { emoji: '⏱️', title: 'Day in the Life Speedrun', hook: '5am to close. Chaotic. Unfiltered. The reason you\'re always tired. People eat this up.', vibe: 'Real & raw' },
-  { emoji: '🫡', title: 'That One Regular Customer', hook: 'Every business has a Margaret. Film her order. She\'ll cry. Your comments will too.', vibe: 'Emotional bait' },
-  { emoji: '💀', title: 'Expectation vs Reality of Owning a Business', hook: 'Expectation: living your dream. Reality: you\'re the CEO, janitor, accountant, and therapist. All at once.', vibe: 'Brutally honest' },
-  { emoji: '📊', title: 'Rating Local Businesses in My City', hook: 'Walk into your own spot as if you\'re a stranger. Rate it out of 10. Roast yourself. The algorithm loves self-awareness.', vibe: 'Trendy format' },
-  { emoji: '📞', title: 'Explaining My Business to My Parents', hook: '"So you\'re just... on your phone?" Yes dad. But make it entrepreneurship.', vibe: 'Generational gap comedy' },
-  { emoji: '🚀', title: 'Why I Quit My 9-5', hook: 'Left the salary. Bought the dream. People said I was unhinged. Numbers said otherwise.', vibe: 'Inspirational arc' },
-  { emoji: '😭', title: 'Things Customers Say vs What They Mean', hook: '"I\'ll think about it" = I\'m going to your competitor. "You\'re a bit pricey" = I want it for free.', vibe: 'Sarcasm as a service' },
-  { emoji: '🎯', title: 'This Is Why We\'re Different', hook: 'Not a promo. Just facts. Here\'s what we actually do that nobody else does. No background music. Just eye contact.', vibe: 'Confident energy' },
+  { tag: 'POV', title: 'Only Business NOT Doing Video', hook: 'POV: every competitor in your area is posting and you\'re still relying on word of mouth. It\'s giving 2009.', vibe: 'Relatable dread', accent: '#6366f1' },
+  { tag: 'VIRAL', title: 'The Audacity of That Yelp Review', hook: 'Dramatic reading of the wildest review you ever got. Spoiler: they gave you 1 star because you were closed on Christmas.', vibe: 'Comedy gold', accent: '#f43f5e' },
+  { tag: 'REAL', title: 'Day in the Life Speedrun', hook: '5am to close. Chaotic. Unfiltered. The reason you\'re always tired. People eat this up.', vibe: 'Real & raw', accent: '#10b981' },
+  { tag: 'FEELS', title: 'That One Regular Customer', hook: 'Every business has a Margaret. Film her order. She\'ll cry. Your comments will too.', vibe: 'Emotional bait', accent: '#f59e0b' },
+  { tag: 'TRUTH', title: 'Expectation vs Reality of Owning a Business', hook: 'Expectation: living your dream. Reality: you\'re the CEO, janitor, accountant, and therapist. All at once.', vibe: 'Brutally honest', accent: '#ef4444' },
+  { tag: 'TREND', title: 'Rating Local Businesses in My City', hook: 'Walk into your own spot as if you\'re a stranger. Rate it out of 10. Roast yourself. The algorithm loves self-awareness.', vibe: 'Trendy format', accent: '#8b5cf6' },
+  { tag: 'LOL', title: 'Explaining My Business to My Parents', hook: '"So you\'re just... on your phone?" Yes dad. But make it entrepreneurship.', vibe: 'Gen gap comedy', accent: '#06b6d4' },
+  { tag: 'STORY', title: 'Why I Quit My 9-5', hook: 'Left the salary. Bought the dream. People said I was unhinged. Numbers said otherwise.', vibe: 'Inspirational arc', accent: '#5855D4' },
+  { tag: 'RELATABLE', title: 'Things Customers Say vs What They Mean', hook: '"I\'ll think about it" = I\'m going to your competitor. "You\'re a bit pricey" = I want it for free.', vibe: 'Sarcasm as a service', accent: '#f97316' },
+  { tag: 'BOLD', title: "This Is Why We're Different", hook: "Not a promo. Just facts. Here's what we actually do that nobody else does. No background music. Just eye contact.", vibe: 'Confident energy', accent: '#10b981' },
 ]
 
 const PLATFORM_OPTIONS: { id: ExportAspect; label: string; desc: string }[] = [
@@ -296,113 +296,92 @@ function GenZInspirationPanel({ onSelect }: { onSelect: (hook: string) => void }
   const idea = GENZ_IDEAS[activeIdx]
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(145deg, #0d0d14 0%, #111118 100%)', border: '0.5px solid rgba(255,255,255,0.07)' }}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4">
-        <div className="flex items-center gap-2">
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Gen Z Video Ideas</span>
-          <span style={{ fontSize: 10, background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 100, padding: '1px 7px', fontWeight: 600 }}>Trending</span>
+    <div style={{ borderRadius: 16, overflow: 'hidden', border: '0.5px solid rgba(255,255,255,0.06)', background: '#0c0c10' }}>
+      <style>{`
+        @keyframes genz-float-a { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+        @keyframes genz-float-b { 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)} }
+      `}</style>
+
+      {/* Top bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 0', borderBottom: '0.5px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Viral Ideas</span>
+          <span style={{ fontSize: 9, background: `${idea.accent}18`, color: idea.accent, border: `1px solid ${idea.accent}33`, borderRadius: 100, padding: '1px 8px', fontWeight: 700, letterSpacing: '0.06em', transition: 'all 200ms' }}>{idea.tag}</span>
         </div>
-        <span style={{ fontSize: 11, color: '#3f3f46' }}>{activeIdx + 1} / {GENZ_IDEAS.length}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={() => setActiveIdx((activeIdx - 1 + GENZ_IDEAS.length) % GENZ_IDEAS.length)} style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)', color: '#52525B', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>‹</button>
+          <span style={{ fontSize: 10, color: '#3f3f46', fontVariantNumeric: 'tabular-nums' }}>{activeIdx + 1}/{GENZ_IDEAS.length}</span>
+          <button onClick={() => setActiveIdx((activeIdx + 1) % GENZ_IDEAS.length)} style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)', color: '#52525B', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>›</button>
+        </div>
       </div>
 
-      <div className="flex gap-4 px-4 pb-4">
-        {/* Phone mockup — example video with before/after enhancement */}
-        <div className="flex-shrink-0 relative" style={{ width: 120, height: 210 }}>
-          {/* Glow orb behind phone */}
-          <div style={{ position: 'absolute', inset: '-30%', background: 'radial-gradient(ellipse at center, rgba(88,85,212,0.3) 0%, transparent 65%)', pointerEvents: 'none', zIndex: 0 }} aria-hidden />
-          {/* Floating petals / sparkle accents */}
-          <div style={{ position: 'absolute', top: -8, right: -4, width: 18, height: 18, borderRadius: '50%', background: 'radial-gradient(circle, rgba(155,138,240,0.7) 0%, transparent 70%)', filter: 'blur(2px)', zIndex: 2, animation: 'float-a 3.2s ease-in-out infinite' }} aria-hidden />
-          <div style={{ position: 'absolute', bottom: 4, left: -6, width: 12, height: 12, borderRadius: '50%', background: 'radial-gradient(circle, rgba(88,85,212,0.9) 0%, transparent 70%)', filter: 'blur(1.5px)', zIndex: 2, animation: 'float-b 4.1s ease-in-out infinite' }} aria-hidden />
-          <div style={{ position: 'absolute', top: '40%', right: -10, width: 8, height: 8, borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,181,253,0.8) 0%, transparent 70%)', filter: 'blur(1px)', zIndex: 2, animation: 'float-a 2.7s ease-in-out infinite reverse' }} aria-hidden />
+      {/* Body */}
+      <div style={{ display: 'flex', gap: 16, padding: 16 }}>
+        {/* Phone mockup */}
+        <div style={{ flexShrink: 0, width: 112, height: 198, position: 'relative' }}>
+          <div style={{ position: 'absolute', inset: '-25%', background: `radial-gradient(ellipse at center, ${idea.accent}28 0%, transparent 70%)`, pointerEvents: 'none', zIndex: 0, transition: 'background 400ms ease' }} aria-hidden />
+          <div style={{ position: 'absolute', top: -6, right: -2, width: 14, height: 14, borderRadius: '50%', background: `radial-gradient(circle, ${idea.accent}99 0%, transparent 70%)`, filter: 'blur(2px)', zIndex: 2, animation: 'genz-float-a 3.4s ease-in-out infinite' }} aria-hidden />
+          <div style={{ position: 'absolute', bottom: 8, left: -4, width: 9, height: 9, borderRadius: '50%', background: 'radial-gradient(circle, rgba(196,181,253,0.7) 0%, transparent 70%)', filter: 'blur(1.5px)', zIndex: 2, animation: 'genz-float-b 4.2s ease-in-out infinite' }} aria-hidden />
 
-          <style>{`
-            @keyframes float-a { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-6px) scale(1.1)} }
-            @keyframes float-b { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(5px) scale(0.9)} }
-            @keyframes vid-badge-in { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-          `}</style>
-
-          {/* Phone chrome */}
-          <div className="relative overflow-hidden" style={{
-            width: 120, height: 210, borderRadius: 22,
-            background: '#0a0a0f',
-            border: '1.5px solid rgba(88,85,212,0.35)',
-            boxShadow: '0 0 0 1px rgba(0,0,0,0.6), 0 8px 40px rgba(88,85,212,0.25), 0 2px 12px rgba(0,0,0,0.8)',
-            zIndex: 1, position: 'relative',
-          }}>
-            {/* Video content — enhanced treatment */}
-            <video
-              autoPlay loop muted playsInline
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: 'brightness(0.82) saturate(1.6) contrast(1.28)', borderRadius: 21 }}
-              src="https://videos.pexels.com/video-files/4812205/4812205-hd_1080_1920_30fps.mp4"
-              aria-hidden
-            />
-            {/* Color grade overlay — same as hero */}
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(18,38,72,0.18) 0%, rgba(88,85,212,0.05) 50%, rgba(110,55,20,0.12) 100%)', mixBlendMode: 'color', borderRadius: 21 }} aria-hidden />
-            {/* Top letterbox */}
-            <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: '8%', background: '#000', borderRadius: '21px 21px 0 0' }} aria-hidden />
-            {/* Bottom gradient + caption */}
-            <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height: '40%', background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)', borderRadius: '0 0 21px 21px', zIndex: 2 }} aria-hidden />
-            {/* Fake caption overlay */}
-            <div className="absolute bottom-0 left-0 right-0 px-2 pb-3" style={{ zIndex: 3 }}>
-              <p style={{ fontSize: 7, color: 'rgba(255,255,255,0.95)', lineHeight: 1.4, textAlign: 'center', textShadow: '0 1px 4px rgba(0,0,0,0.8)', fontWeight: 600 }}>
-                {idea.hook.slice(0, 60)}…
-              </p>
+          <div style={{ width: 112, height: 198, borderRadius: 20, overflow: 'hidden', border: '1.5px solid rgba(255,255,255,0.1)', boxShadow: `0 0 0 1px rgba(0,0,0,0.5), 0 6px 32px ${idea.accent}22, 0 2px 8px rgba(0,0,0,0.8)`, position: 'relative', zIndex: 1, background: '#000', transition: 'box-shadow 400ms ease' }}>
+            <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'brightness(0.8) saturate(1.65) contrast(1.3)', borderRadius: 19 }} src="https://videos.pexels.com/video-files/4812205/4812205-hd_1080_1920_30fps.mp4" aria-hidden />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(18,38,72,0.15) 0%, rgba(88,85,212,0.04) 50%, rgba(110,55,20,0.1) 100%)', mixBlendMode: 'color', borderRadius: 19 }} aria-hidden />
+            <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: '7%', background: '#000', borderRadius: '19px 19px 0 0' }} aria-hidden />
+            <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height: '42%', background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, transparent 100%)', borderRadius: '0 0 19px 19px', zIndex: 2 }} aria-hidden />
+            <div className="absolute bottom-0 left-0 right-0 px-2 pb-2.5" style={{ zIndex: 3 }}>
+              <p style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.95)', lineHeight: 1.45, textAlign: 'center', textShadow: '0 1px 4px rgba(0,0,0,0.9)', fontWeight: 700 }}>{idea.hook.slice(0, 55)}…</p>
             </div>
-            {/* Status badges */}
-            <div className="absolute top-2 right-2 flex flex-col items-end gap-1" style={{ zIndex: 4 }}>
-              {[{ dot: '#10B981', label: 'Color graded' }, { dot: '#5855D4', label: 'Captioned' }].map(({ dot, label }) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 3, background: 'rgba(0,0,0,0.75)', borderRadius: 4, padding: '1px 4px', animation: 'vid-badge-in 0.4s ease both' }}>
-                  <span style={{ color: dot, fontSize: 6 }}>●</span>
-                  <span style={{ fontSize: 6, color: 'rgba(255,255,255,0.85)', fontWeight: 600, whiteSpace: 'nowrap' }}>{label}</span>
+            <div className="absolute top-1.5 left-1.5" style={{ zIndex: 4 }}>
+              <span style={{ fontSize: 5.5, background: 'rgba(88,85,212,0.3)', color: '#c4b5fd', border: '1px solid rgba(88,85,212,0.45)', borderRadius: 100, padding: '1px 4px', fontWeight: 700, letterSpacing: '0.04em' }}>AI-polished</span>
+            </div>
+            <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-0.5" style={{ zIndex: 4 }}>
+              {[{ dot: '#10B981', label: 'Graded' }, { dot: '#5855D4', label: 'Captions' }].map(({ dot, label }) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 2, background: 'rgba(0,0,0,0.8)', borderRadius: 3, padding: '1px 3px' }}>
+                  <span style={{ color: dot, fontSize: 5 }}>&#9679;</span>
+                  <span style={{ fontSize: 5.5, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>{label}</span>
                 </div>
               ))}
             </div>
-            {/* AI polished pill */}
-            <div className="absolute top-2 left-2" style={{ zIndex: 4 }}>
-              <span style={{ fontSize: 6, background: 'rgba(88,85,212,0.25)', color: '#A5A3F0', border: '1px solid rgba(88,85,212,0.4)', borderRadius: 100, padding: '1px 5px', fontWeight: 700 }}>AI-polished</span>
-            </div>
-            {/* Vignette */}
-            <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 30px rgba(0,0,0,0.5)', borderRadius: 21 }} aria-hidden />
+            <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 24px rgba(0,0,0,0.45)', borderRadius: 19 }} aria-hidden />
           </div>
         </div>
 
-        {/* Right: idea content */}
-        <div className="flex flex-col gap-3 flex-1 min-w-0">
+        {/* Content */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span style={{ fontSize: 18 }}>{idea.emoji}</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#E4E4E7', lineHeight: 1.3 }}>{idea.title}</span>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+              <div style={{ width: 2.5, height: 36, borderRadius: 2, background: idea.accent, flexShrink: 0, marginTop: 2, transition: 'background 300ms' }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#E4E4E7', lineHeight: 1.35 }}>{idea.title}</span>
             </div>
-            <span style={{ fontSize: 10, background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 100, padding: '1px 7px', fontWeight: 600 }}>{idea.vibe}</span>
+            <span style={{ fontSize: 10, background: `${idea.accent}14`, color: idea.accent, border: `1px solid ${idea.accent}28`, borderRadius: 100, padding: '2px 9px', fontWeight: 600, letterSpacing: '0.04em', transition: 'all 300ms' }}>{idea.vibe}</span>
           </div>
-          <p style={{ fontSize: 12, color: '#71717A', lineHeight: 1.6 }}>{idea.hook}</p>
 
-          <div className="flex gap-2 flex-wrap mt-auto">
+          <p style={{ fontSize: 12, color: '#71717A', lineHeight: 1.65, margin: 0 }}>{idea.hook}</p>
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 'auto', flexWrap: 'wrap' }}>
             <button
               onClick={() => onSelect(idea.hook)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
-              style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#fff', background: idea.accent, border: 'none', cursor: 'pointer', transition: 'opacity 150ms, transform 150ms', letterSpacing: '-0.01em' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.88'; (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)' }}
             >
-              <Sparkles className="w-3 h-3" /> Use this idea
+              <Sparkles className="w-3 h-3" />Use this
             </button>
             <button
               onClick={() => setActiveIdx((activeIdx + 1) % GENZ_IDEAS.length)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all"
-              style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)', color: '#52525B' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#52525B', background: 'transparent', border: '0.5px solid rgba(255,255,255,0.07)', cursor: 'pointer', transition: 'color 150ms, border-color 150ms' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.14)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#52525B'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.07)' }}
             >
-              Next idea →
+              Next →
             </button>
           </div>
         </div>
       </div>
 
-      {/* Dot nav */}
-      <div className="flex items-center gap-1.5 pb-4 justify-center">
-        {GENZ_IDEAS.map((_, i) => (
-          <button key={i} onClick={() => setActiveIdx(i)} style={{ width: i === activeIdx ? 16 : 5, height: 5, borderRadius: 3, background: i === activeIdx ? '#6366f1' : 'rgba(255,255,255,0.1)', transition: 'all 200ms ease', border: 'none', padding: 0, cursor: 'pointer' }} aria-label={`Idea ${i + 1}`} />
-        ))}
+      {/* Progress bar */}
+      <div style={{ height: 2, background: 'rgba(255,255,255,0.04)' }}>
+        <div style={{ height: '100%', width: `${((activeIdx + 1) / GENZ_IDEAS.length) * 100}%`, background: idea.accent, transition: 'width 250ms ease, background 300ms ease', borderRadius: 1 }} />
       </div>
     </div>
   )
