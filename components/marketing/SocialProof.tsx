@@ -345,9 +345,6 @@ export default function SocialProof() {
             <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
               {reviews.length > 0 ? 'Got results? Add your story.' : 'Used BrandLift? Share what happened.'}
             </p>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.55 }}>
-              Genuine positive reviews go live automatically. No wait, no approval process.
-            </p>
           </div>
           <SubmitForm onSuccess={fetchReviews} />
           <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
