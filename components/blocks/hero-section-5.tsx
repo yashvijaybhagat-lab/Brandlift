@@ -134,40 +134,6 @@ const HeroHeader = () => {
   )
 }
 
-/* ─── Floating social proof chip ─────────────────────────────────────────── */
-function SocialChip({ name, result, delay }: { name: string; result: string; delay: number }) {
-  const [visible, setVisible] = useState(false)
-  useEffect(() => {
-    const t = setTimeout(() => setVisible(true), delay)
-    return () => clearTimeout(t)
-  }, [delay])
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        background: 'rgba(17,24,39,0.85)',
-        backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(88,85,212,0.25)',
-        borderRadius: 12,
-        padding: '10px 14px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04)',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.96)',
-        transition: 'opacity 500ms ease, transform 500ms ease',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981', boxShadow: '0 0 6px rgba(16,185,129,0.8)', flexShrink: 0 }} />
-      <div>
-        <p style={{ fontSize: 12, fontWeight: 600, color: '#E7E7EA', margin: 0 }}>{name}</p>
-        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', margin: 0 }}>{result}</p>
-      </div>
-    </div>
-  )
-}
 
 /* ─── Before/After Slider ─────────────────────────────────────────────────── */
 function BeforeAfterSlider() {
@@ -482,11 +448,6 @@ function HeroSection5() {
                 Free during beta &middot; No credit card &middot; Cancel anytime
               </p>
 
-              {/* Social proof chips */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                <SocialChip name="Mike's Barbershop" result="12 new bookings this week" delay={1200} />
-                <SocialChip name="Zara's Kitchen" result="3× more profile visits" delay={1800} />
-              </div>
             </div>
 
             {/* Right: product preview */}
