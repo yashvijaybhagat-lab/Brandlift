@@ -178,7 +178,7 @@ function BeforeAfterSlider() {
       className="relative w-full select-none"
       style={{
         aspectRatio: '9/16',
-        maxHeight: 560,
+        maxHeight: 640,
         borderRadius: 20,
         border: '1px solid rgba(88,85,212,0.2)',
         background: '#0e0a06',
@@ -222,7 +222,7 @@ function BeforeAfterSlider() {
 
         <div className="absolute top-0 left-0 right-0 px-4 pt-3 pb-1 flex items-center justify-between"
           style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)' }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.92)', fontFamily: '-apple-system, sans-serif' }}>9:41</span>
+          <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.92)', fontFamily: '-apple-system, sans-serif' }}>9:41</span>
           <div className="flex items-center gap-1.5">
             <svg width="17" height="12" viewBox="0 0 17 12" fill="none" aria-hidden>
               <rect x="0" y="8" width="3" height="4" rx="0.5" fill="rgba(255,255,255,0.9)"/>
@@ -240,13 +240,13 @@ function BeforeAfterSlider() {
 
         <div className="absolute top-11 left-4 flex items-center gap-1.5">
           <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#ef4444', animation: 'blink-rec 1.4s step-end infinite', boxShadow: '0 0 6px rgba(239,68,68,0.9)' }} aria-hidden />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', fontFamily: '-apple-system, sans-serif', letterSpacing: '0.07em' }}>REC</span>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.72)', fontFamily: 'ui-monospace, monospace' }}>00:23</span>
+          <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.95)', fontFamily: '-apple-system, sans-serif', letterSpacing: '0.07em' }}>REC</span>
+          <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.72)', fontFamily: 'ui-monospace, monospace' }}>00:23</span>
         </div>
 
         <div className="absolute" style={{ top: '38%', left: '42%', width: 52, height: 52, border: '1.5px solid rgba(255,204,0,0.85)', animation: 'af-pulse 3.6s ease-out infinite' }} aria-hidden />
 
-        <div className="absolute bottom-4 left-4 flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded"
+        <div className="absolute bottom-4 left-4 flex items-center gap-1.5 text-[8px] px-2 py-0.5 rounded"
           style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>
           iPhone · Unedited
         </div>
@@ -268,21 +268,21 @@ function BeforeAfterSlider() {
             { dot: '#5855D4', label: 'Color graded' },
             { dot: '#94A3B8', label: 'Captioned' },
           ].map(({ dot, label }) => (
-            <div key={label} className="flex items-center gap-1.5 text-[9px] px-2 py-1 rounded"
+            <div key={label} className="flex items-center gap-1 text-[7px] px-1.5 py-0.5 rounded"
               style={{ background: 'rgba(0,0,0,0.7)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
               <span style={{ color: dot }}>●</span> {label}
             </div>
           ))}
         </div>
 
-        <div className="absolute top-4 right-3 text-[10px] px-2.5 py-1 rounded-full"
+        <div className="absolute top-4 right-3 text-[8px] px-2 py-0.5 rounded-full"
           style={{ background: 'rgba(88,85,212,0.2)', color: '#A5A3F0', border: '1px solid rgba(88,85,212,0.4)', fontWeight: 700, letterSpacing: '0.03em' }}>
           AI-polished
         </div>
 
         <div className="absolute left-0 right-0 px-3 pt-12 pb-3"
           style={{ bottom: '9%', background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)', zIndex: 2 }}>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.95)', lineHeight: 1.45, marginBottom: 8, textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}>
+          <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.95)', lineHeight: 1.45, marginBottom: 6, textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}>
             Behind the lens — golden hour session, straight from iPhone to polished edit.{' '}
             <span style={{ color: 'rgba(255,255,255,0.5)' }}>#photography #brandlift</span>
           </p>
@@ -303,7 +303,7 @@ function BeforeAfterSlider() {
         </div>
       </m.div>
 
-      <div className="absolute top-3 left-3 text-[10px] px-2 py-0.5 rounded"
+      <div className="absolute top-3 left-3 text-[8px] px-1.5 py-0.5 rounded"
         style={{ background: 'rgba(0,0,0,0.75)', color: 'rgba(255,255,255,0.7)', fontWeight: 600, zIndex: 5, pointerEvents: 'none' }} aria-hidden>BEFORE</div>
     </div>
   )
@@ -460,7 +460,7 @@ function HeroSection5() {
                 pointerEvents: 'none',
                 zIndex: 0,
               }} aria-hidden />
-              <div style={{ width: '100%', maxWidth: 360, position: 'relative', zIndex: 1 }}>
+              <div style={{ width: '100%', maxWidth: 440, position: 'relative', zIndex: 1 }}>
                 <BeforeAfterSlider />
               </div>
             </div>
