@@ -177,8 +177,11 @@ function BeforeAfterSlider() {
       ref={containerRef}
       className="relative w-full select-none"
       style={{
-        aspectRatio: '9/16',
-        maxHeight: 640,
+        aspectRatio: '9 / 16',
+        width: 'auto',
+        margin: '0 auto',
+        maxHeight: 'none',
+        height: 'min(85vh, 880px)',
         borderRadius: 20,
         border: '1px solid rgba(88,85,212,0.2)',
         background: '#0e0a06',
@@ -319,10 +322,10 @@ function HeroSection5() {
 
       <section
         aria-label="Hero"
-        style={{ paddingTop: 'calc(64px + 60px)', paddingBottom: 60, minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative' }}
+        style={{ paddingTop: 'calc(64px + 40px)', paddingBottom: 40, minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative' }}
       >
         <div className="max-w-6xl mx-auto px-8 w-full">
-          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-20 items-center">
+          <div className="grid lg:grid-cols-[1fr_1fr] gap-8 lg:gap-12 items-center">
 
             {/* Left: copy */}
             <div className="flex flex-col gap-8">
@@ -456,11 +459,11 @@ function HeroSection5() {
               <div style={{
                 position: 'absolute',
                 inset: '-20%',
-                background: 'radial-gradient(ellipse at center, rgba(88,85,212,0.2) 0%, transparent 65%)',
+                background: 'radial-gradient(ellipse at center, rgba(88,85,212,0.22) 0%, transparent 65%)',
                 pointerEvents: 'none',
                 zIndex: 0,
               }} aria-hidden />
-              <div style={{ width: '100%', maxWidth: 440, position: 'relative', zIndex: 1 }}>
+              <div style={{ width: '100%', position: 'relative', zIndex: 1 }}>
                 <BeforeAfterSlider />
               </div>
             </div>

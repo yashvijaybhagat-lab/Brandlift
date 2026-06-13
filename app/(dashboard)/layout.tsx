@@ -3,6 +3,8 @@
 import * as React from 'react'
 import { useSession } from 'next-auth/react'
 import { Sidebar } from '@/components/dashboard/Sidebar'
+import { LyraChat } from '@/components/chat/LyraChat'
+import { FounderBar } from '@/components/founder/FounderBar'
 
 const STORAGE_KEY = 'brandlift:sidebar-collapsed'
 
@@ -47,6 +49,8 @@ export default function DashboardLayout({
         {children}
       </main>
 
+      <LyraChat />
+      <FounderBar />
     </div>
   )
 }
