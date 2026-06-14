@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { geminiGenerate } from '@/lib/gemini'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30
@@ -12,11 +13,11 @@ export interface ViralScoreResult {
   verdict: string
   summary: string
   dimensions: {
-    hook:      { score: number; max: 20; label: string; tip: string; icon: string }
-    retention: { score: number; max: 20; label: string; tip: string; icon: string }
-    emotion:   { score: number; max: 20; label: string; tip: string; icon: string }
-    cta:       { score: number; max: 20; label: string; tip: string; icon: string }
-    trend:     { score: number; max: 20; label: string; tip: string; icon: string }
+    hook:      { score: number; max: 20; label: string; tip: string }
+    retention: { score: number; max: 20; label: string; tip: string }
+    emotion:   { score: number; max: 20; label: string; tip: string }
+    cta:       { score: number; max: 20; label: string; tip: string }
+    trend:     { score: number; max: 20; label: string; tip: string }
   }
   improvedHook: string
   quickFixes: string[]
@@ -26,7 +27,8 @@ export async function POST(req: NextRequest) {
   const ip = getIp(req)
   const rl = await rateLimit(`viral-score:${ip}`, 12, 60_000 * 60)
   if (!rl.success) return tooManyRequests(rl.reset)
-  const session = await getServerSession()
+
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Sign in to use this feature' }, { status: 401 })
   }
@@ -53,44 +55,14 @@ Return exactly this JSON:
 {
   "totalScore": <integer 0-100, sum of all dimension scores>,
   "grade": <"S" if >=90, "A" if >=80, "B" if >=65, "C" if >=50, "D" otherwise>,
-  "verdict": <"10-12 word punchy verdict like 'Strong hook but loses steam by the middle'>">,
+  "verdict": <"10-12 word punchy verdict like 'Strong hook but loses steam by the middle'">,
   "summary": <"2-3 sentences explaining what works and what doesn't">,
   "dimensions": {
-    "hook": {
-      "score": <0-20>,
-      "max": 20,
-      "label": "Hook Power",
-      "tip": <"specific 1 sentence improvement for the hook">,
-      "icon": "⚡"
-    },
-    "retention": {
-      "score": <0-20>,
-      "max": 20,
-      "label": "Retention",
-      "tip": <"specific 1 sentence improvement for keeping viewers watching">,
-      "icon": "👁"
-    },
-    "emotion": {
-      "score": <0-20>,
-      "max": 20,
-      "label": "Emotional Pull",
-      "tip": <"specific 1 sentence improvement for emotional resonance">,
-      "icon": "💥"
-    },
-    "cta": {
-      "score": <0-20>,
-      "max": 20,
-      "label": "Call to Action",
-      "tip": <"specific 1 sentence improvement for the CTA">,
-      "icon": "🎯"
-    },
-    "trend": {
-      "score": <0-20>,
-      "max": 20,
-      "label": "Trend Fit",
-      "tip": <"specific 1 sentence improvement for trend alignment">,
-      "icon": "🔥"
-    }
+    "hook":      { "score": <0-20>, "max": 20, "label": "Hook Power",      "tip": <"specific 1 sentence improvement for the hook"> },
+    "retention": { "score": <0-20>, "max": 20, "label": "Retention",       "tip": <"specific 1 sentence improvement for keeping viewers watching"> },
+    "emotion":   { "score": <0-20>, "max": 20, "label": "Emotional Pull",  "tip": <"specific 1 sentence improvement for emotional resonance"> },
+    "cta":       { "score": <0-20>, "max": 20, "label": "Call to Action",  "tip": <"specific 1 sentence improvement for the CTA"> },
+    "trend":     { "score": <0-20>, "max": 20, "label": "Trend Fit",       "tip": <"specific 1 sentence improvement for trend alignment"> }
   },
   "improvedHook": <"a rewritten first 1-2 sentences that would dramatically improve the hook score">,
   "quickFixes": [<"actionable fix 1">, <"actionable fix 2">, <"actionable fix 3">]
