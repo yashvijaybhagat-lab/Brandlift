@@ -896,47 +896,18 @@ function VideosInner() {
     pipelineStage === 'export' ? 'done' : 'enhancing'
 
   const runEnhancementInBackground = useCallback(async (blobUrl: string, recordId: string) => {
-    setPipelineStage('analyze'); setPipelineProgress(5); setQualityGatePassed(null)
+    setPipelineStage('upscale'); setPipelineProgress(5); setQualityGatePassed(null)
 
     try {
-      // Stage 1: Analyze source (client sends video metadata from the video element)
-      const videoEl = document.querySelector('video') as HTMLVideoElement | null
-      const w   = videoEl?.videoWidth  ?? 1920
-      const h   = videoEl?.videoHeight ?? 1080
-      const fps = 30  // no reliable DOM API for FPS
-      const dur = videoEl?.duration ?? 0
-
-      const analysisRes = await fetch('/api/video/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ width: w, height: h, fps, duration: dur, hasFaces: true }),
-      })
-      if (!analysisRes.ok) { setPipelineStage('failed'); return }
-      const { analysis } = await analysisRes.json() as { analysis: SourceAnalysis }
-      setPipelineAnalysis(analysis)
-
-      // Stages 2-3: Denoise + stabilize are canvas pre-passes (instant)
-      if (!analysis.skipDenoise) {
-        setPipelineStage('denoise'); setPipelineProgress(12)
-        await new Promise(r => setTimeout(r, 400))
-      }
-      setPipelineStage('stabilize'); setPipelineProgress(18)
-      await new Promise(r => setTimeout(r, 300))
-
-      // Stage 4: Upscale via Replicate
-      setPipelineStage('upscale'); setPipelineProgress(22)
+      // Send to Replicate lucataco/real-esrgan-video for 4× AI upscaling
       const enhRes = await fetch('/api/video/enhance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoUrl: blobUrl, analysis }),
+        body: JSON.stringify({ videoUrl: blobUrl }),
       })
       if (!enhRes.ok) {
         const errData = await enhRes.json().catch(() => ({})) as { code?: string; error?: string }
-        if (errData.code === 'ENHANCE_UNAVAILABLE') {
-          // Feature coming soon — don't mark as failed, just silently skip
-          setPipelineStage('idle')
-          return
-        }
+        if (errData.code === 'ENHANCE_UNAVAILABLE') { setPipelineStage('idle'); return }
         setPipelineStage('failed'); return
       }
       const enhData = await enhRes.json()
@@ -1706,11 +1677,12 @@ function VideosInner() {
                   </p>
                   {/* ── Pipeline status pill ── */}
                   {pipelineStage === 'idle' && (
-                    <span className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]"
-                      title="Video enhancement coming soon"
-                      style={{ background: 'rgba(99,102,241,0.05)', border: '0.5px solid rgba(99,102,241,0.15)', color: '#555' }}>
-                      <Sparkles className="w-2.5 h-2.5" />4K — Soon
-                    </span>
+                    <button
+                      onClick={() => { if (activeClip) runEnhancementInBackground(activeClip.url, activeClip.id) }}
+                      className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] transition-colors"
+                      style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.25)', color: '#818cf8', cursor: 'pointer' }}>
+                      <Sparkles className="w-2.5 h-2.5" />4K Enhance
+                    </button>
                   )}
                   {pipelineStage === 'idle' && !beta.has('enhancement') && (
                     <button onClick={() => setShowBetaPanel(true)}
