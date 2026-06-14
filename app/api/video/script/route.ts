@@ -68,7 +68,7 @@ PROVEN VIRAL HOOK FORMULAS — pick one that fits, use it as the first line:
 
 TIKTOK RHYTHM RULES:
 - First 1–2 words: impossible to scroll past. Create FOMO, curiosity, or deep relatability.
-- Total length: 15–25 seconds of spoken content (short = more rewatches = more reach)
+- Total length: 45–75 seconds of spoken content. Long enough to tell a real story, short enough to keep attention. Build a proper arc: hook → context → value/story → payoff → CTA.
 - Use rhythm: short punchy line. Then a slightly longer one that builds context. Then the satisfying payoff.
 - Sound unscripted. Incomplete sentences are fine. Use "okay so", "like", "literally", mid-sentence pivots.
 - Be specific and local: "our $14 birria tacos on Sixth Street" beats "our affordable food". Specifics build trust.
@@ -80,7 +80,7 @@ NEVER WRITE:
 - Bullet points, numbered lists, headers, stage directions, "[hook]" markers, or anything in brackets
 - Questions as openers ("Are you looking for...?" gets skipped every time)`,
       messages: [{ role: 'user', parts: [{ text: `Write a TikTok video script based on this idea:\n"${idea}"${productDesc?.trim() ? `\n\nProduct/brand context: ${productDesc.trim()}` : ''}\n\nFormat: ${formatHint}\n\nOutput only the spoken words. No labels, no stage directions, no brackets. Just the script.` }] }],
-      maxTokens: 450,
+      maxTokens: 900,
     })
 
     return NextResponse.json({ script })
