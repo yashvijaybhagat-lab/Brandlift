@@ -354,8 +354,8 @@ function drawFrame(
   const fontFamilyStr = FONT_FAMILIES[opts.captionFont ?? 'inter'] ?? 'Inter, Arial, sans-serif'
   const capColor = opts.captionColor ?? '#FFFFFF'
 
-  // Clarity boost: lift shadows first, then gentle contrast/saturation for sharpness
-  const clarityBoost = 'brightness(1.12) contrast(1.06) saturate(1.08)'
+  // Clarity boost: lift shadows first, then punch contrast + saturation for a crisp, vivid look
+  const clarityBoost = 'brightness(1.10) contrast(1.18) saturate(1.14)'
   const baseFilter   = opts.colorFilter && opts.colorFilter !== 'none' ? opts.colorFilter : 'none'
   ctx.filter = baseFilter !== 'none' ? `${baseFilter} ${clarityBoost}` : clarityBoost
   drawVideoFit(ctx, video, w, h)
@@ -478,6 +478,8 @@ function renderClipRVFC(
       ctx.clearRect(0, 0, w, h)
       drawFrame(ctx, v, w, h, opts, t - startT, opts.captions, 1, frame)
       if (opts.letterbox) drawLetterbox(ctx, w, h)
+      // Unsharp mask at 1080p and below (pixel loop is too slow at 4K)
+      if (w <= 1920) applyUnsharpMask(ctx.canvas, 0.7, 1.5)
       videoTrack.requestFrame()
       onFrame(frame)
       frame++
@@ -514,6 +516,7 @@ async function renderClipSeekBased(
     ctx.clearRect(0, 0, w, h)
     drawFrame(ctx, v, w, h, opts, t - startT, opts.captions, 1, f)
     if (opts.letterbox) drawLetterbox(ctx, w, h)
+    if (w <= 1920) applyUnsharpMask(ctx.canvas, 0.7, 1.5)
     videoTrack.requestFrame()
     // One microtask yield — lets MediaRecorder process the frame
     await new Promise(r => setTimeout(r, 0))

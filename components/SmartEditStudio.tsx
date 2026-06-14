@@ -326,7 +326,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
               playsInline
               style={{
                 width: '100%', height: '100%', objectFit: 'contain',
-                filter: colorFilter || undefined,
+                filter: [colorFilter, 'brightness(1.10) contrast(1.18) saturate(1.14)'].filter(Boolean).join(' ') || undefined,
                 transform: `scale(${activeZoom})`,
                 transition: 'transform 0.2s ease',
               }}
