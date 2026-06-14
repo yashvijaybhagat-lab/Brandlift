@@ -252,6 +252,26 @@ export function Sidebar({
 
         {/* ── Bottom section ── */}
         <div className="flex flex-col gap-3 px-2 pb-4 pt-3 border-t border-white/[0.06] flex-shrink-0">
+          {/* Mission statement */}
+          <div
+            style={{
+              opacity: collapsed ? 0 : 1,
+              transition: 'opacity 160ms cubic-bezier(0.23,1,0.32,1)',
+              pointerEvents: collapsed ? 'none' : 'auto',
+              padding: '8px 10px',
+              borderRadius: 10,
+              background: 'rgba(88,85,212,0.07)',
+              border: '0.5px solid rgba(88,85,212,0.18)',
+            }}
+          >
+            <p style={{ fontSize: 10, fontWeight: 700, color: '#5855D4', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>
+              Our Mission
+            </p>
+            <p style={{ fontSize: 11, color: '#52525b', lineHeight: 1.5, letterSpacing: '-0.01em' }}>
+              Help local businesses assimilate into the new marketing generation.
+            </p>
+          </div>
+
           {/* User row */}
           <NavTooltip label={userEmail} collapsed={collapsed}>
             <div className="flex items-center gap-2.5 px-1 py-1 rounded-[8px] hover:bg-[#18181C] transition-colors duration-160 cursor-pointer">
