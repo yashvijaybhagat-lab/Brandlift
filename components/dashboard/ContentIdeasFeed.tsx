@@ -64,9 +64,9 @@ const FORMAT_LABELS: Record<Format, string> = {
 }
 
 const TREND_CONFIG: Record<string, { emoji: string; label: string }> = {
-  trending: { emoji: '🔥', label: 'Trending' },
-  rising:   { emoji: '📈', label: 'Rising' },
-  classic:  { emoji: '⭐', label: 'Classic' },
+  trending: { emoji: '', label: 'Trending' },
+  rising:   { emoji: '', label: 'Rising' },
+  classic:  { emoji: '', label: 'Classic' },
 }
 
 const TREND_ACCENT: Record<string, string> = {

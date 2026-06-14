@@ -39,37 +39,37 @@ interface PlatformOption {
 const PERSONALITIES: PersonalityCard[] = [
   {
     id: 'bold',
-    emoji: '💥',
+    emoji: '',
     name: 'Bold & Direct',
     description: "You don't waste words. You deliver results.",
   },
   {
     id: 'warm',
-    emoji: '🤝',
+    emoji: '',
     name: 'Warm & Community-Focused',
     description: 'Your neighborhood, your people.',
   },
   {
     id: 'premium',
-    emoji: '✨',
+    emoji: '',
     name: 'Premium & Exclusive',
     description: 'Quality over everything.',
   },
   {
     id: 'fun',
-    emoji: '🎉',
+    emoji: '',
     name: 'Fun & Energetic',
     description: "Good vibes only. Life's too short.",
   },
   {
     id: 'expert',
-    emoji: '📚',
+    emoji: '',
     name: 'Expert & Educational',
     description: 'You teach while you sell.',
   },
   {
     id: 'authentic',
-    emoji: '📱',
+    emoji: '',
     name: 'Authentic & Raw',
     description: 'No polish needed. Real is better.',
   },
@@ -180,12 +180,9 @@ export default function StepTone({ onComplete }: StepToneProps) {
                 }}
               >
                 {/* Emoji */}
-                <span
-                  className="text-[32px] leading-none"
-                  aria-hidden="true"
-                >
-                  {card.emoji}
-                </span>
+                {card.emoji && (
+                  <span className="text-[32px] leading-none" aria-hidden="true">{card.emoji}</span>
+                )}
 
                 {/* Name */}
                 <span

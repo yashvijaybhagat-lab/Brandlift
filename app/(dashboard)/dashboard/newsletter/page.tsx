@@ -10,19 +10,19 @@ type SendState = 'idle' | 'sending' | 'sent' | 'error'
 const TEMPLATES = [
   {
     label: 'New Feature',
-    subject: '✨ New in BrandLift: [feature name]',
+    subject: 'New in BrandLift: [feature name]',
     headline: 'We just shipped something you\'re going to love',
     body: `<p>Hey!</p>\n<p>We just launched <strong>[feature name]</strong> — and it's live in your dashboard right now.</p>\n<p>[2-3 sentences describing what it does and why it's useful for them]</p>\n<p>Here's how to try it: [one clear instruction]</p>\n<p>As always, reply to this email if you have questions or feedback — I read every message.</p>`,
   },
   {
     label: 'Product Update',
-    subject: '📦 What\'s new in BrandLift this week',
+    subject: 'What\'s new in BrandLift this week',
     headline: 'Here\'s what shipped this week',
     body: `<p>Quick update on what we've been building:</p>\n<ul>\n  <li>✅ <strong>[Feature 1]</strong> — [one sentence description]</li>\n  <li>✅ <strong>[Feature 2]</strong> — [one sentence description]</li>\n  <li>✅ <strong>[Improvement]</strong> — [one sentence description]</li>\n</ul>\n<p>All of these are live. Let me know what you think.</p>`,
   },
   {
     label: 'Announcement',
-    subject: '🚀 Big news from BrandLift',
+    subject: 'Big news from BrandLift',
     headline: '[Your big announcement headline]',
     body: `<p>Hey, I have some exciting news to share.</p>\n<p>[2-3 sentences with the announcement]</p>\n<p>[Why this matters for your subscribers]</p>\n<p>More details coming soon — stay tuned.</p>`,
   },
@@ -99,7 +99,7 @@ export default function NewsletterPage() {
           {/* Weekly tips note */}
           <div className="rounded-xl p-4 flex gap-3"
             style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
-            <span style={{ fontSize: 16 }}>⚡</span>
+            <span style={{ fontSize: 11, color: '#6366f1', fontWeight: 700 }}>auto</span>
             <p className="text-[13px] text-[#71717A] leading-relaxed">
               <span className="text-[#A1A1AA] font-medium">Weekly tips are automatic.</span> Every Monday at 2pm UTC, a content marketing tip goes out to all subscribers automatically — no action needed. Use this page for product updates and announcements.
             </p>
@@ -126,7 +126,7 @@ export default function NewsletterPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-medium text-[#A1A1AA]">Subject line</label>
               <input value={subject} onChange={e => setSubject(e.target.value)} maxLength={200}
-                placeholder="✨ New in BrandLift: AI video enhancement"
+                placeholder="New in BrandLift: AI video enhancement"
                 className={cn(
                   'w-full px-3 py-2.5 rounded-[8px] text-[14px] text-[#FAFAFA] placeholder:text-[#3f3f46]',
                   'bg-[#18181C] border border-white/[0.1] focus:outline-none focus:border-[rgba(99,102,241,0.5)]',

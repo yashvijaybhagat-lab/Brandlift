@@ -27,15 +27,22 @@ export async function POST(req: NextRequest) {
     }
 
     const formatHint =
-      format === 'talking-head' ? 'Talking-head — owner speaks directly to camera, raw and conversational. No voiceover polish, no cuts implied. Just the owner talking.' :
-      format === 'b-roll'       ? 'Voiceover over b-roll footage. Conversational narration, not a commercial. Sound like you\'re telling a friend, not selling.' :
-      format === 'tutorial'     ? 'Tutorial. Use "here\'s what I actually do" language, not "step 1, step 2". Keep it casual and real.' :
-      format === 'text-overlay' ? 'Text overlay — ultra-short punchy lines only. Each sentence is its own screen. Max 5–6 words per line. Punchy as hell.' :
-      format === 'pov'          ? 'POV format. Start with "POV:" — put the viewer in the moment as a customer. Describe the experience as if it\'s happening to them right now. Second-person throughout.' :
-      format === 'storytime'    ? 'Story time format. Open with something like "okay real talk" or "not me gatekeeping this anymore". Tell one specific incident or moment — customer story, business origin, behind the scenes reveal. Make it feel like gossip you couldn\'t keep to yourself.' :
-      format === 'hottake'      ? 'Hot take format. Lead with a spicy, slightly controversial opinion about your industry or category — something that makes people go "wait actually." Build your case in 3 sentences. Your business is the proof that you\'re right.' :
-      format === 'countdown'    ? 'Countdown format. Pick 3, 5, or 7. Title line: "[Number] things about [business type] that nobody tells you" or similar. Each point is one punchy sentence with a specific detail. Make them feel like insider info.' :
-      'Casual spoken script, TikTok style. No specific format required — just make it real and addictive.'
+      format === 'boss_never'      ? '"My boss would never let me post this but I own the place" format. Start with that energy. Then drop the actual thing — a deal, a secret menu item, a fact about quality that the competition would never admit. Conversational, slightly rebellious, 100% confident.' :
+      format === 'math_mathing'    ? 'Price comparison / value format. Make the math undeniable. Compare your price/quality to a competitor or average without naming names. Short, punchy, makes the viewer feel smart for knowing about you.' :
+      format === 'types_customers' ? '"Types of customers" format. Name 3 types with affection, not mockery. Each type is one sentence. End by saying you love all of them or that there\'s a type for everyone. Warm, funny, relatable.' :
+      format === 'rent_free'       ? '"Lives rent free in my head" format. Tell a specific customer or moment story that genuinely stuck with you. Specific details — time, what they said, what happened. End with warmth. Makes people want to be THAT customer.' :
+      format === 'pov'             ? 'POV format. Start with "POV:" — put the viewer in the moment as a customer experiencing the best version of your business. Second-person. Make them feel the moment.' :
+      format === 'no_gatekeep'     ? '"No gatekeeping" format. Open with "I\'m not gatekeeping this anymore" or similar. Drop the specifics — price, location, what makes you different. Short, direct, like telling a friend a secret.' :
+      format === 'convinced'       ? '"I\'m convinced nobody knows about this place" format — but YOU are the place. Write it from the POV of a raving fan who can\'t believe the place is underrated. Use second-person for the reader, first-person for the business owner. Hyped but real.' :
+      format === 'storytime'       ? 'Story time format. One real, specific moment — a customer interaction, something that went wrong, something beautiful that happened. Open with "okay real talk" or a grabby first line. No polish. Feels like gossip you can\'t keep to yourself.' :
+      format === 'audacity'        ? 'Bad review / audacity format. Read a real (or fictional but believable) bad review and let it speak for itself. Deadpan reaction. Keep it short — the review is the punchline. Do not get defensive. Let the absurdity win.' :
+      format === 'expectvreality'  ? 'Expectation vs Reality format. What you THOUGHT owning this business would be like vs what it actually is. Be honest, funny, and self-aware. End with "worth it" or a real reason why you keep going.' :
+      format === 'quit9to5'        ? '"I left my salary" format. Give the number (specific). What people thought. What actually happened. The result. Short, punchy, makes people believe in you.' :
+      format === 'dayinlife'       ? '"Day in my life but make it honest" format. Timestamps work well. Be specific about the chaos, the early hours, the weird things. No glamour. End with something that makes the grind feel worth it.' :
+      format === 'explaining'      ? '"Explaining to my parents / someone who doesn\'t get it" format. Dialogue style — their question, your answer, their confused follow-up, the punchline. Relatable to any entrepreneur.' :
+      format === 'price_reveal'    ? '"What $X gets you" format. Name a specific price point. List exactly what you get — be specific. Compare without naming competitors. Make the viewer feel like they\'re missing out.' :
+      format === 'hottake'         ? 'Unpopular opinion format. Start with "unpopular opinion:" or "hot take:". Say something true and slightly controversial about your industry. Build your case in 2-3 lines. Your business is the proof.' :
+      'Casual spoken script, Instagram Reels/TikTok style. No specific format required — just make it real, specific, and impossible to scroll past.'
 
     const script = await geminiGenerate({
       system: `You write TikTok video scripts for small business owners that actually make people stop scrolling and come in. You understand TikTok culture in 2025-2026 — not just the slang, but the rhythm, the pacing, and the psychological hooks that work on the app.

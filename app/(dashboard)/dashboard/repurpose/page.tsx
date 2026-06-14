@@ -7,12 +7,12 @@ import { Repeat2, Copy, Check, Sparkles, ChevronDown } from 'lucide-react'
 import type { RepurposeResult } from '@/app/api/repurpose/route'
 
 const PLATFORMS = [
-  { id: 'tiktok',    label: 'TikTok',     emoji: '🎵', color: '#ff2d55', bg: 'rgba(255,45,85,0.1)' },
-  { id: 'instagram', label: 'Instagram',  emoji: '📸', color: '#c13584', bg: 'rgba(193,53,132,0.1)' },
-  { id: 'linkedin',  label: 'LinkedIn',   emoji: '💼', color: '#0077b5', bg: 'rgba(0,119,181,0.1)' },
-  { id: 'twitter',   label: 'Twitter / X',emoji: '✦',  color: '#1da1f2', bg: 'rgba(29,161,242,0.1)' },
-  { id: 'youtube',   label: 'YouTube',    emoji: '▶',  color: '#ff0000', bg: 'rgba(255,0,0,0.1)' },
-  { id: 'email',     label: 'Email',      emoji: '✉',  color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
+  { id: 'tiktok',    label: 'TikTok',     emoji: 'TK', color: '#ff2d55', bg: 'rgba(255,45,85,0.1)' },
+  { id: 'instagram', label: 'Instagram',  emoji: 'IG', color: '#c13584', bg: 'rgba(193,53,132,0.1)' },
+  { id: 'linkedin',  label: 'LinkedIn',   emoji: 'LI', color: '#0077b5', bg: 'rgba(0,119,181,0.1)' },
+  { id: 'twitter',   label: 'Twitter / X',emoji: '✕',  color: '#1da1f2', bg: 'rgba(29,161,242,0.1)' },
+  { id: 'youtube',   label: 'YouTube',    emoji: 'YT', color: '#ff0000', bg: 'rgba(255,0,0,0.1)' },
+  { id: 'email',     label: 'Email',      emoji: '@',  color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
 ] as const
 
 type PlatformId = typeof PLATFORMS[number]['id']

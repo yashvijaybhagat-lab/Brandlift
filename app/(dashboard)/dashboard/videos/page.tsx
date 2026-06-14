@@ -123,21 +123,23 @@ const CAPTION_POSITIONS: { id: CaptionPos; label: string; icon: string }[] = [
 ]
 
 const SCRIPT_TEMPLATES = [
-  { id: 'promo',        label: 'Business Promo',    placeholder: 'e.g. We make the best tacos in Austin — fresh ingredients, made to order, open late.' },
-  { id: 'pov',          label: 'POV Format',        placeholder: 'e.g. POV: you finally found a barber who actually listens to what you want.' },
-  { id: 'storytime',    label: 'Story Time',        placeholder: 'e.g. A customer walked in crying last week. Here\'s what happened.' },
-  { id: 'hottake',      label: 'Hot Take',          placeholder: 'e.g. Most coffee shops don\'t actually care about flavor. Here\'s why mine is different.' },
-  { id: 'countdown',    label: 'Countdown',         placeholder: 'e.g. 5 things about our bakery that nobody talks about.' },
-  { id: 'behindscenes', label: 'Behind the Scenes', placeholder: 'e.g. A day in our kitchen — from prep at 6am to the last order.' },
-  { id: 'testimonial',  label: 'Customer Story',    placeholder: "e.g. Sarah's been coming every Friday for two years. Here's what she says." },
-  { id: 'dayinlife',    label: 'Day in the Life',   placeholder: "e.g. 5am. Ovens on. I haven't had coffee yet and there's already 200 croissants to make. This is my life." },
-  { id: 'audacity',     label: 'Yelp Audacity',     placeholder: "e.g. Someone left us 1 star because we were 'too good' and they felt overdressed. Read that again." },
-  { id: 'regularclients', label: 'That One Regular', placeholder: "e.g. She comes in every Tuesday at 11:03am, orders the same thing, and has for 4 years. Her name is Margaret and she is everything." },
-  { id: 'expectvreality', label: 'Expectation vs Reality', placeholder: "e.g. What I thought owning a bakery would be: cute aprons, smiling customers. What it actually is: 3am panic because the sourdough didn't proof." },
-  { id: 'ratingseries',  label: 'Rating My City',   placeholder: "e.g. I'm rating every coffee shop in [city] and today we're at mine. I'm giving myself a solid 6/10. The vibe is immaculate but I found a scone from 2019 behind the counter." },
-  { id: 'explaining',   label: 'Explaining to Parents', placeholder: "e.g. Me: I make content for my small business. My dad: So you're on your phone all day. Me: ...yes but strategically." },
-  { id: 'quit9to5',     label: 'Why I Quit My 9-5', placeholder: "e.g. I left a $70k salary to open a taco truck. Everyone thought I was cooked. Last month I made more than I ever did in an office. Here's the story." },
-  { id: 'custom',       label: 'Write My Own',      placeholder: 'Write your script or talking points here...' },
+  // --- Trending formats (Instagram Reels / TikTok 2025-2026) ---
+  { id: 'boss_never',    label: 'Boss Would Never',      placeholder: "e.g. My boss would never let me post this. But I own the place so. We have $12 birria fries and they're better than anything on Yelp's top 10 list. I said what I said." },
+  { id: 'math_mathing',  label: 'The Math Isn\'t Mathing', placeholder: "e.g. You're spending $18 on a salad at that place downtown. For $14 you can come here and get a full meal, a drink, and I'll actually remember your name next time." },
+  { id: 'types_customers', label: 'Types of Customers',  placeholder: "e.g. Three types of people walk into my shop. Type 1: knows exactly what they want, bless them. Type 2: 'I'll know it when I see it.' Type 3: sends 47 reference photos and then says 'but make it different.' I love all three of them." },
+  { id: 'rent_free',     label: 'Lives Rent Free',       placeholder: "e.g. The customer who came in last Tuesday, tried everything, said 'I'll think about it', walked out, and then texted us at midnight to order the first thing they touched. You live in my head rent free. We love you. Come back." },
+  { id: 'pov',           label: 'POV Format',            placeholder: "e.g. POV: you finally find the one barber in the city who doesn't give you a fade when you asked for a trim. This is that barber. This is us." },
+  { id: 'no_gatekeep',   label: 'No Gatekeeping',        placeholder: "e.g. I'm not gatekeeping this anymore. Best [product] in [city], $15, we're open till 10, there's never a line because nobody knows about us yet. Now you do." },
+  { id: 'convinced',     label: 'I\'m Convinced Nobody Knows', placeholder: "e.g. I'm genuinely convinced [city] doesn't know this place exists. We've been here 4 years. Regulars swear by us. Come in once and you'll understand why they never tell anyone — they want to keep us to themselves." },
+  { id: 'storytime',     label: 'Story Time (Real One)',  placeholder: "e.g. A customer walked in last month, slapped cash on the counter, and said 'whatever you think I should have.' I made her my personal favorite. She cried a little. She comes in every week now. That's the whole story." },
+  { id: 'audacity',      label: 'The Audacity (Bad Review)', placeholder: "e.g. We got a 1-star review that said we were 'too friendly' and it made them uncomfortable. They gave us one star. For being too nice. We're keeping it. It's going in the lobby." },
+  { id: 'expectvreality',label: 'Expectation vs Reality', placeholder: "e.g. What I thought owning a restaurant would be: creative menus, happy customers. What it actually is: googling 'why did my walk-in compressor make that sound' at 2am and crying in a parking lot. Worth it though." },
+  { id: 'quit9to5',      label: 'I Left My Salary',      placeholder: "e.g. I walked away from a $75k salary to open this place. People thought I was cooked. Last quarter I made more than I ever did in a cubicle. Here's what nobody tells you about making the jump." },
+  { id: 'dayinlife',     label: 'Day in My Life (Honest)', placeholder: "e.g. 4:45am alarm. Ignore it. 4:46am alarm. Get up. Coffee before anything. Prep starts at 5:30. First customer at 7. Forget to eat until 2pm. Go home at 8. Do it again tomorrow. This is the dream." },
+  { id: 'explaining',    label: 'Explaining to My Parents', placeholder: "e.g. Me: I make content for my business. My mom: So you're just on your phone all day? Me: Technically yes. Her: That sounds fake. Me: I made $6k last month. Her: Oh. Carry on." },
+  { id: 'price_reveal',  label: 'What $X Gets You',      placeholder: "e.g. What $20 gets you at our place: full entree, side, a drink, and we'll box up the leftovers without making it weird. Compare that to literally anywhere else." },
+  { id: 'hottake',       label: 'Unpopular Opinion',     placeholder: "e.g. Unpopular opinion: most [business type] in this city are charging you for the vibe, not the quality. We're the opposite. No Instagram aesthetic. No $8 upcharge for oat milk. Just the actual best [product] you've had." },
+  { id: 'custom',        label: 'Write My Own',          placeholder: 'Write your script or talking points here...' },
 ]
 
 const GENZ_IDEAS = [
@@ -1166,7 +1168,7 @@ function VideosInner() {
                   onClick={() => setShowSmartEdit(true)}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-semibold transition-all"
                   style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.15))', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.35)', boxShadow: '0 0 12px rgba(99,102,241,0.15)' }}>
-                  ✨ Smart Edit
+                  Smart Edit
                 </button>
               )}
               {stage !== 'script' && stage !== 'done' && <Button variant="ghost" size="sm" onClick={reset}>← Start over</Button>}
@@ -2154,7 +2156,6 @@ function VideosInner() {
                       {/* AI Voice Narration */}
                       <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(99,102,241,0.15)' }}>
                         <div className="flex items-center gap-2">
-                          <span style={{ fontSize: 13, color: '#818cf8' }}>🎙</span>
                           <p style={{ fontSize: 12, fontWeight: 700, color: '#a5b4fc', letterSpacing: '0.04em' }}>AI Voice Narration</p>
                         </div>
 
@@ -2211,7 +2212,7 @@ function VideosInner() {
                           {ttsGenerating ? (
                             <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Generating voice… (~30–90s)</>
                           ) : (
-                            <><span style={{ fontSize: 14 }}>🎙</span>Generate AI Voice</>
+                            <>Generate AI Voice</>
                           )}
                         </button>
 
@@ -2785,7 +2786,7 @@ function VideosInner() {
                           {[
                             { icon: '✦', label: '4K & 2K export', desc: 'Ultra-high resolution output' },
                             { icon: '⬆', label: 'AI Enhancement', desc: 'Replicate upscaling on every video' },
-                            { icon: '🎙', label: 'Audio Captions', desc: 'Whisper AI auto-sync to speech' },
+                            { icon: '', label: 'Audio Captions', desc: 'Whisper AI auto-sync to speech' },
                             { icon: '✦', label: 'Noise Reduction', desc: 'Clarity boost in Color tab' },
                           ].map(f => (
                             <div key={f.label} className="flex items-start gap-2 p-2.5 rounded-lg" style={{ background: 'rgba(139,92,246,0.06)', border: '0.5px solid rgba(139,92,246,0.12)' }}>
@@ -2892,7 +2893,7 @@ function VideosInner() {
                         { id: 'instagram', label: 'Reels',        tip: '9:16 · up to 90s',  bg: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', border: 'rgba(253,29,29,0.35)', color: '#FAFAFA', url: 'https://www.instagram.com', icon: '◎' },
                         { id: 'youtube',   label: 'YT Shorts',   tip: '9:16 · under 60s',  bg: '#FF0000', border: 'rgba(255,0,0,0.35)', color: '#FAFAFA', url: 'https://studio.youtube.com', icon: '▶' },
                         { id: 'twitter',   label: 'X / Twitter', tip: 'Up to 2m 20s',       bg: '#000000', border: 'rgba(255,255,255,0.15)', color: '#FAFAFA', url: 'https://twitter.com/compose/tweet', icon: '✕' },
-                        { id: 'snapchat',  label: 'Snapchat',    tip: 'Spotlight · 9:16',   bg: '#FFFC00', border: 'rgba(0,0,0,0.15)', color: '#000000', url: 'https://www.snapchat.com', icon: '👻' },
+                        { id: 'snapchat',  label: 'Snapchat',    tip: 'Spotlight · 9:16',   bg: '#FFFC00', border: 'rgba(0,0,0,0.15)', color: '#000000', url: 'https://www.snapchat.com', icon: 'SC' },
                         { id: 'linkedin',  label: 'LinkedIn',    tip: 'Professional',        bg: '#0A66C2', border: 'rgba(10,102,194,0.5)', color: '#FAFAFA', url: 'https://www.linkedin.com/feed/', icon: 'in' },
                       ].map(p => (
                         <a

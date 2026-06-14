@@ -323,7 +323,7 @@ function IdeaAnalyticsPanel({ idea, onClose }: { idea: ContentIdea; onClose: () 
   const { lo, hi } = parseReach(idea.reach)
   const eng = idea.trend === 'trending' ? 5.2 : idea.trend === 'rising' ? 3.8 : 2.9
   const trendColor = idea.trend === 'trending' ? '#FBBF24' : idea.trend === 'rising' ? '#4ADE80' : '#A1A1AA'
-  const trendEmoji = idea.trend === 'trending' ? '🔥' : idea.trend === 'rising' ? '📈' : '⭐'
+  const trendEmoji = ''
   const [activePlatform, setActivePlatform] = React.useState(idea.platforms[0])
 
   // Reset active platform when idea changes

@@ -7,11 +7,11 @@ import { CalendarDays, Sparkles, Copy, Check, ChevronDown, Clock, TrendingUp } f
 import type { PlannerDay } from '@/app/api/planner/route'
 
 const PLATFORM_COLORS: Record<string, { color: string; emoji: string }> = {
-  TikTok:      { color: '#ff2d55', emoji: '🎵' },
-  Instagram:   { color: '#c13584', emoji: '📸' },
-  LinkedIn:    { color: '#0077b5', emoji: '💼' },
-  'Twitter / X': { color: '#1da1f2', emoji: '✦' },
-  YouTube:     { color: '#ff0000', emoji: '▶' },
+  TikTok:      { color: '#ff2d55', emoji: 'TK' },
+  Instagram:   { color: '#c13584', emoji: 'IG' },
+  LinkedIn:    { color: '#0077b5', emoji: 'LI' },
+  'Twitter / X': { color: '#1da1f2', emoji: '✕' },
+  YouTube:     { color: '#ff0000', emoji: 'YT' },
 }
 
 const DIFFICULTY_CONFIG = {
@@ -33,7 +33,7 @@ const TYPE_COLORS: Record<string, string> = {
 function DayCard({ day, index }: { day: PlannerDay; index: number }) {
   const [expanded, setExpanded] = useState(false)
   const [scriptCopied, setScriptCopied] = useState(false)
-  const platform = PLATFORM_COLORS[day.platform] ?? { color: '#6366f1', emoji: '📱' }
+  const platform = PLATFORM_COLORS[day.platform] ?? { color: '#6366f1', emoji: '·' }
   const difficulty = DIFFICULTY_CONFIG[day.difficulty]
   const typeColor = TYPE_COLORS[day.contentType] ?? '#818cf8'
 
@@ -200,7 +200,7 @@ export default function PlannerPage() {
               <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 8 }}>Platforms</label>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {PLATFORM_OPTIONS.map(p => {
-                  const meta = PLATFORM_COLORS[p] ?? { color: '#6366f1', emoji: '📱' }
+                  const meta = PLATFORM_COLORS[p] ?? { color: '#6366f1', emoji: '·' }
                   const active = platforms.includes(p)
                   return (
                     <button key={p} onClick={() => togglePlatform(p)}

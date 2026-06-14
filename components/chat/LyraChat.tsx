@@ -22,12 +22,12 @@ interface Message {
 
 /* ─── Quick actions ─────────────────────────────────────── */
 const QUICK_ACTIONS = [
-  { emoji: '💡', label: 'Content ideas',   prompt: 'Give me 5 viral video content ideas for a small business on TikTok' },
-  { emoji: '✍️', label: 'Write a script',  prompt: 'Write a 30-second TikTok script to promote my local business' },
-  { emoji: '🔥', label: 'Hook ideas',      prompt: 'Give me 5 scroll-stopping video opening hooks for my business' },
-  { emoji: '⏰', label: 'Best post times', prompt: 'When is the best time to post on TikTok, Instagram, and YouTube?' },
-  { emoji: '#',  label: 'Hashtag strategy',prompt: 'What hashtag strategy should I use to grow my business account fastest?' },
-  { emoji: '🚀', label: 'Grow faster',     prompt: 'How can I grow my social media following 10x faster as a small business?' },
+  { emoji: '', label: 'Content ideas',    prompt: 'Give me 5 viral video content ideas for a small business on TikTok' },
+  { emoji: '', label: 'Write a script',   prompt: 'Write a 30-second TikTok script to promote my local business' },
+  { emoji: '', label: 'Hook ideas',       prompt: 'Give me 5 scroll-stopping video opening hooks for my business' },
+  { emoji: '', label: 'Best post times',  prompt: 'When is the best time to post on TikTok, Instagram, and YouTube?' },
+  { emoji: '#', label: 'Hashtag strategy',prompt: 'What hashtag strategy should I use to grow my business account fastest?' },
+  { emoji: '', label: 'Grow faster',      prompt: 'How can I grow my social media following 10x faster as a small business?' },
 ]
 
 /* ─── Markdown renderer ─────────────────────────────────── */
@@ -163,7 +163,7 @@ function TypingDots() {
 
 /* ─── Attachment card ───────────────────────────────────── */
 function AttachmentCard({ att, onRemove }: { att: Attachment; onRemove?: () => void }) {
-  const icon = att.type.startsWith('image/') ? '🖼️' : att.type.startsWith('video/') ? '🎬' : att.type === 'application/pdf' ? '📄' : '📎'
+  const icon = att.type.startsWith('image/') ? 'img' : att.type.startsWith('video/') ? 'vid' : att.type === 'application/pdf' ? 'pdf' : 'file'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 10px', borderRadius: 10, background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.2)', maxWidth: 220 }}>
       <span style={{ fontSize: 13, flexShrink: 0 }}>{icon}</span>
