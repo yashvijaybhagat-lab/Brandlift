@@ -930,7 +930,15 @@ function VideosInner() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ videoUrl: blobUrl, analysis }),
       })
-      if (!enhRes.ok) { setPipelineStage('failed'); return }
+      if (!enhRes.ok) {
+        const errData = await enhRes.json().catch(() => ({})) as { code?: string; error?: string }
+        if (errData.code === 'ENHANCE_UNAVAILABLE') {
+          // Feature coming soon — don't mark as failed, just silently skip
+          setPipelineStage('idle')
+          return
+        }
+        setPipelineStage('failed'); return
+      }
       const enhData = await enhRes.json()
       if (!enhData.id) { setPipelineStage('failed'); return }
 
@@ -1697,13 +1705,12 @@ function VideosInner() {
                     {clips.length === 1 ? clips[0].name : `${clips.length} clips ready`}
                   </p>
                   {/* ── Pipeline status pill ── */}
-                  {pipelineStage === 'idle' && beta.has('enhancement') && (
-                    <button
-                      onClick={() => { if (activeClip) runEnhancementInBackground(activeClip.url, activeClip.id) }}
-                      className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] transition-colors"
-                      style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.25)', color: '#818cf8' }}>
-                      <Sparkles className="w-2.5 h-2.5" />4K Enhance
-                    </button>
+                  {pipelineStage === 'idle' && (
+                    <span className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]"
+                      title="Video enhancement coming soon"
+                      style={{ background: 'rgba(99,102,241,0.05)', border: '0.5px solid rgba(99,102,241,0.15)', color: '#555' }}>
+                      <Sparkles className="w-2.5 h-2.5" />4K — Soon
+                    </span>
                   )}
                   {pipelineStage === 'idle' && !beta.has('enhancement') && (
                     <button onClick={() => setShowBetaPanel(true)}

@@ -26,102 +26,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }
 
-  const ip = getIp(req)
-  // 10/hour — each prediction costs real Replicate credits
-  const rl = await rateLimit(`enhance:${ip}`, 10, 60 * 60_000)
-  if (!rl.success) return tooManyRequests(rl.reset)
-
-  const token = process.env.REPLICATE_API_TOKEN
-  if (!token || token === 'your_replicate_token') {
-    return NextResponse.json({ error: 'REPLICATE_API_TOKEN not configured' }, { status: 503 })
-  }
-
-  let body: { videoUrl: string; analysis: SourceAnalysis }
-  try { body = await req.json() } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
-  }
-
-  const { videoUrl, analysis } = body
-
-  if (!videoUrl || typeof videoUrl !== 'string') {
-    return NextResponse.json({ error: 'videoUrl is required' }, { status: 400 })
-  }
-  if (!analysis || typeof analysis !== 'object') {
-    return NextResponse.json({ error: 'analysis object is required (call /api/video/analyze first)' }, { status: 400 })
-  }
-
-  // Only allow HTTPS URLs from trusted storage (Vercel Blob / public CDN)
-  let parsed: URL
-  try { parsed = new URL(videoUrl) } catch {
-    return NextResponse.json({ error: 'Invalid videoUrl' }, { status: 400 })
-  }
-  if (parsed.protocol !== 'https:') {
-    return NextResponse.json({ error: 'videoUrl must be HTTPS' }, { status: 400 })
-  }
-
-  const upscaleScale = analysis.upscaleFactor ?? 4
-  // Enable face enhance only when faces detected — model fidelity is set lower internally
-  // to avoid the waxy-face artifact the spec forbids
-  const faceEnhance = analysis.hasFaces === true
-
-  // nightmareai/real-esrgan supports both image and video inputs.
-  // It processes each video frame through ESRGAN and reassembles the stream.
-  // model: 'RealESRGAN_x4plus' is the real-photography model (not anime).
-  const res = await fetch(
-    'https://api.replicate.com/v1/models/nightmareai/real-esrgan/predictions',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        // Prefer: wait=5 means Replicate tries to return synchronously within 5s.
-        // For video this almost always exceeds 5s, so we get back an ID to poll.
-        Prefer: 'wait=5',
-      },
-      body: JSON.stringify({
-        input: {
-          video: videoUrl,
-          scale: upscaleScale,
-          // face_enhance uses a GFPGAN sub-pass; keep it at lower strength (0.5 default)
-          // to avoid the waxy, over-smooth face regression.
-          face_enhance: faceEnhance,
-          model: 'RealESRGAN_x4plus',
-        },
-      }),
-    },
+  // Video upscaling via Replicate is temporarily unavailable.
+  // nightmareai/real-esrgan only supports images, not video streams.
+  // Return a clear message so the client shows "coming soon" instead of silently failing.
+  return NextResponse.json(
+    { error: 'Video enhancement is coming soon — your video exports at full original quality in the meantime.', code: 'ENHANCE_UNAVAILABLE' },
+    { status: 503 },
   )
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: res.statusText }))
-    const status = res.status
-    // 404 = model has no public deployment; treat as temporarily unavailable
-    const outStatus = status === 404 ? 503 : status >= 500 ? 502 : status
-    const message = status === 404
-      ? 'Video upscaling model temporarily unavailable — your video will still export at its original quality'
-      : (err.detail ?? 'Replicate API error')
-    return NextResponse.json({ error: message, code: status }, { status: outStatus })
-  }
-
-  const prediction = await res.json()
-
-  // If Replicate returned synchronously (very fast video or small file), return immediately
-  if (prediction.status === 'succeeded' && prediction.output) {
-    const outputUrl = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output
-    return NextResponse.json({
-      id: prediction.id,
-      status: 'succeeded',
-      stage: 'color',      // upscale done; next client-side stages
-      progress: 70,
-      outputUrl,
-      analysis,
-    })
-  }
-
-  return NextResponse.json({
-    id: prediction.id,
-    status: prediction.status,    // 'starting' | 'processing'
-    stage: 'upscale',
-    progress: 5,
-    analysis,
-  })
 }
