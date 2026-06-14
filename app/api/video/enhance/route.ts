@@ -93,10 +93,13 @@ export async function POST(req: NextRequest) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }))
-    return NextResponse.json(
-      { error: err.detail ?? 'Replicate API error', code: res.status },
-      { status: res.status >= 500 ? 502 : res.status },
-    )
+    const status = res.status
+    // 404 = model has no public deployment; treat as temporarily unavailable
+    const outStatus = status === 404 ? 503 : status >= 500 ? 502 : status
+    const message = status === 404
+      ? 'Video upscaling model temporarily unavailable — your video will still export at its original quality'
+      : (err.detail ?? 'Replicate API error')
+    return NextResponse.json({ error: message, code: status }, { status: outStatus })
   }
 
   const prediction = await res.json()

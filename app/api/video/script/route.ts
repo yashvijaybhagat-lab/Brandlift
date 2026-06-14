@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { idea, format } = await req.json() as { idea: string; format?: string }
+    const { idea, format, productDesc } = await req.json() as { idea: string; format?: string; productDesc?: string }
 
     if (!idea?.trim()) {
       return NextResponse.json({ error: 'idea is required' }, { status: 400 })
@@ -71,7 +71,7 @@ NEVER WRITE:
 - Generic CTAs: "visit us today" / "check out our website" / "give us a call"
 - Bullet points, numbered lists, headers, stage directions, "[hook]" markers, or anything in brackets
 - Questions as openers ("Are you looking for...?" gets skipped every time)`,
-      messages: [{ role: 'user', parts: [{ text: `Write a TikTok video script based on this idea:\n"${idea}"\n\nFormat: ${formatHint}\n\nOutput only the spoken words. No labels, no stage directions, no brackets. Just the script.` }] }],
+      messages: [{ role: 'user', parts: [{ text: `Write a TikTok video script based on this idea:\n"${idea}"${productDesc?.trim() ? `\n\nProduct/brand context: ${productDesc.trim()}` : ''}\n\nFormat: ${formatHint}\n\nOutput only the spoken words. No labels, no stage directions, no brackets. Just the script.` }] }],
       maxTokens: 450,
     })
 

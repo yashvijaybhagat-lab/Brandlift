@@ -418,6 +418,7 @@ function VideosInner() {
   const [addClipProgress, setAddClipProgress] = useState(0)
 
   // Script
+  const [productDesc, setProductDesc]         = useState('')
   const [scriptText, setScriptText]           = useState('')
   const [isGenerating, setIsGenerating]       = useState(false)
   const [generationDone, setGenerationDone]   = useState(false)
@@ -644,6 +645,12 @@ function VideosInner() {
       if (res.status === 429) { fallbackToScript(); return }
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
+        // whisper_unavailable = Replicate model offline; silently fall back to script timing
+        if (errData.error === 'whisper_unavailable' || res.status === 503) {
+          fallbackToScript()
+          setTranscribeError('')
+          return
+        }
         throw new Error(errData.error ?? 'Transcription start failed')
       }
       const data = await res.json()
@@ -767,7 +774,7 @@ function VideosInner() {
     if (streamingRef.current) return
     streamingRef.current = true; setIsGenerating(true); setGenerationDone(false); setScriptText(''); setScriptGenError(false); setScriptGenMsg('')
     try {
-      const res = await fetch('/api/video/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idea, format }) })
+      const res = await fetch('/api/video/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idea, format, productDesc }) })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         // data.error may be an object — always coerce to string
@@ -782,7 +789,7 @@ function VideosInner() {
       setScriptGenError(true)
     }
     finally { streamingRef.current = false; setIsGenerating(false) }
-  }, [])
+  }, [productDesc])
 
   useEffect(() => {
     if (!hasIdea || writeOwn || streamingRef.current) return
@@ -1209,6 +1216,22 @@ function VideosInner() {
 
               {!writeOwn && !hasIdea && (
                 <>
+                  {/* ── Product / brand description ──────────────────── */}
+                  <div className="flex flex-col gap-1.5">
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#52525B', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                      Your product or brand
+                    </label>
+                    <input
+                      value={productDesc}
+                      onChange={e => setProductDesc(e.target.value)}
+                      placeholder="e.g. handmade candles, Austin TX, lavender + cedar scents, $24 — the AI will use this for every script"
+                      className="w-full px-3 py-2.5 rounded-[10px] text-[13px]"
+                      style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', color: '#E4E4E7', outline: 'none' }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
+                    />
+                  </div>
+
                   {/* ── Gen Z Example Video + Ideas ─────────────────── */}
                   <GenZInspirationPanel onSelect={(hook) => { setScriptText(hook); setWriteOwn(true) }} />
 
@@ -2242,11 +2265,25 @@ function VideosInner() {
                           <p style={{ fontSize: 11, fontWeight: 700, color: '#52525B', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
                             Caption lines {captions.length > 0 && `· ${captions.length}`}
                           </p>
-                          <button
-                            onClick={() => { setShowAddCaption(p => !p); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('') }}
-                            style={{ fontSize: 11, fontWeight: 600, color: '#6366f1', cursor: 'pointer' }}>
-                            {showAddCaption ? 'Cancel' : '+ Add'}
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                const t = videoRef.current?.currentTime ?? 0
+                                setNewCaptionStart(t.toFixed(1))
+                                setNewCaptionEnd((t + 3).toFixed(1))
+                                setNewCaptionText('')
+                                setShowAddCaption(true)
+                              }}
+                              style={{ fontSize: 11, fontWeight: 600, color: '#52525B', cursor: 'pointer' }}
+                              title="Add a caption starting at the current video time">
+                              + At playhead
+                            </button>
+                            <button
+                              onClick={() => { setShowAddCaption(p => !p); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('') }}
+                              style={{ fontSize: 11, fontWeight: 600, color: '#6366f1', cursor: 'pointer' }}>
+                              {showAddCaption ? 'Cancel' : '+ Add'}
+                            </button>
+                          </div>
                         </div>
 
                         {/* Add caption form */}
@@ -2310,8 +2347,8 @@ function VideosInner() {
                                 ) : (
                                   <p
                                     onClick={() => setEditingCaption(i)}
-                                    style={{ fontSize: 12, color: '#71717A', lineHeight: 1.5, flex: 1, cursor: 'text' }}
-                                    title="Click to edit">
+                                    style={{ fontSize: 12, color: '#71717A', lineHeight: 1.5, flex: 1, cursor: 'text', borderBottom: '1px dashed rgba(255,255,255,0.06)' }}
+                                    title="Click to edit text">
                                     {c.text}
                                   </p>
                                 )}

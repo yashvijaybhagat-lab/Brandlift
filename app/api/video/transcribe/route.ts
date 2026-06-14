@@ -61,7 +61,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const res = await fetch('https://api.replicate.com/v1/models/openai/whisper/predictions', {
+    // Use versioned endpoint — the model-deployment endpoint (/v1/models/.../predictions)
+    // returns 404 when the model has no public deployment; versioned endpoint is always stable.
+    // Version: openai/whisper @ cdd97b257f93cb89dede1c7584e3d3a170fbb0ec (large-v3)
+    const res = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}`,
@@ -69,11 +72,18 @@ export async function POST(request: NextRequest) {
         'Prefer': 'wait=25',
       },
       body: JSON.stringify({
+        version: 'cdd97b257f93cb89dede1c7584e3d3a170fbb0ec',
         input: { audio: videoUrl, model: 'base', word_timestamps: true, language: 'en' },
       }),
     })
 
-    if (!res.ok) throw new Error(`Replicate error ${res.status}`)
+    if (!res.ok) {
+      if (res.status === 404) {
+        // Model version unavailable — caller will fall back to script captions
+        return NextResponse.json({ error: 'whisper_unavailable' }, { status: 503 })
+      }
+      throw new Error(`Replicate error ${res.status}`)
+    }
     const prediction = await res.json()
 
     // Completed within the wait window
