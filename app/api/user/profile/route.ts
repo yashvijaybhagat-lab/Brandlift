@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { put, list } from '@vercel/blob'
 
 export const dynamic = 'force-dynamic'
@@ -9,7 +10,7 @@ function profileKey(email: string) {
 }
 
 export async function GET(_req: NextRequest) {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   const email = session?.user?.email
   if (!email) return NextResponse.json({ profile: null })
 
@@ -26,7 +27,7 @@ export async function GET(_req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   const email = session?.user?.email
   if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

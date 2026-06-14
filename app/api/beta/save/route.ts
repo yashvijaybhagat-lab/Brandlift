@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { put, head } from '@vercel/blob'
 
 export const dynamic = 'force-dynamic'
@@ -19,7 +20,7 @@ async function getSession(req: NextRequest) {
   const { default: NextAuth } = await import('next-auth')
   void NextAuth // suppress unused warning — we just need getServerSession below
   // In App Router we pass req/res headers manually
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   return session
 }
 

@@ -5,6 +5,7 @@ import { isFounderCode } from '@/lib/founderAuth'
 import { DEFAULT_SYSTEM } from '@/lib/lyraSystem'
 import { detectPromptInjection, sanitizeText } from '@/lib/sanitize'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,7 @@ interface Message { role: 'user' | 'assistant'; content: string }
 interface Attachment { name: string; url: string; type: string }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Sign in to use this feature' }, { status: 401 })
   }

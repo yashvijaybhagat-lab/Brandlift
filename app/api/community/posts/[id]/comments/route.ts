@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { put, list } from '@vercel/blob'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
@@ -45,7 +46,7 @@ export async function POST(
   const rl = await rateLimit(`community-comment:${ip}`, 30, 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Sign in to comment' }, { status: 401 })
   }
@@ -82,7 +83,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)

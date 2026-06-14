@@ -14,13 +14,14 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { list, del } from '@vercel/blob'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
 export async function DELETE(req: NextRequest) {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }

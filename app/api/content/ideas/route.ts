@@ -3,6 +3,7 @@ import { geminiGenerate } from '@/lib/gemini'
 import { type BusinessProfile } from '@/lib/claude'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
   const ip = getIp(request)
   const rl = await rateLimit(`content-ideas:${ip}`, 30, 60 * 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Sign in to use this feature' }, { status: 401 })
   }

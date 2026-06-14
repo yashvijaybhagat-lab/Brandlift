@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { put, list } from '@vercel/blob'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
@@ -38,7 +39,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -57,7 +58,7 @@ export async function POST(
   const rl = await rateLimit(`community-msg:${ip}`, 60, 60_000)
   if (!rl.success) return tooManyRequests(rl.reset)
 
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Sign in to message' }, { status: 401 })
   }

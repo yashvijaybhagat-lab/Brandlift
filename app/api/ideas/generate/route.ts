@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { list } from '@vercel/blob'
 import { geminiGenerate } from '@/lib/gemini'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
   // Load business profile for this user
   let profileContext = 'A small local business looking to grow on social media.'
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     const email = session?.user?.email
     if (email) {
       const { blobs } = await list({ prefix: `user-data/${encodeURIComponent(email)}/profile.json`, limit: 1 })

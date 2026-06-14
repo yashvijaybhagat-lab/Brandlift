@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 
 export const dynamic    = 'force-dynamic'
@@ -10,7 +11,7 @@ export const maxDuration = 60
 const REALESRGAN_VIDEO_VERSION = 'c23768236472c41b7a121ee735c8073e29080c01b32907740cfada61bff75320'
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }
