@@ -1037,6 +1037,32 @@ function VideosInner() {
     })
   }
 
+  // Enhance a single clip URL via Replicate — returns enhanced URL or original on failure
+  const enhanceClip = useCallback(async (videoUrl: string): Promise<string> => {
+    try {
+      const res = await fetch('/api/video/enhance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl }),
+      })
+      if (!res.ok) return videoUrl
+      const data = await res.json()
+      if (!data.id) return videoUrl
+      if (data.status === 'succeeded' && data.outputUrl) return data.outputUrl
+
+      // Poll until done
+      const poll = async (): Promise<string> => {
+        await new Promise(r => setTimeout(r, POLL_INTERVAL))
+        const r = await fetch(`/api/video/enhance/status/${data.id}`)
+        const d = await r.json()
+        if (d.outputUrl) return d.outputUrl
+        if (d.status === 'failed' || d.error || d.fallback) return videoUrl
+        return poll()
+      }
+      return await poll()
+    } catch { return videoUrl }
+  }, [])
+
   const handleExport = useCallback(async () => {
     if (clips.length === 0 || exporting) return
     setExporting(true); setExportProgress(0); setExportLabel('Preparing…')
@@ -1044,8 +1070,12 @@ function VideosInner() {
     const grade    = GRADES[colorGrade]
     const musicUrl = MUSIC_MOODS.find(m => m.id === selectedMusic)?.url ?? null
     try {
+      // Auto-enhance to 4K before export
+      setExportLabel('Enhancing to 4K… (5–7 min)')
+      const enhancedUrls = await Promise.all(clips.map(c => enhanceClip(c.url)))
+
       const blob = await exportVideo({
-        clips: clips.map(c => ({ url: c.url, trimStart: c.trimStart, trimEnd: c.trimEnd })),
+        clips: clips.map((c, i) => ({ url: enhancedUrls[i], trimStart: c.trimStart, trimEnd: c.trimEnd })),
         colorFilter:     colorGrade === 'custom' ? buildCustomFilter(customColor) : grade.filter,
         colorOverlay:    colorGrade === 'custom' ? undefined : grade.color,
         vignetteOpacity: colorGrade === 'custom' ? 0 : grade.vignette,
@@ -1073,7 +1103,7 @@ function VideosInner() {
       console.error('[export]', err)
       alert('Export failed — try a shorter clip or reload the page.')
     } finally { setExporting(false); setExportProgress(0); setExportLabel('') }
-  }, [clips, exporting, colorGrade, customColor, grain, letterbox, halation, selectedMusic, captionsEnabled, captions, captionStyle, captionPos, captionSize, captionColor, captionFont, showHook, hookText, showCta, ctaText, transition, transitionDuration, exportQuality, exportAspect, ttsInExport, ttsAudioUrl])
+  }, [clips, exporting, colorGrade, customColor, grain, letterbox, halation, selectedMusic, captionsEnabled, captions, captionStyle, captionPos, captionSize, captionColor, captionFont, showHook, hookText, showCta, ctaText, transition, transitionDuration, exportQuality, exportAspect, ttsInExport, ttsAudioUrl, enhanceClip])
 
   const reset = () => {
     setStage('script'); setUploadProgress(0); setErrorMsg(''); setClips([]); setActiveClipId(null)
