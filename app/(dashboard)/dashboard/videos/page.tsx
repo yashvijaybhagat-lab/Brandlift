@@ -425,7 +425,7 @@ function VideosInner() {
   const [isGenerating, setIsGenerating]       = useState(false)
   const [generationDone, setGenerationDone]   = useState(false)
   const [scriptGenError, setScriptGenError]   = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState('promo')
+  const [selectedTemplate, setSelectedTemplate] = useState('boss_never')
   const [writeOwn, setWriteOwn]               = useState(false)
 
   // Studio
@@ -516,7 +516,7 @@ function VideosInner() {
   const activeClip      = clips.find(c => c.id === activeClipId) ?? clips[0] ?? null
   const displayUrl      = activeClip?.url ?? ''
   const hasIdea         = ideaHook.length > 0
-  const currentTemplate = SCRIPT_TEMPLATES.find(t => t.id === selectedTemplate)!
+  const currentTemplate = SCRIPT_TEMPLATES.find(t => t.id === selectedTemplate) ?? SCRIPT_TEMPLATES[0]
 
   /* ── Preview filter ───────────────────────────────── */
   const baseFilter = colorGrade === 'custom'
