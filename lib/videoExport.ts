@@ -354,8 +354,8 @@ function drawFrame(
   const fontFamilyStr = FONT_FAMILIES[opts.captionFont ?? 'inter'] ?? 'Inter, Arial, sans-serif'
   const capColor = opts.captionColor ?? '#FFFFFF'
 
-  // Clarity boost: contrast/saturation lift gives perceived sharpness without blurring
-  const clarityBoost = 'contrast(1.12) saturate(1.08) brightness(1.01)'
+  // Clarity boost: lift shadows first, then gentle contrast/saturation for sharpness
+  const clarityBoost = 'brightness(1.12) contrast(1.06) saturate(1.08)'
   const baseFilter   = opts.colorFilter && opts.colorFilter !== 'none' ? opts.colorFilter : 'none'
   ctx.filter = baseFilter !== 'none' ? `${baseFilter} ${clarityBoost}` : clarityBoost
   drawVideoFit(ctx, video, w, h)

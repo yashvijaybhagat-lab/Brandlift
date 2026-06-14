@@ -45,17 +45,17 @@ interface GradeLook { filter: string; color?: { bg: string; blend: string; opaci
 const GRADES: Record<GradeKey, GradeLook> = {
   // "Invisible premium" — neutral-cool S-curve, skin-safe, natural saturation
   original:   { filter: 'none' },
-  premium:    { filter: 'contrast(1.07) brightness(1.02) saturate(1.05) hue-rotate(-2deg)' },
+  premium:    { filter: 'brightness(1.10) contrast(1.05) saturate(1.05) hue-rotate(-2deg)' },
   // Ultra-clean, cool-neutral — DTC/creator studio look
-  clean_cool: { filter: 'contrast(1.06) brightness(1.05) saturate(0.96) hue-rotate(-5deg)' },
+  clean_cool: { filter: 'brightness(1.12) contrast(1.04) saturate(0.96) hue-rotate(-5deg)' },
   // Warm natural daylight — accurate skin, no orange wash
-  natural:    { filter: 'contrast(1.05) brightness(1.04) saturate(1.10)' },
+  natural:    { filter: 'brightness(1.10) contrast(1.03) saturate(1.10)' },
   // Modern vivid — punchy without halos
-  vivid:      { filter: 'contrast(1.08) brightness(1.02) saturate(1.22)' },
-  // Rich shadows with retained detail — cinematic depth, no vignette
-  deep:       { filter: 'contrast(1.14) brightness(0.96) saturate(1.04)' },
+  vivid:      { filter: 'brightness(1.08) contrast(1.06) saturate(1.22)' },
+  // Rich shadows with retained detail — cinematic depth, lifted blacks
+  deep:       { filter: 'brightness(1.06) contrast(1.08) saturate(1.04)' },
   // Clean monochrome — natural gray response, not crushed
-  mono:       { filter: 'grayscale(1) contrast(1.12) brightness(1.03)' },
+  mono:       { filter: 'grayscale(1) brightness(1.10) contrast(1.06)' },
   custom:     { filter: 'none' },
 }
 
