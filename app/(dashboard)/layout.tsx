@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { LyraChat } from '@/components/chat/LyraChat'
 import { FounderBar } from '@/components/founder/FounderBar'
+import { BetaModalProvider } from '@/components/beta/BetaModal'
 
 const STORAGE_KEY = 'brandlift:sidebar-collapsed'
 
@@ -36,6 +37,7 @@ export default function DashboardLayout({
   const businessName = session?.user?.name ?? 'Your Business'
 
   return (
+    <BetaModalProvider>
     <div className="flex h-screen overflow-hidden bg-[#0D1117]">
       <Sidebar
         collapsed={collapsed}
@@ -52,5 +54,6 @@ export default function DashboardLayout({
       <LyraChat />
       <FounderBar />
     </div>
+    </BetaModalProvider>
   )
 }

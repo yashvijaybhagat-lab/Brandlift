@@ -18,6 +18,7 @@ import {
   type CaptionStyle, type CaptionPos,
 } from '@/lib/videoExport'
 import { useBetaAccess } from '@/lib/betaAccess'
+import { useBetaModal } from '@/components/beta/BetaModal'
 import SmartEditStudio from '@/components/SmartEditStudio'
 import { type EditState } from '@/lib/editPlan'
 import { STAGE_META, type PipelineStage, type SourceAnalysis } from '@/lib/enhancePipeline'
@@ -769,8 +770,7 @@ function VideosInner() {
 
   // Beta access
   const beta = useBetaAccess()
-  const [showBetaPanel, setShowBetaPanel] = useState(false)
-  const [betaCodeInput, setBetaCodeInput] = useState('')
+  const { openBetaModal } = useBetaModal()
 
   const runScriptGen = useCallback(async (idea: string, format: string) => {
     if (streamingRef.current) return
@@ -1114,7 +1114,7 @@ function VideosInner() {
     setSelectedMusic('none'); setCaptions([]); setCaptionsEnabled(false); setCurrentCaption('')
     setCaptionStyle('bold'); setCaptionPos('bottom'); setCaptionSize(1.0)
     setEditingCaption(null); setShowAddCaption(false); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('')
-    setExportAspect('16:9'); setPipelineStage('idle'); setPipelineProgress(0); setPipelineAnalysis(null); setQualityGatePassed(null); setShowBetaPanel(false); setBetaCodeInput('')
+    setExportAspect('16:9'); setPipelineStage('idle'); setPipelineProgress(0); setPipelineAnalysis(null); setQualityGatePassed(null);
     setLetterbox(false); setHalation(0)
     setTtsText(''); setTtsVoice('v2/en_speaker_6'); setTtsGenerating(false)
     setTtsAudioUrl(null); setTtsJobId(null); setTtsError(''); setTtsInExport(false)
@@ -1715,7 +1715,7 @@ function VideosInner() {
                     </button>
                   )}
                   {pipelineStage === 'idle' && !beta.has('enhancement') && (
-                    <button onClick={() => setShowBetaPanel(true)}
+                    <button onClick={() => openBetaModal('4K Enhance')}
                       className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] transition-colors"
                       style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.25)', color: '#8b5cf6' }}>
                       <Lock className="w-2.5 h-2.5" />4K Enhance
@@ -1974,7 +1974,7 @@ function VideosInner() {
                         {beta.has('noise_reduce') ? (
                           <Toggle on={noiseReduce} onToggle={() => setNoiseReduce(p => !p)} />
                         ) : (
-                          <button onClick={() => setShowBetaPanel(true)}
+                          <button onClick={() => openBetaModal('Noise Reduction')}
                             className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
                             style={{ background: 'rgba(139,92,246,0.1)', border: '0.5px solid rgba(139,92,246,0.25)', color: '#a78bfa' }}>
                             Unlock
@@ -2741,7 +2741,7 @@ function VideosInner() {
                             return (
                               <button key={q}
                                 onClick={() => {
-                                  if (locked) { setShowBetaPanel(true); return }
+                                  if (locked) { openBetaModal(`${short} export`); return }
                                   setExportQuality(q)
                                 }}
                                 className="flex-1 py-2 text-[11px] font-bold transition-all duration-150 flex items-center justify-center gap-1 relative"
@@ -2777,74 +2777,6 @@ function VideosInner() {
                       </div>
                     </div>
 
-                    {/* Beta unlock panel */}
-                    {showBetaPanel && !beta.unlocked && (
-                      <div className="flex flex-col gap-4 p-4 rounded-xl" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)' }}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Lock className="w-3.5 h-3.5" style={{ color: '#8b5cf6' }} />
-                            <p style={{ fontSize: 13, fontWeight: 600, color: '#c4b5fd' }}>Unlock Beta Features</p>
-                          </div>
-                          <button onClick={() => { setShowBetaPanel(false); setBetaCodeInput('') }} style={{ color: '#52525B' }}>
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-
-                        {/* Feature list */}
-                        <div className="grid grid-cols-2 gap-2">
-                          {[
-                            { icon: '✦', label: '4K & 2K export', desc: 'Ultra-high resolution output' },
-                            { icon: '⬆', label: 'AI Enhancement', desc: 'Replicate upscaling on every video' },
-                            { icon: '', label: 'Audio Captions', desc: 'Whisper AI auto-sync to speech' },
-                            { icon: '✦', label: 'Noise Reduction', desc: 'Clarity boost in Color tab' },
-                          ].map(f => (
-                            <div key={f.label} className="flex items-start gap-2 p-2.5 rounded-lg" style={{ background: 'rgba(139,92,246,0.06)', border: '0.5px solid rgba(139,92,246,0.12)' }}>
-                              <span style={{ fontSize: 13, color: '#8b5cf6', flexShrink: 0, lineHeight: 1.4 }}>{f.icon}</span>
-                              <div>
-                                <p style={{ fontSize: 11, fontWeight: 700, color: '#c4b5fd' }}>{f.label}</p>
-                                <p style={{ fontSize: 10, color: '#52525B', lineHeight: 1.4 }}>{f.desc}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="flex gap-2">
-                          <input
-                            value={betaCodeInput}
-                            onChange={e => setBetaCodeInput(e.target.value.toUpperCase())}
-                            onKeyDown={async e => { if (e.key === 'Enter') await beta.unlock(betaCodeInput) }}
-                            placeholder="ENTER BETA CODE"
-                            className="flex-1 px-3 py-2 rounded-lg text-[13px] font-mono uppercase outline-none tracking-widest"
-                            style={{ background: '#18181C', border: '0.5px solid rgba(139,92,246,0.3)', color: '#c4b5fd', letterSpacing: '0.15em' }}
-                            onFocus={e => { e.currentTarget.style.borderColor = 'rgba(139,92,246,0.6)' }}
-                            onBlur={e => { e.currentTarget.style.borderColor = 'rgba(139,92,246,0.3)' }}
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => beta.unlock(betaCodeInput)}
-                            disabled={beta.loading || !betaCodeInput.trim()}
-                            className="px-4 py-2 rounded-lg text-[12px] font-semibold transition-all duration-150 disabled:opacity-40"
-                            style={{ background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.4)', color: '#c4b5fd' }}>
-                            {beta.loading ? '…' : 'Unlock'}
-                          </button>
-                        </div>
-                        {beta.error && (
-                          <p style={{ fontSize: 11, color: '#f87171' }}>{beta.error}</p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Success state after unlock */}
-                    {beta.unlocked && showBetaPanel && (
-                      <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: 'rgba(74,222,128,0.06)', border: '0.5px solid rgba(74,222,128,0.2)' }}>
-                        <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />
-                        <p style={{ fontSize: 12, color: '#4ADE80' }}>Beta access active — 2K, 4K, and AI Enhancement unlocked</p>
-                        <button onClick={() => setShowBetaPanel(false)} className="ml-auto flex-shrink-0" style={{ color: '#52525B' }}>
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
-
                     {/* Export CTA */}
                     <button onClick={handleExport}
                       className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all duration-200"
@@ -2861,9 +2793,9 @@ function VideosInner() {
                         {' '}· 30fps · WebM{letterbox ? ' · Letterbox' : ''}{halation > 0 ? ' · Halation' : ''}
                       </p>
                       {!beta.unlocked && (
-                        <button onClick={() => setShowBetaPanel(p => !p)}
+                        <button onClick={() => openBetaModal()}
                           className="flex items-center gap-1 text-[10px] font-semibold transition-colors"
-                          style={{ color: showBetaPanel ? '#8b5cf6' : '#3f3f46', letterSpacing: '0.06em' }}>
+                          style={{ color: '#3f3f46', letterSpacing: '0.06em' }}>
                           <Lock className="w-2.5 h-2.5" />BETA ACCESS
                         </button>
                       )}
