@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Menu, X, ArrowRight } from 'lucide-react'
@@ -312,6 +313,165 @@ function BeforeAfterSlider() {
   )
 }
 
+/* ─── Beta Code Widget ────────────────────────────────────────────────────── */
+function BetaCodeWidget() {
+  const router = useRouter()
+  const [code, setCode] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [message, setMessage] = useState('')
+  const [activeCode, setActiveCode] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/beta/me')
+      .then(r => r.json())
+      .then(data => { if (data.session?.code) setActiveCode(data.session.code) })
+      .catch(() => {})
+  }, [])
+
+  function handleReset() {
+    fetch('/api/beta/validate', { method: 'DELETE' }).catch(() => {})
+    fetch('/api/beta/save', { method: 'DELETE' }).catch(() => {})
+    try { localStorage.removeItem('bl_beta_v1') } catch {}
+    setActiveCode(null)
+    setCode('')
+    setStatus('idle')
+    setMessage('')
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!code.trim()) return
+    setStatus('loading')
+    setMessage('')
+    try {
+      const res = await fetch('/api/beta/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code.trim() }),
+      })
+      const data = await res.json()
+      if (data.valid) {
+        setStatus('success')
+        setMessage(data.message || 'Access granted!')
+        setActiveCode(code.trim())
+        setTimeout(() => router.push('/sign-up'), 900)
+      } else {
+        setStatus('error')
+        setMessage(data.message || 'Invalid code')
+      }
+    } catch {
+      setStatus('error')
+      setMessage('Something went wrong — try again')
+    }
+  }
+
+  if (activeCode) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.28)', margin: 0, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 600 }}>
+          Beta code active
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{
+            fontFamily: 'ui-monospace, monospace',
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            color: '#A5A3F0',
+            background: 'rgba(88,85,212,0.12)',
+            border: '1px solid rgba(88,85,212,0.25)',
+            borderRadius: 8,
+            padding: '6px 12px',
+          }}>
+            {activeCode}
+          </span>
+          <button
+            onClick={handleReset}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 12,
+              color: 'rgba(255,255,255,0.3)',
+              padding: 0,
+              transition: 'color 150ms ease',
+              textDecoration: 'underline',
+              textUnderlineOffset: 3,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(239,68,68,0.7)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.3)' }}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.28)', margin: 0, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 600 }}>
+        Have a beta code?
+      </p>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input
+          type="text"
+          value={code}
+          onChange={(e) => { setCode(e.target.value.toUpperCase()); setStatus('idle'); setMessage('') }}
+          placeholder="ENTER-CODE"
+          maxLength={32}
+          spellCheck={false}
+          autoComplete="off"
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            border: status === 'error'
+              ? '1px solid rgba(239,68,68,0.6)'
+              : status === 'success'
+              ? '1px solid rgba(16,185,129,0.6)'
+              : '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 10,
+            color: '#fff',
+            fontSize: 14,
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            fontFamily: 'ui-monospace, monospace',
+            padding: '10px 14px',
+            outline: 'none',
+            width: 180,
+            transition: 'border-color 150ms ease',
+          }}
+          onFocus={(e) => { if (status === 'idle') e.currentTarget.style.borderColor = 'rgba(88,85,212,0.6)' }}
+          onBlur={(e) => { if (status === 'idle') e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
+        />
+        <button
+          type="submit"
+          disabled={status === 'loading' || !code.trim()}
+          style={{
+            background: status === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(88,85,212,0.18)',
+            border: status === 'success' ? '1px solid rgba(16,185,129,0.4)' : '1px solid rgba(88,85,212,0.35)',
+            borderRadius: 10,
+            color: status === 'success' ? '#34D399' : '#A5A3F0',
+            fontSize: 14,
+            fontWeight: 600,
+            padding: '10px 18px',
+            cursor: status === 'loading' || !code.trim() ? 'not-allowed' : 'pointer',
+            opacity: !code.trim() ? 0.5 : 1,
+            transition: 'all 150ms ease',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {status === 'loading' ? '…' : status === 'success' ? 'Unlocked' : 'Unlock'}
+        </button>
+      </form>
+      {message && (
+        <p style={{ fontSize: 12, margin: 0, color: status === 'error' ? 'rgba(239,68,68,0.85)' : 'rgba(52,211,153,0.9)', fontWeight: 500 }}>
+          {message}
+        </p>
+      )}
+    </div>
+  )
+}
+
 /* ─── Main export ─────────────────────────────────────────────────────────── */
 export function HeroSection() { return <HeroSection5 /> }
 
@@ -450,6 +610,9 @@ function HeroSection5() {
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.28)', margin: 0, letterSpacing: '0.01em' }}>
                 Free during beta &middot; No credit card &middot; Cancel anytime
               </p>
+
+              {/* Beta code entry */}
+              <BetaCodeWidget />
 
             </div>
 
