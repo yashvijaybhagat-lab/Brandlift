@@ -184,6 +184,9 @@ const QUICK_LOOKS: QuickLook[] = [
 ]
 
 const POLL_INTERVAL = 4000
+// Hard cap on enhancement polling so a stalled or cold Replicate job can never
+// hang the export/upscale UI forever — we fall back to the source clip instead.
+const ENHANCE_MAX_WAIT_MS = 10 * 60_000
 
 /* ─── Helpers ────────────────────────────────────────── */
 function fmtSec(s: number) { return s < 60 ? `${s.toFixed(1)}s` : `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}` }
@@ -922,8 +925,10 @@ function VideosInner() {
         return
       }
 
-      // Poll the new status endpoint
+      // Poll the new status endpoint (bounded — fall back if Replicate stalls)
+      const enhanceDeadline = Date.now() + ENHANCE_MAX_WAIT_MS
       const poll = async (): Promise<void> => {
+        if (Date.now() > enhanceDeadline) { setPipelineStage('failed'); return }
         try {
           const r = await fetch(`/api/video/enhance/status/${enhData.id}`)
           const d = await r.json()
@@ -1050,8 +1055,10 @@ function VideosInner() {
       if (!data.id) return videoUrl
       if (data.status === 'succeeded' && data.outputUrl) return data.outputUrl
 
-      // Poll until done
+      // Poll until done (bounded — fall back to the original clip if Replicate stalls)
+      const enhanceDeadline = Date.now() + ENHANCE_MAX_WAIT_MS
       const poll = async (): Promise<string> => {
+        if (Date.now() > enhanceDeadline) return videoUrl
         await new Promise(r => setTimeout(r, POLL_INTERVAL))
         const r = await fetch(`/api/video/enhance/status/${data.id}`)
         const d = await r.json()
