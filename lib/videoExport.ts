@@ -143,11 +143,22 @@ function seekTo(v: HTMLVideoElement, t: number): Promise<void> {
 }
 
 function pickMimeType(): string {
-  const types = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4']
+  if (typeof MediaRecorder === 'undefined') return ''
+  // webm first for desktop quality (Chrome/Firefox); mp4 for Safari/iOS.
+  const types = [
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm',
+    'video/mp4;codecs=h264,aac',
+    'video/mp4',
+  ]
   for (const t of types) {
-    if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) return t
+    if (MediaRecorder.isTypeSupported(t)) return t
   }
-  return 'video/webm'
+  // No explicit match (e.g. older iOS Safari) — return '' so the caller lets
+  // MediaRecorder choose its own default container instead of forcing webm,
+  // which iOS can't record (the constructor would throw and export would fail).
+  return ''
 }
 
 /* ── Cinematic FX ────────────────────────────────────────── */
@@ -706,12 +717,15 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
   const videoTrack = videoStream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack
   const combined = new MediaStream([...videoStream.getVideoTracks(), ...dest.stream.getAudioTracks()])
 
-  const mimeType = pickMimeType()
-  const recorder = new MediaRecorder(combined, {
-    mimeType,
+  const requestedMime = pickMimeType()
+  const recorderOpts: MediaRecorderOptions = {
     videoBitsPerSecond: BITRATES[opts.quality],
     audioBitsPerSecond: 192_000,
-  })
+  }
+  // Only set mimeType when we have a supported one; otherwise let MediaRecorder
+  // pick its own default (iOS Safari records mp4 this way).
+  if (requestedMime) recorderOpts.mimeType = requestedMime
+  const recorder = new MediaRecorder(combined, recorderOpts)
   const chunks: Blob[] = []
   recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data) }
   recorder.start(100)
@@ -817,10 +831,27 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
   objectUrls.forEach(u => URL.revokeObjectURL(u))
 
   report(100, 'Done!')
-  return new Blob(chunks, { type: mimeType })
+  // Use the container the recorder actually produced (may differ from the
+  // requested one — e.g. mp4 on iOS) so the Blob type and the downstream file
+  // extension are correct.
+  return new Blob(chunks, { type: recorder.mimeType || requestedMime || 'video/webm' })
 }
 
-export function downloadBlob(blob: Blob, filename: string) {
+export async function downloadBlob(blob: Blob, filename: string) {
+  // iOS Safari ignores <a download> for blobs (it opens/plays them instead),
+  // so use the native share sheet ("Save Video" / "Save to Files") when the
+  // platform can share files. share() requires a user gesture — call this
+  // directly from a click/tap handler, not after a long async task.
+  try {
+    const file = new File([blob], filename, { type: blob.type || 'video/mp4' })
+    const nav = navigator as Navigator & { canShare?: (data: unknown) => boolean }
+    if (typeof nav.share === 'function' && nav.canShare?.({ files: [file] })) {
+      await nav.share({ files: [file], title: filename })
+      return
+    }
+  } catch {
+    // share cancelled or unsupported — fall back to a normal download
+  }
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url; a.download = filename

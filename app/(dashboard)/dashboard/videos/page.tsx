@@ -514,6 +514,7 @@ function VideosInner() {
   const [exportProgress, setExportProgress]   = useState(0)
   const [exportLabel, setExportLabel]         = useState('')
   const [exportedBlobUrl, setExportedBlobUrl] = useState<string | null>(null)
+  const [exportedBlob, setExportedBlob]       = useState<Blob | null>(null)
   const [exportedMime, setExportedMime]       = useState('video/webm')
   const [showSmartEdit, setShowSmartEdit]     = useState(false)
 
@@ -1101,11 +1102,13 @@ function VideosInner() {
         aspect:  exportAspect,
         onProgress: (pct, label) => { setExportProgress(pct); setExportLabel(label) },
       })
-      const filename = `brandlift-${Date.now()}.webm`
-      downloadBlob(blob, filename)
+      const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
+      const filename = `brandlift-${Date.now()}.${ext}`
+      setExportedBlob(blob)
+      setExportedMime(blob.type || 'video/webm')
       const url = URL.createObjectURL(blob)
       setExportedBlobUrl(url)
-      setExportedMime(blob.type || 'video/webm')
+      void downloadBlob(blob, filename)
     } catch (err) {
       console.error('[export]', err)
       alert('Export failed — try a shorter clip or reload the page.')
@@ -2822,18 +2825,21 @@ function VideosInner() {
                   <div style={{ marginTop: 4, padding: '16px', borderRadius: 14, background: 'rgba(99,102,241,0.04)', border: '0.5px solid rgba(99,102,241,0.18)' }}>
                     <div className="flex items-center justify-between mb-3">
                       <p style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Share to Social</p>
-                      <a
-                        href={exportedBlobUrl}
-                        download={`brandlift-${Date.now()}.webm`}
-                        style={{ fontSize: 11, color: '#52525B', textDecoration: 'none' }}
-                        onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = '#FAFAFA'}
-                        onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = '#52525B'}
+                      <button
+                        onClick={() => {
+                          if (!exportedBlob) return
+                          const ext = exportedMime.includes('mp4') ? 'mp4' : 'webm'
+                          void downloadBlob(exportedBlob, `brandlift-${Date.now()}.${ext}`)
+                        }}
+                        style={{ fontSize: 11, color: '#52525B', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#FAFAFA'}
+                        onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#52525B'}
                       >
-                        Download again ↓
-                      </a>
+                        Save video ↓
+                      </button>
                     </div>
                     <p style={{ fontSize: 11, color: '#52525B', marginBottom: 12, lineHeight: 1.5 }}>
-                      Video downloaded — click a platform to open its upload page. Paste your caption from the Copy tab.
+                      Your video is ready — tap Save video to keep it, then pick a platform to open its upload page. Paste your caption from the Copy tab.
                     </p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                       {[
