@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 interface Review {
@@ -16,23 +16,6 @@ interface Review {
 /* ─── Card accent palette ────────────────────────────────────────────────── */
 const ACCENTS = ['#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4']
 const RESULT_COLORS = ['#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4']
-
-/* ─── Count-up hook ──────────────────────────────────────────────────────── */
-function useCountUp(target: number, duration: number, started: boolean) {
-  const [value, setValue] = useState(0)
-  useEffect(() => {
-    if (!started) return
-    const startTime = performance.now()
-    const tick = (now: number) => {
-      const progress = Math.min((now - startTime) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setValue(Math.round(eased * target))
-      if (progress < 1) requestAnimationFrame(tick)
-    }
-    requestAnimationFrame(tick)
-  }, [started, target, duration])
-  return value
-}
 
 /* ─── Business type marquee ──────────────────────────────────────────────── */
 const BUSINESSES = [
@@ -274,19 +257,8 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
 
 /* ─── Main component ─────────────────────────────────────────────────────── */
 export default function SocialProof() {
-  const sectionRef                        = useRef<HTMLElement>(null)
-  const [started, setStarted]             = useState(false)
-  const [reviews, setReviews]             = useState<Review[]>([])
+  const [reviews, setReviews] = useState<Review[]>([])
   const [loadingReviews, setLoadingReviews] = useState(true)
-
-  // Kick off count-up animation when section enters viewport
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) { setStarted(true); observer.disconnect() }
-    }, { threshold: 0.2 })
-    if (sectionRef.current) observer.observe(sectionRef.current)
-    return () => observer.disconnect()
-  }, [])
 
   const fetchReviews = () => {
     fetch('/api/reviews')
@@ -300,7 +272,7 @@ export default function SocialProof() {
   const displayReviews = reviews.slice(0, 3)
 
   return (
-    <section ref={sectionRef} aria-label="Social proof" className="py-20 overflow-hidden"
+    <section aria-label="Social proof" className="py-20 overflow-hidden"
       style={{ background: 'var(--base)', borderTop: '1px solid var(--border-subtle)' }}>
       <div className="max-w-6xl mx-auto px-6 flex flex-col gap-14">
 
@@ -310,14 +282,18 @@ export default function SocialProof() {
             style={{ background: 'var(--accent-subtle)', border: '1px solid var(--accent-border)' }}>
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--success)', display: 'inline-block' }} />
             <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
-              Real businesses. Real results.
+              {reviews.length > 0 ? 'Real businesses. Real results.' : 'Now in beta · be among the first'}
             </span>
           </div>
           <p style={{ fontSize: 'clamp(26px,3.5vw,36px)', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1.1, fontFamily: 'var(--font-display)' }}>
-            Small businesses are growing<br />with BrandLift.
+            {reviews.length > 0
+              ? <>Small businesses are growing<br />with BrandLift.</>
+              : <>Built for small businesses<br />like yours.</>}
           </p>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', maxWidth: '44ch', lineHeight: 1.6 }}>
-            From barbershops to food trucks — creators using BrandLift to 10× their content without hiring an editor.
+            {reviews.length > 0
+              ? 'From barbershops to food trucks — creators using BrandLift to 10× their content without hiring an editor.'
+              : 'From barbershops to food trucks — turn raw clips into content that brings in customers, without hiring an editor.'}
           </p>
         </div>
 
@@ -361,7 +337,7 @@ export default function SocialProof() {
             style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 32 }}>
             <div className="flex flex-col items-center gap-1 text-center">
               <span style={{ fontSize: 'clamp(24px,3.5vw,36px)', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1, fontFamily: 'var(--font-display)' }}>
-                ~{useCountUp(8, 1200, started)} min
+                ~8 min
               </span>
               <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>average onboarding time</span>
             </div>

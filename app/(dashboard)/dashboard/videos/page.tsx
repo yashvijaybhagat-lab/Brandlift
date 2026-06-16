@@ -184,6 +184,9 @@ const QUICK_LOOKS: QuickLook[] = [
 ]
 
 const POLL_INTERVAL = 4000
+// Hard cap on enhancement polling so a stalled or cold Replicate job can never
+// hang the export/upscale UI forever — we fall back to the source clip instead.
+const ENHANCE_MAX_WAIT_MS = 10 * 60_000
 
 /* ─── Helpers ────────────────────────────────────────── */
 function fmtSec(s: number) { return s < 60 ? `${s.toFixed(1)}s` : `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}` }
@@ -511,6 +514,7 @@ function VideosInner() {
   const [exportProgress, setExportProgress]   = useState(0)
   const [exportLabel, setExportLabel]         = useState('')
   const [exportedBlobUrl, setExportedBlobUrl] = useState<string | null>(null)
+  const [exportedBlob, setExportedBlob]       = useState<Blob | null>(null)
   const [exportedMime, setExportedMime]       = useState('video/webm')
   const [showSmartEdit, setShowSmartEdit]     = useState(false)
 
@@ -922,8 +926,10 @@ function VideosInner() {
         return
       }
 
-      // Poll the new status endpoint
+      // Poll the new status endpoint (bounded — fall back if Replicate stalls)
+      const enhanceDeadline = Date.now() + ENHANCE_MAX_WAIT_MS
       const poll = async (): Promise<void> => {
+        if (Date.now() > enhanceDeadline) { setPipelineStage('failed'); return }
         try {
           const r = await fetch(`/api/video/enhance/status/${enhData.id}`)
           const d = await r.json()
@@ -1050,8 +1056,10 @@ function VideosInner() {
       if (!data.id) return videoUrl
       if (data.status === 'succeeded' && data.outputUrl) return data.outputUrl
 
-      // Poll until done
+      // Poll until done (bounded — fall back to the original clip if Replicate stalls)
+      const enhanceDeadline = Date.now() + ENHANCE_MAX_WAIT_MS
       const poll = async (): Promise<string> => {
+        if (Date.now() > enhanceDeadline) return videoUrl
         await new Promise(r => setTimeout(r, POLL_INTERVAL))
         const r = await fetch(`/api/video/enhance/status/${data.id}`)
         const d = await r.json()
@@ -1094,11 +1102,13 @@ function VideosInner() {
         aspect:  exportAspect,
         onProgress: (pct, label) => { setExportProgress(pct); setExportLabel(label) },
       })
-      const filename = `brandlift-${Date.now()}.webm`
-      downloadBlob(blob, filename)
+      const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
+      const filename = `brandlift-${Date.now()}.${ext}`
+      setExportedBlob(blob)
+      setExportedMime(blob.type || 'video/webm')
       const url = URL.createObjectURL(blob)
       setExportedBlobUrl(url)
-      setExportedMime(blob.type || 'video/webm')
+      void downloadBlob(blob, filename)
     } catch (err) {
       console.error('[export]', err)
       alert('Export failed — try a shorter clip or reload the page.')
@@ -2815,18 +2825,21 @@ function VideosInner() {
                   <div style={{ marginTop: 4, padding: '16px', borderRadius: 14, background: 'rgba(99,102,241,0.04)', border: '0.5px solid rgba(99,102,241,0.18)' }}>
                     <div className="flex items-center justify-between mb-3">
                       <p style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Share to Social</p>
-                      <a
-                        href={exportedBlobUrl}
-                        download={`brandlift-${Date.now()}.webm`}
-                        style={{ fontSize: 11, color: '#52525B', textDecoration: 'none' }}
-                        onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = '#FAFAFA'}
-                        onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = '#52525B'}
+                      <button
+                        onClick={() => {
+                          if (!exportedBlob) return
+                          const ext = exportedMime.includes('mp4') ? 'mp4' : 'webm'
+                          void downloadBlob(exportedBlob, `brandlift-${Date.now()}.${ext}`)
+                        }}
+                        style={{ fontSize: 11, color: '#52525B', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#FAFAFA'}
+                        onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#52525B'}
                       >
-                        Download again ↓
-                      </a>
+                        Save video ↓
+                      </button>
                     </div>
                     <p style={{ fontSize: 11, color: '#52525B', marginBottom: 12, lineHeight: 1.5 }}>
-                      Video downloaded — click a platform to open its upload page. Paste your caption from the Copy tab.
+                      Your video is ready — tap Save video to keep it, then pick a platform to open its upload page. Paste your caption from the Copy tab.
                     </p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                       {[

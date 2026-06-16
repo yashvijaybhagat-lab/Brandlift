@@ -3,19 +3,9 @@
 import { useState, FormEvent } from 'react'
 import Link from 'next/link'
 
-const BUSINESS_TYPES = [
-  'barbershop',
-  'restaurant',
-  'yoga studio',
-  'plumbing company',
-  'photography business',
-  'food truck',
-]
-
 export default function Footer() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const [typeIndex] = useState(() => Math.floor(Math.random() * BUSINESS_TYPES.length))
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -43,7 +33,7 @@ export default function Footer() {
               className="text-heading"
               style={{ fontSize: 'clamp(18px, 2.5vw, 22px)', color: 'var(--text-primary)' }}
             >
-              Get content tips for your {BUSINESS_TYPES[typeIndex]}
+              Get content tips for your business
             </h3>
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
               Weekly ideas, trends, and hooks — curated for your industry. No spam.

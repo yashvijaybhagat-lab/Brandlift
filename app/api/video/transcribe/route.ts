@@ -7,8 +7,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { createReplicatePrediction } from '@/lib/replicate'
 
 export const dynamic = 'force-dynamic'
+// Hold the function long enough for Replicate's `Prefer: wait` window (25s) plus
+// network overhead. Without this the request can be killed mid-wait and "hang".
+export const maxDuration = 60
+
+// Pinned openai/whisper version. Overridable via env so a retired Replicate
+// version can be swapped without a redeploy.
+const WHISPER_VERSION = process.env.WHISPER_VERSION || 'cdd97b257f93cb89dede1c7584e3d3a170fbb0ec'
 
 interface WSegment { start: number; end: number; text: string }
 interface WOutput  { segments?: WSegment[]; transcription?: string; text?: string }
@@ -62,20 +70,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Use versioned endpoint — the model-deployment endpoint (/v1/models/.../predictions)
-    // returns 404 when the model has no public deployment; versioned endpoint is always stable.
-    // Version: openai/whisper @ cdd97b257f93cb89dede1c7584e3d3a170fbb0ec (large-v3)
-    const res = await fetch('https://api.replicate.com/v1/predictions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'wait=25',
-      },
-      body: JSON.stringify({
-        version: 'cdd97b257f93cb89dede1c7584e3d3a170fbb0ec',
+    // Use the versioned endpoint — the model-deployment endpoint (/v1/models/.../predictions)
+    // returns 404 when the model has no public deployment; the versioned endpoint is stable.
+    const res = await createReplicatePrediction({
+      token: process.env.REPLICATE_API_TOKEN!,
+      waitSeconds: 25,
+      body: {
+        version: WHISPER_VERSION,
         input: { audio: videoUrl, model: 'base', word_timestamps: true, language: 'en' },
-      }),
+      },
     })
 
     if (!res.ok) {

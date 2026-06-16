@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
+import { createReplicatePrediction } from '@/lib/replicate'
 
 export const dynamic    = 'force-dynamic'
 export const maxDuration = 60
 
-// lucataco/real-esrgan-video — accepts video URL, outputs 4× upscaled video
-// Pinned version hash for stability
-const REALESRGAN_VIDEO_VERSION = 'c23768236472c41b7a121ee735c8073e29080c01b32907740cfada61bff75320'
+// lucataco/real-esrgan-video — accepts video URL, outputs 4× upscaled video.
+// Pinned version hash for stability; overridable via env so a retired Replicate
+// version can be swapped without a redeploy.
+const REALESRGAN_VIDEO_VERSION =
+  process.env.REALESRGAN_VIDEO_VERSION || 'c23768236472c41b7a121ee735c8073e29080c01b32907740cfada61bff75320'
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -46,20 +49,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'videoUrl must be HTTPS' }, { status: 400 })
   }
 
-  const res = await fetch('https://api.replicate.com/v1/predictions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      Prefer: 'wait=5',
-    },
-    body: JSON.stringify({
+  const res = await createReplicatePrediction({
+    token,
+    waitSeconds: 5,
+    body: {
       version: REALESRGAN_VIDEO_VERSION,
       input: {
         video_path: videoUrl,
         model: 'RealESRGAN_x4plus',
       },
-    }),
+    },
   })
 
   if (!res.ok) {
