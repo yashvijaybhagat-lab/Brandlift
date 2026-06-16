@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { createReplicatePrediction } from '@/lib/replicate'
 
 export const dynamic = 'force-dynamic'
 // Hold the function long enough for Replicate's `Prefer: wait` window (25s) plus
@@ -71,17 +72,13 @@ export async function POST(request: NextRequest) {
   try {
     // Use the versioned endpoint — the model-deployment endpoint (/v1/models/.../predictions)
     // returns 404 when the model has no public deployment; the versioned endpoint is stable.
-    const res = await fetch('https://api.replicate.com/v1/predictions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'wait=25',
-      },
-      body: JSON.stringify({
+    const res = await createReplicatePrediction({
+      token: process.env.REPLICATE_API_TOKEN!,
+      waitSeconds: 25,
+      body: {
         version: WHISPER_VERSION,
         input: { audio: videoUrl, model: 'base', word_timestamps: true, language: 'en' },
-      }),
+      },
     })
 
     if (!res.ok) {

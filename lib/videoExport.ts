@@ -306,6 +306,51 @@ function drawStyledText(
   }
 }
 
+/** Split text into lines that each fit `maxWidth` at the current ctx.font. */
+function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean)
+  const lines: string[] = []
+  let line = ''
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word
+    if (line && ctx.measureText(test).width > maxWidth) {
+      lines.push(line)
+      line = word
+    } else {
+      line = test
+    }
+  }
+  if (line) lines.push(line)
+  return lines.length ? lines : [text]
+}
+
+/**
+ * Draw text wrapped across multiple centered lines instead of letting
+ * fillText() horizontally squish a long caption. `yAnchor` is the single-line
+ * baseline from captionY(); lines are stacked around it according to `pos`.
+ */
+function drawWrappedText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  yAnchor: number,
+  maxWidth: number,
+  color: string,
+  style: CaptionStyle,
+  pos: CaptionPos,
+  lineHeight: number,
+) {
+  const lines = wrapLines(ctx, text, maxWidth)
+  const n = lines.length
+  let firstBaseline: number
+  if (pos === 'top')         firstBaseline = yAnchor
+  else if (pos === 'center') firstBaseline = yAnchor - ((n - 1) * lineHeight) / 2
+  else                       firstBaseline = yAnchor - (n - 1) * lineHeight
+  for (let i = 0; i < n; i++) {
+    drawStyledText(ctx, lines[i], x, firstBaseline + i * lineHeight, maxWidth, color, style)
+  }
+}
+
 function parseGradientToCanvas(ctx: CanvasRenderingContext2D, bg: string, w: number, h: number): CanvasGradient | string {
   const m = bg.match(/^linear-gradient\(\s*(\d+)deg\s*,(.+)\)$/)
   if (!m) return '#888'
@@ -415,7 +460,8 @@ function drawFrame(
       const y = captionY(h, opts.captionPos, sz)
       ctx.font = `${opts.captionStyle === 'minimal' ? 500 : 700} ${sz}px ${fontFamilyStr}`
       ctx.textAlign = 'center'
-      drawStyledText(ctx, cap.text, w / 2, y, w * 0.80, capColor, opts.captionStyle ?? 'bold')
+      // Wrap long segments onto multiple lines instead of horizontally squishing them.
+      drawWrappedText(ctx, cap.text, w / 2, y, w * 0.80, capColor, opts.captionStyle ?? 'bold', opts.captionPos ?? 'bottom', Math.round(sz * 1.3))
     }
   }
 

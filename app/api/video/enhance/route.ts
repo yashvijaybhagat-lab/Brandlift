@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { rateLimit, getIp, tooManyRequests } from '@/lib/rateLimit'
+import { createReplicatePrediction } from '@/lib/replicate'
 
 export const dynamic    = 'force-dynamic'
 export const maxDuration = 60
@@ -48,20 +49,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'videoUrl must be HTTPS' }, { status: 400 })
   }
 
-  const res = await fetch('https://api.replicate.com/v1/predictions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      Prefer: 'wait=5',
-    },
-    body: JSON.stringify({
+  const res = await createReplicatePrediction({
+    token,
+    waitSeconds: 5,
+    body: {
       version: REALESRGAN_VIDEO_VERSION,
       input: {
         video_path: videoUrl,
         model: 'RealESRGAN_x4plus',
       },
-    }),
+    },
   })
 
   if (!res.ok) {
