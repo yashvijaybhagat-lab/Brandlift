@@ -515,7 +515,7 @@ function cancelVFC(v: HTMLVideoElement, id: number) {
 function renderClipRVFC(
   v: HTMLVideoElement,
   ctx: CanvasRenderingContext2D,
-  videoTrack: CanvasCaptureMediaStreamTrack,
+  pushFrame: () => void,
   w: number, h: number,
   opts: ExportOptions,
   startT: number,
@@ -537,7 +537,7 @@ function renderClipRVFC(
       if (opts.letterbox) drawLetterbox(ctx, w, h)
       // Unsharp mask at 1080p and below (pixel loop is too slow at 4K)
       if (w <= 1920) applyUnsharpMask(ctx.canvas, 0.7, 1.5)
-      videoTrack.requestFrame()
+      pushFrame()
       onFrame(frame)
       frame++
       rafId = requestVFC(v, step)
@@ -558,12 +558,13 @@ function renderClipRVFC(
 async function renderClipSeekBased(
   v: HTMLVideoElement,
   ctx: CanvasRenderingContext2D,
-  videoTrack: CanvasCaptureMediaStreamTrack,
+  pushFrame: () => void,
   w: number, h: number,
   opts: ExportOptions,
   startT: number,
   endT: number,
   onFrame: (frameIndex: number) => void,
+  seekYieldMs: number,
 ): Promise<void> {
   v.pause()
   const clipFrames = Math.round((endT - startT) * FPS)
@@ -574,9 +575,10 @@ async function renderClipSeekBased(
     drawFrame(ctx, v, w, h, opts, t - startT, opts.captions, 1, f)
     if (opts.letterbox) drawLetterbox(ctx, w, h)
     if (w <= 1920) applyUnsharpMask(ctx.canvas, 0.7, 1.5)
-    videoTrack.requestFrame()
-    // One microtask yield — lets MediaRecorder process the frame
-    await new Promise(r => setTimeout(r, 0))
+    pushFrame()
+    // Hold each frame long enough for the recorder to sample it (0ms in manual
+    // mode where frames are committed explicitly; ~1 frame-time in auto mode).
+    await new Promise(r => setTimeout(r, seekYieldMs))
     onFrame(f)
   }
 }
@@ -585,7 +587,7 @@ async function renderClipSeekBased(
 
 async function renderTransitionFrames(
   ctx: CanvasRenderingContext2D,
-  videoTrack: CanvasCaptureMediaStreamTrack,
+  pushFrame: () => void,
   outV: HTMLVideoElement,
   inV:  HTMLVideoElement | null,
   w: number, h: number,
@@ -630,7 +632,7 @@ async function renderTransitionFrames(
     }
 
     if (opts.letterbox) drawLetterbox(ctx, w, h)
-    videoTrack.requestFrame()
+    pushFrame()
     await new Promise(r => setTimeout(r, FRAME_MS))
     onFrame(f)
   }
@@ -712,9 +714,22 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
     } catch {}
   }
 
-  // Frame-perfect capture: captureStream(0) + manual requestFrame()
-  const videoStream = canvas.captureStream(0)
-  const videoTrack = videoStream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack
+  // Frame-perfect capture on browsers with manual requestFrame() (Chrome/Firefox):
+  // captureStream(0) + requestFrame() per drawn frame. iOS Safari lacks
+  // requestFrame() on the canvas track, so fall back to automatic timed capture
+  // (captureStream(FPS)) — the render loops below already pace in real time.
+  let videoStream = canvas.captureStream(0)
+  let videoTrack = videoStream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack
+  const manualCapture = typeof (videoTrack as { requestFrame?: () => void }).requestFrame === 'function'
+  if (!manualCapture) {
+    videoStream = canvas.captureStream(FPS)
+    videoTrack = videoStream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack
+  }
+  // In manual mode we commit each drawn frame explicitly; in auto mode the
+  // browser samples the canvas on its own, so pushFrame() is a no-op and the
+  // seek loop must hold each frame ~1 frame-time (seekYieldMs) for correct timing.
+  const pushFrame = manualCapture ? videoTrack.requestFrame.bind(videoTrack) : () => {}
+  const seekYieldMs = manualCapture ? 0 : FRAME_MS
   const combined = new MediaStream([...videoStream.getVideoTracks(), ...dest.stream.getAudioTracks()])
 
   const requestedMime = pickMimeType()
@@ -767,7 +782,7 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
       ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h)
       drawFrame(ctx, v, w, h, opts, 0, opts.captions, alpha, f)
       if (opts.letterbox) drawLetterbox(ctx, w, h)
-      videoTrack.requestFrame()
+      pushFrame()
       await new Promise(r => setTimeout(r, FRAME_MS))
       onFrame(f)
     }
@@ -781,9 +796,9 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
     await seekTo(v, startT)
 
     if (useRVFC) {
-      await renderClipRVFC(v, ctx, videoTrack, w, h, opts, startT, endT, onFrame)
+      await renderClipRVFC(v, ctx, pushFrame, w, h, opts, startT, endT, onFrame)
     } else {
-      await renderClipSeekBased(v, ctx, videoTrack, w, h, opts, startT, endT, onFrame)
+      await renderClipSeekBased(v, ctx, pushFrame, w, h, opts, startT, endT, onFrame, seekYieldMs)
     }
     v.pause()
 
@@ -794,7 +809,7 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
       await seekTo(nextV, nextStartT)
       const outT = endT - startT
       await renderTransitionFrames(
-        ctx, videoTrack, v, nextV, w, h,
+        ctx, pushFrame, v, nextV, w, h,
         opts.transition, opts.transitionDuration, opts,
         outT, 0, renderedFrames, onFrame
       )
@@ -815,7 +830,7 @@ export async function exportVideo(opts: ExportOptions): Promise<Blob> {
       drawFrame(ctx, lv, w, h, opts, lEndT - lStartT, opts.captions, alpha, renderedFrames + f)
       ctx.fillStyle = `rgba(0,0,0,${1 - alpha})`; ctx.fillRect(0, 0, w, h)
       if (opts.letterbox) drawLetterbox(ctx, w, h)
-      videoTrack.requestFrame()
+      pushFrame()
       await new Promise(r => setTimeout(r, FRAME_MS))
       onFrame(f)
     }
