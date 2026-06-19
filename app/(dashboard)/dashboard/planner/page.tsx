@@ -33,7 +33,7 @@ const TYPE_COLORS: Record<string, string> = {
 function DayCard({ day, index }: { day: PlannerDay; index: number }) {
   const [expanded, setExpanded] = useState(false)
   const [scriptCopied, setScriptCopied] = useState(false)
-  const platform = PLATFORM_COLORS[day.platform] ?? { color: '#6366f1', emoji: '·' }
+  const platform = PLATFORM_COLORS[day.platform] ?? { color: '#7C5CFF', emoji: '·' }
   const difficulty = DIFFICULTY_CONFIG[day.difficulty]
   const typeColor = TYPE_COLORS[day.contentType] ?? '#818cf8'
 
@@ -94,7 +94,7 @@ function DayCard({ day, index }: { day: PlannerDay; index: number }) {
           >
             <div style={{ borderTop: '0.5px solid var(--color-border)', padding: '16px 16px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {/* Hook */}
-              <div style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.18)', borderRadius: 10, padding: '10px 14px' }}>
+              <div style={{ background: 'rgba(124, 92, 255,0.06)', border: '0.5px solid rgba(124, 92, 255,0.18)', borderRadius: 10, padding: '10px 14px' }}>
                 <p style={{ fontSize: 10, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Opening hook</p>
                 <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', lineHeight: 1.5 }}>"{day.hook}"</p>
               </div>
@@ -200,7 +200,7 @@ export default function PlannerPage() {
               <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 8 }}>Platforms</label>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {PLATFORM_OPTIONS.map(p => {
-                  const meta = PLATFORM_COLORS[p] ?? { color: '#6366f1', emoji: '·' }
+                  const meta = PLATFORM_COLORS[p] ?? { color: '#7C5CFF', emoji: '·' }
                   const active = platforms.includes(p)
                   return (
                     <button key={p} onClick={() => togglePlatform(p)}

@@ -14,7 +14,7 @@ export default function DashboardError({
   }, [error])
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen gap-6" style={{ background: '#0A0A0B' }}>
+    <div className="flex flex-col items-center justify-center h-screen gap-6" style={{ background: '#08060F' }}>
       <div className="flex flex-col items-center gap-3 text-center max-w-md px-6">
         <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)' }}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -30,7 +30,7 @@ export default function DashboardError({
         <button
           onClick={reset}
           className="px-5 py-2.5 rounded-xl text-[14px] font-semibold text-white mt-2"
-          style={{ background: 'linear-gradient(135deg,#6366f1 0%,#5558e8 100%)', boxShadow: '0 0 0 1px rgba(99,102,241,0.4)' }}
+          style={{ background: 'linear-gradient(135deg,#7C5CFF 0%,#5558e8 100%)', boxShadow: '0 0 0 1px rgba(124, 92, 255,0.4)' }}
         >
           Try again
         </button>

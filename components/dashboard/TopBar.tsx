@@ -91,7 +91,7 @@ function ContentScoreGauge({ score = 72 }: { score?: number }) {
             cy={24}
             r={radius}
             fill="none"
-            stroke="#5855D4"
+            stroke="#7C5CFF"
             strokeWidth={4}
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -175,13 +175,13 @@ export function TopBar() {
           className={cn(
             'relative flex items-center justify-center w-8 h-8 rounded-lg',
             'transition-colors duration-150',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5855D4]/60',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5CFF]/60',
           )}
           style={{ color: '#52525B', border: '0.5px solid rgba(255,255,255,0.07)' }}
           onMouseEnter={(e) => {
             const el = e.currentTarget as HTMLButtonElement
             el.style.color = '#FAFAFA'
-            el.style.background = '#18181C'
+            el.style.background = '#1A1530'
             el.style.borderColor = 'rgba(255,255,255,0.12)'
           }}
           onMouseLeave={(e) => {
@@ -194,7 +194,7 @@ export function TopBar() {
           <Bell className="w-3.5 h-3.5" />
           <span
             className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-            style={{ background: '#5855D4', boxShadow: '0 0 4px rgba(88,85,212,0.6)' }}
+            style={{ background: '#7C5CFF', boxShadow: '0 0 4px rgba(124, 92, 255,0.6)' }}
             aria-hidden
           />
         </button>

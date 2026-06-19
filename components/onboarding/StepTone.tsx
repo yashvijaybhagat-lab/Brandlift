@@ -211,7 +211,7 @@ export default function StepTone({ onComplete }: StepToneProps) {
                     <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
                       <path
                         d="M1 3L3 5L7 1"
-                        stroke="#0A0A0B"
+                        stroke="#08060F"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"

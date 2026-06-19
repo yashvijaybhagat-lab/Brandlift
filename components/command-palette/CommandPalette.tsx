@@ -305,7 +305,7 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
             <div
               className="mx-4 overflow-hidden"
               style={{
-                background: '#18181C',
+                background: '#1A1530',
                 border: '1px solid rgba(255,255,255,0.12)',
                 borderRadius: 16,
                 boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
@@ -351,7 +351,7 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
                   style={{
                     fontSize: 16,
                     color: '#FAFAFA',
-                    caretColor: '#6366f1',
+                    caretColor: '#7C5CFF',
                   }}
                 />
 
@@ -360,7 +360,7 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
                   <span
                     className="flex-shrink-0 w-1.5 h-1.5 rounded-full"
                     style={{
-                      background: '#6366f1',
+                      background: '#7C5CFF',
                       animation: 'indigoCursorBlink 1s ease-in-out infinite',
                     }}
                     aria-hidden="true"
@@ -396,9 +396,9 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
                           }}
                           onMouseEnter={(e) => {
                             const el = e.currentTarget
-                            el.style.borderColor = 'rgba(99,102,241,0.4)'
+                            el.style.borderColor = 'rgba(124, 92, 255,0.4)'
                             el.style.color = '#FAFAFA'
-                            el.style.background = 'rgba(99,102,241,0.05)'
+                            el.style.background = 'rgba(124, 92, 255,0.05)'
                           }}
                           onMouseLeave={(e) => {
                             const el = e.currentTarget
@@ -432,7 +432,7 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
                             display: 'inline-block',
                             width: 2,
                             height: '1em',
-                            background: '#6366f1',
+                            background: '#7C5CFF',
                             marginLeft: 2,
                             verticalAlign: 'text-bottom',
                             animation: 'indigoCursorBlink 900ms ease-in-out infinite',
@@ -457,21 +457,21 @@ export function CommandPalette({ currentPage }: CommandPaletteProps) {
                             onClick={() => close()}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[13px] font-medium"
                             style={{
-                              background: 'rgba(99,102,241,0.1)',
-                              border: '0.5px solid rgba(99,102,241,0.3)',
-                              color: '#6366f1',
+                              background: 'rgba(124, 92, 255,0.1)',
+                              border: '0.5px solid rgba(124, 92, 255,0.3)',
+                              color: '#7C5CFF',
                               textDecoration: 'none',
                               transition: 'background 150ms, border-color 150ms',
                             }}
                             onMouseEnter={(e) => {
                               const el = e.currentTarget
-                              el.style.background = 'rgba(99,102,241,0.18)'
-                              el.style.borderColor = 'rgba(99,102,241,0.5)'
+                              el.style.background = 'rgba(124, 92, 255,0.18)'
+                              el.style.borderColor = 'rgba(124, 92, 255,0.5)'
                             }}
                             onMouseLeave={(e) => {
                               const el = e.currentTarget
-                              el.style.background = 'rgba(99,102,241,0.1)'
-                              el.style.borderColor = 'rgba(99,102,241,0.3)'
+                              el.style.background = 'rgba(124, 92, 255,0.1)'
+                              el.style.borderColor = 'rgba(124, 92, 255,0.3)'
                             }}
                           >
                             {action.label}

@@ -38,8 +38,8 @@ export default function ContactPage() {
   } as React.CSSProperties
 
   const focusStyle = {
-    borderColor: 'rgba(99,102,241,0.45)',
-    boxShadow: '0 0 0 3px rgba(99,102,241,0.1)',
+    borderColor: 'rgba(124, 92, 255,0.45)',
+    boxShadow: '0 0 0 3px rgba(124, 92, 255,0.1)',
   }
 
   const blurStyle = {
@@ -48,13 +48,13 @@ export default function ContactPage() {
   }
 
   return (
-    <div style={{ background: '#0A0A0B', minHeight: '100vh' }}>
+    <div style={{ background: '#08060F', minHeight: '100vh' }}>
       {/* Nav */}
       <header
         className="sticky top-0 z-50 flex items-center justify-between px-6 py-4"
         style={{ background: 'rgba(10,10,11,0.85)', backdropFilter: 'blur(16px)', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}
       >
-        <Link href="/" style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, color: '#6366f1', letterSpacing: '-0.03em' }}>
+        <Link href="/" style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, color: '#7C5CFF', letterSpacing: '-0.03em' }}>
           BrandLift
         </Link>
         <Link
@@ -71,7 +71,7 @@ export default function ContactPage() {
         <div className="mb-14 max-w-xl">
           <div
             className="inline-block text-[11px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full mb-5"
-            style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '0.5px solid rgba(99,102,241,0.2)' }}
+            style={{ background: 'rgba(124, 92, 255,0.1)', color: '#818cf8', border: '0.5px solid rgba(124, 92, 255,0.2)' }}
           >
             Contact
           </div>
@@ -159,7 +159,7 @@ export default function ContactPage() {
                     onBlur={(e) => Object.assign(e.currentTarget.style, blurStyle)}
                   >
                     {TOPICS.map((t) => (
-                      <option key={t} value={t} style={{ background: '#111113', color: '#FAFAFA' }}>
+                      <option key={t} value={t} style={{ background: '#110E1C', color: '#FAFAFA' }}>
                         {t}
                       </option>
                     ))}
@@ -187,15 +187,15 @@ export default function ContactPage() {
                   type="submit"
                   className="flex items-center justify-center gap-2 py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all duration-200"
                   style={{
-                    background: 'linear-gradient(135deg, #6366f1 0%, #5558e8 100%)',
-                    boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.25)',
+                    background: 'linear-gradient(135deg, #7C5CFF 0%, #5558e8 100%)',
+                    boxShadow: '0 0 0 1px rgba(124, 92, 255,0.4), 0 8px 24px rgba(124, 92, 255,0.25)',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.5), 0 12px 32px rgba(99,102,241,0.35)'
+                    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(124, 92, 255,0.5), 0 12px 32px rgba(124, 92, 255,0.35)'
                     e.currentTarget.style.transform = 'translateY(-1px)'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.25)'
+                    e.currentTarget.style.boxShadow = '0 0 0 1px rgba(124, 92, 255,0.4), 0 8px 24px rgba(124, 92, 255,0.25)'
                     e.currentTarget.style.transform = 'translateY(0)'
                   }}
                 >
@@ -249,7 +249,7 @@ export default function ContactPage() {
               >
                 <div
                   className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.15)' }}
+                  style={{ background: 'rgba(124, 92, 255,0.1)', border: '0.5px solid rgba(124, 92, 255,0.15)' }}
                 >
                   {icon}
                 </div>

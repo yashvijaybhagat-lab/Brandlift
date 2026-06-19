@@ -43,7 +43,7 @@ function LoadingDots() {
 const variantStyles: Record<ButtonVariant, string> = {
   primary: [
     'bg-gradient-to-br from-brand-primary to-brand-primary-hover',
-    'text-[#0A0A0B]',
+    'text-[#08060F]',
     'border border-transparent',
     'shadow-sm',
     'hover:brightness-105',
@@ -52,7 +52,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   // shadcn alias for primary
   default: [
     'bg-gradient-to-br from-brand-primary to-brand-primary-hover',
-    'text-[#0A0A0B]',
+    'text-[#08060F]',
     'border border-transparent',
     'shadow-sm',
     'hover:brightness-105',

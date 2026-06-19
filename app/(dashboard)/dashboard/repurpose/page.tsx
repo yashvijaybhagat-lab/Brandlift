@@ -188,7 +188,7 @@ export default function RepurposePage() {
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(124, 92, 255,0.1)', border: '0.5px solid rgba(124, 92, 255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Repeat2 className="w-6 h-6" style={{ color: '#818cf8' }} />
             </div>
             <div>
@@ -225,7 +225,7 @@ export default function RepurposePage() {
             <button
               onClick={run}
               disabled={!script.trim() || loading}
-              style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 22px', borderRadius: 12, border: 'none', cursor: script.trim() && !loading ? 'pointer' : 'not-allowed', background: script.trim() && !loading ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'var(--color-surface-elevated)', color: script.trim() && !loading ? '#fff' : 'var(--color-text-muted)', fontSize: 14, fontWeight: 700, boxShadow: script.trim() && !loading ? '0 4px 20px rgba(99,102,241,0.35)' : 'none', transition: 'all 0.2s' }}
+              style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 22px', borderRadius: 12, border: 'none', cursor: script.trim() && !loading ? 'pointer' : 'not-allowed', background: script.trim() && !loading ? 'linear-gradient(135deg,#7C5CFF,#A78BFA)' : 'var(--color-surface-elevated)', color: script.trim() && !loading ? '#fff' : 'var(--color-text-muted)', fontSize: 14, fontWeight: 700, boxShadow: script.trim() && !loading ? '0 4px 20px rgba(124, 92, 255,0.35)' : 'none', transition: 'all 0.2s' }}
             >
               {loading ? (
                 <><div style={{ display: 'flex', gap: 4 }}>{[0,1,2].map(i => <motion.div key={i} animate={{ opacity: [0.3,1,0.3] }} transition={{ duration: 1, repeat: Infinity, delay: i*0.15 }} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-text-muted)' }} />)}</div>Repurposing…</>

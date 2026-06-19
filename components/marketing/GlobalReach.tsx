@@ -97,9 +97,9 @@ export default function GlobalReach() {
       {/* Slider — left fade mask */}
       <div className="relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 w-24 z-10"
-          style={{ background: 'linear-gradient(to right, #0A0A0B, transparent)' }} />
+          style={{ background: 'linear-gradient(to right, #08060F, transparent)' }} />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-24 z-10"
-          style={{ background: 'linear-gradient(to left, #0A0A0B, transparent)' }} />
+          style={{ background: 'linear-gradient(to left, #08060F, transparent)' }} />
 
         <InfiniteSlider gap={12} duration={35} durationOnHover={80}>
           {flags.map((c) => (

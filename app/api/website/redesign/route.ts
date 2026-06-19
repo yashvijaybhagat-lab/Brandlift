@@ -23,19 +23,19 @@ const SCHEME_TOKENS: Record<string, string> = {
   --bg-elevated: #13131e;
   --bg-card:     #0f0f19;
   --border:      rgba(255,255,255,0.08);
-  --border-glow: rgba(99,102,241,0.35);
+  --border-glow: rgba(124, 92, 255,0.35);
   --text:        #f0f0ff;
   --text-2:      #9898b3;
   --text-3:      #606078;
-  --accent:      #6366f1;
+  --accent:      #7C5CFF;
   --accent-2:    #818cf8;
-  --accent-glow: rgba(99,102,241,0.18);
+  --accent-glow: rgba(124, 92, 255,0.18);
   --green:       #22c55e;
   --amber:       #f59e0b;
   --nav-bg:      rgba(5,5,10,0.7);
-  --btn-primary: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);
-  --btn-shadow:  0 4px 20px rgba(99,102,241,0.4);
-  --card-glow:   0 0 40px rgba(99,102,241,0.08);
+  --btn-primary: linear-gradient(135deg,#7C5CFF 0%,#A78BFA 100%);
+  --btn-shadow:  0 4px 20px rgba(124, 92, 255,0.4);
+  --card-glow:   0 0 40px rgba(124, 92, 255,0.08);
 }`,
   light: `
 :root {
@@ -44,18 +44,18 @@ const SCHEME_TOKENS: Record<string, string> = {
   --bg-elevated: #f0f0f8;
   --bg-card:     #ffffff;
   --border:      rgba(0,0,0,0.08);
-  --border-glow: rgba(99,102,241,0.35);
+  --border-glow: rgba(124, 92, 255,0.35);
   --text:        #09090d;
   --text-2:      #52525b;
   --text-3:      #a1a1aa;
-  --accent:      #6366f1;
-  --accent-2:    #4f46e5;
-  --accent-glow: rgba(99,102,241,0.12);
+  --accent:      #7C5CFF;
+  --accent-2:    #6A45F5;
+  --accent-glow: rgba(124, 92, 255,0.12);
   --green:       #16a34a;
   --amber:       #d97706;
   --nav-bg:      rgba(248,248,252,0.8);
-  --btn-primary: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);
-  --btn-shadow:  0 4px 20px rgba(99,102,241,0.3);
+  --btn-primary: linear-gradient(135deg,#7C5CFF 0%,#A78BFA 100%);
+  --btn-shadow:  0 4px 20px rgba(124, 92, 255,0.3);
   --card-glow:   0 8px 40px rgba(0,0,0,0.06);
 }`,
   midnight: `
@@ -69,7 +69,7 @@ const SCHEME_TOKENS: Record<string, string> = {
   --text:        #ede9fe;
   --text-2:      #a78bfa;
   --text-3:      #7c3aed;
-  --accent:      #8b5cf6;
+  --accent:      #A78BFA;
   --accent-2:    #a78bfa;
   --accent-glow: rgba(139,92,246,0.2);
   --green:       #34d399;

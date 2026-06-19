@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import CountUp from '@/components/reactbits/CountUp'
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 interface Review {
@@ -14,8 +15,8 @@ interface Review {
 }
 
 /* ─── Card accent palette ────────────────────────────────────────────────── */
-const ACCENTS = ['#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4']
-const RESULT_COLORS = ['#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4', '#5855D4']
+const ACCENTS = ['#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF']
+const RESULT_COLORS = ['#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF']
 
 /* ─── Business type marquee ──────────────────────────────────────────────── */
 const BUSINESSES = [
@@ -30,9 +31,9 @@ function Marquee() {
   return (
     <div className="relative overflow-hidden w-full" aria-hidden>
       <div className="absolute left-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(to right, #0B1120, transparent)' }} />
+        style={{ background: 'linear-gradient(to right, #08060F, transparent)' }} />
       <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(to left, #0B1120, transparent)' }} />
+        style={{ background: 'linear-gradient(to left, #08060F, transparent)' }} />
       <div className="flex items-center gap-2.5 py-1"
         style={{ width: 'max-content', animation: 'marqueeScroll 35s linear infinite' }}>
         {items.map((biz, i) => (
@@ -196,13 +197,13 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
             <div className="flex flex-col gap-1">
               <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Your name *</label>
               <input value={name} onChange={e => setName(e.target.value)} placeholder="Jane D." style={inputStyle}
-                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
+                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
             </div>
             <div className="flex flex-col gap-1">
               <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Business name *</label>
               <input value={business} onChange={e => setBusiness(e.target.value)} placeholder="Jane's Bakery" style={inputStyle}
-                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
+                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
             </div>
           </div>
@@ -211,13 +212,13 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
             <div className="flex flex-col gap-1">
               <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Location <span style={{ color: 'var(--text-muted)' }}>(optional)</span></label>
               <input value={location} onChange={e => setLocation(e.target.value)} placeholder="Austin, TX" style={inputStyle}
-                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
+                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
             </div>
             <div className="flex flex-col gap-1">
               <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Result <span style={{ color: 'var(--text-muted)' }}>(optional)</span></label>
               <input value={result} onChange={e => setResult(e.target.value)} placeholder="500 new followers" style={inputStyle}
-                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
+                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.4)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }} />
             </div>
           </div>
@@ -228,7 +229,7 @@ function SubmitForm({ onSuccess }: { onSuccess: () => void }) {
               value={quote} onChange={e => setQuote(e.target.value.slice(0, 600))} rows={4}
               placeholder="What did you post? What happened? Be specific — real stories get featured."
               style={{ ...inputStyle, resize: 'none', lineHeight: 1.6 }}
-              onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.4)' }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.4)' }}
               onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
             />
           </div>
@@ -301,7 +302,7 @@ export default function SocialProof() {
         {loadingReviews ? (
           <div className="grid md:grid-cols-3 gap-4">
             {[0,1,2].map(i => (
-              <div key={i} className="h-52 rounded-2xl animate-pulse" style={{ background: '#111113' }} />
+              <div key={i} className="h-52 rounded-2xl animate-pulse" style={{ background: '#110E1C' }} />
             ))}
           </div>
         ) : displayReviews.length === 0 ? (
@@ -337,7 +338,7 @@ export default function SocialProof() {
             style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 32 }}>
             <div className="flex flex-col items-center gap-1 text-center">
               <span style={{ fontSize: 'clamp(24px,3.5vw,36px)', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1, fontFamily: 'var(--font-display)' }}>
-                ~8 min
+                ~<CountUp to={8} duration={2} /> min
               </span>
               <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>average onboarding time</span>
             </div>

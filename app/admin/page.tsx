@@ -15,13 +15,13 @@ interface ActivityItem { ts: number; action: string; detail: string }
 
 /* ─── Design tokens ──────────────────────────────────────────── */
 const C = {
-  bg:       '#0A0A0B',
-  surface:  '#111113',
-  elevated: '#18181C',
+  bg:       '#08060F',
+  surface:  '#110E1C',
+  elevated: '#1A1530',
   border:   'rgba(255,255,255,0.06)',
   borderMd: 'rgba(255,255,255,0.10)',
-  primary:  '#6366f1',
-  accent:   '#8b5cf6',
+  primary:  '#7C5CFF',
+  accent:   '#A78BFA',
   text:     '#FAFAFA',
   muted:    '#A1A1AA',
   subtle:   '#52525B',
@@ -58,7 +58,7 @@ const btn = (active = true, variant: 'primary' | 'success' | 'danger' | 'ghost' 
     ghost:   'transparent',
   }
   const col: Record<string, string> = {
-    primary: '#fff', success: '#0A0A0B', danger: C.danger, ghost: C.muted,
+    primary: '#fff', success: '#08060F', danger: C.danger, ghost: C.muted,
   }
   const bdr: Record<string, string> = {
     primary: 'none', success: 'none', danger: `0.5px solid rgba(239,68,68,0.3)`, ghost: `0.5px solid ${C.border}`,

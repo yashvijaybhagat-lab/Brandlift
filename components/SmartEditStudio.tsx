@@ -54,8 +54,8 @@ function Pill({ label, active, onClick }: { label: string; active: boolean; onCl
   return (
     <button onClick={onClick} style={{
       flex: 1, padding: '7px 4px', borderRadius: 8, fontSize: 11, fontWeight: 700,
-      background: active ? '#5855D4' : 'rgba(255,255,255,0.05)',
-      border: active ? '1px solid #5855D4' : '1px solid rgba(255,255,255,0.08)',
+      background: active ? '#7C5CFF' : 'rgba(255,255,255,0.05)',
+      border: active ? '1px solid #7C5CFF' : '1px solid rgba(255,255,255,0.08)',
       color: active ? '#fff' : '#666',
       cursor: 'pointer', transition: 'all 120ms ease',
     }}>{label}</button>
@@ -71,7 +71,7 @@ function SliderRow({ label, value, onChange }: { label: string; value: number; o
       </div>
       <input type="range" min={0} max={1} step={0.05} value={value}
         onChange={e => onChange(Number(e.target.value))}
-        style={{ width: '100%', accentColor: '#5855D4', height: 4 }} />
+        style={{ width: '100%', accentColor: '#7C5CFF', height: 4 }} />
     </div>
   )
 }
@@ -312,7 +312,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
           </button>
           <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.06)' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Sparkles className="w-3.5 h-3.5" style={{ color: '#5855D4' }} />
+            <Sparkles className="w-3.5 h-3.5" style={{ color: '#7C5CFF' }} />
             <span style={{ fontSize: 13, fontWeight: 700, color: '#e4e4f0', letterSpacing: '-0.02em' }}>Smart Edit</span>
           </div>
           <span style={{ fontSize: 10, color: '#3a3a3a', fontFamily: 'monospace' }}>{duration.toFixed(1)}s</span>
@@ -333,10 +333,10 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
           </button>
           <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.06)' }} />
           <button onClick={() => onApply(editState)} style={{
-            background: '#5855D4', border: 'none', color: '#fff',
+            background: '#7C5CFF', border: 'none', color: '#fff',
             padding: '7px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700,
             cursor: 'pointer', letterSpacing: '-0.01em',
-            boxShadow: '0 0 0 1px rgba(88,85,212,0.5)',
+            boxShadow: '0 0 0 1px rgba(124, 92, 255,0.5)',
           }}>
             Apply & Export
           </button>
@@ -385,7 +385,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                     textShadow: '0 2px 12px rgba(0,0,0,0.95)',
                     textAlign: 'center',
                     padding: o.style === 'cta' ? '5px 14px' : '0',
-                    background: o.style === 'cta' ? 'rgba(88,85,212,0.9)' : 'transparent',
+                    background: o.style === 'cta' ? 'rgba(124, 92, 255,0.9)' : 'transparent',
                     borderRadius: o.style === 'cta' ? 8 : 0,
                   }}>{o.text}</span>
                 </div>
@@ -400,7 +400,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                   left: `${(seg.start/duration)*100}%`,
                   width: `${((seg.end-seg.start)/duration)*100}%`,
                   height: '100%',
-                  background: seg.speed !== 1.0 ? '#facc15' : '#5855D4',
+                  background: seg.speed !== 1.0 ? '#facc15' : '#7C5CFF',
                 }} />
               ))}
             </div>
@@ -427,7 +427,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                 padding: '10px 6px',
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: activeTool === tool.id ? '#7B78E8' : '#3a3a3a',
-                borderBottom: activeTool === tool.id ? '2px solid #5855D4' : '2px solid transparent',
+                borderBottom: activeTool === tool.id ? '2px solid #7C5CFF' : '2px solid transparent',
                 transition: 'all 120ms ease',
               }}>
                 {tool.icon}
@@ -450,7 +450,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                         maxWidth: '86%', borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                         padding: '10px 14px',
                         background: msg.role === 'user'
-                          ? 'linear-gradient(135deg, #5855D4, #4845b0)'
+                          ? 'linear-gradient(135deg, #7C5CFF, #4845b0)'
                           : msg.kind === 'error'
                           ? 'rgba(239,68,68,0.08)'
                           : msg.kind === 'clarify'
@@ -461,7 +461,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                           : msg.kind === 'clarify' ? '1px solid rgba(250,204,21,0.15)'
                           : '1px solid rgba(255,255,255,0.07)'
                           : 'none',
-                        boxShadow: msg.role === 'user' ? '0 2px 12px rgba(88,85,212,0.3)' : 'none',
+                        boxShadow: msg.role === 'user' ? '0 2px 12px rgba(124, 92, 255,0.3)' : 'none',
                       }}>
                         <p style={{
                           fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap', margin: 0,
@@ -489,7 +489,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                         borderRadius: '16px 16px 16px 4px', padding: '12px 16px', display: 'flex', gap: 5, alignItems: 'center',
                       }}>
                         {[0,1,2].map(i => (
-                          <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: '#5855D4', animation: `sePulse 1.2s ease ${i*0.2}s infinite` }} />
+                          <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: '#7C5CFF', animation: `sePulse 1.2s ease ${i*0.2}s infinite` }} />
                         ))}
                       </div>
                     </div>
@@ -525,7 +525,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                       color: '#e4e4f0', outline: 'none', fontFamily: 'inherit', lineHeight: 1.5,
                       transition: 'border-color 150ms ease',
                     }}
-                    onFocus={e => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.5)' }}
+                    onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.5)' }}
                     onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
                   />
                   <button onClick={() => sendPrompt(input)} disabled={isLoading || !input.trim()} style={{
@@ -533,10 +533,10 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: 'none',
                     cursor: input.trim() && !isLoading ? 'pointer' : 'default',
-                    background: input.trim() && !isLoading ? '#5855D4' : 'rgba(255,255,255,0.05)',
+                    background: input.trim() && !isLoading ? '#7C5CFF' : 'rgba(255,255,255,0.05)',
                     color: input.trim() && !isLoading ? '#fff' : '#333',
                     transition: 'all 150ms ease',
-                    boxShadow: input.trim() && !isLoading ? '0 2px 12px rgba(88,85,212,0.4)' : 'none',
+                    boxShadow: input.trim() && !isLoading ? '0 2px 12px rgba(124, 92, 255,0.4)' : 'none',
                   }}>
                     <Send className="w-3.5 h-3.5" />
                   </button>
@@ -562,7 +562,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                     <button onClick={() => { setShowAddForm(p => !p); setAddText('') }} style={{
                       display: 'flex', alignItems: 'center', gap: 4,
                       padding: '5px 10px', borderRadius: 7, fontSize: 11, fontWeight: 700,
-                      background: '#5855D4', border: '1px solid #5855D4', color: '#fff', cursor: 'pointer',
+                      background: '#7C5CFF', border: '1px solid #7C5CFF', color: '#fff', cursor: 'pointer',
                     }}>
                       <Plus className="w-3 h-3" />Add
                     </button>
@@ -579,11 +579,11 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                       <span style={{ fontSize: 11, color: '#444', whiteSpace: 'nowrap' }}>Show for</span>
                       <input type="range" min={1} max={8} step={0.5} value={addDuration}
                         onChange={e => setAddDuration(Number(e.target.value))}
-                        style={{ flex: 1, accentColor: '#5855D4' }} />
+                        style={{ flex: 1, accentColor: '#7C5CFF' }} />
                       <span style={{ fontSize: 11, color: '#666', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{addDuration}s</span>
                       <button onClick={addCaptionAtTime} disabled={!addText.trim()} style={{
                         display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 7,
-                        fontSize: 12, fontWeight: 700, background: '#5855D4', border: 'none', color: '#fff',
+                        fontSize: 12, fontWeight: 700, background: '#7C5CFF', border: 'none', color: '#fff',
                         cursor: addText.trim() ? 'pointer' : 'default', opacity: addText.trim() ? 1 : 0.4,
                       }}>
                         <Check className="w-3.5 h-3.5" />Add
@@ -609,7 +609,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                           <input autoFocus value={editingText} onChange={e => setEditingText(e.target.value)}
                             onBlur={() => editingText.trim() ? updateCaption(i, editingText) : setEditingIdx(null)}
                             onKeyDown={e => { if (e.key === 'Enter') editingText.trim() ? updateCaption(i, editingText) : setEditingIdx(null); if (e.key === 'Escape') setEditingIdx(null) }}
-                            style={{ flex: 1, background: 'rgba(88,85,212,0.1)', border: '1px solid rgba(88,85,212,0.4)', borderRadius: 6, padding: '3px 8px', fontSize: 12, color: '#e4e4f0', outline: 'none', fontFamily: 'inherit' }} />
+                            style={{ flex: 1, background: 'rgba(124, 92, 255,0.1)', border: '1px solid rgba(124, 92, 255,0.4)', borderRadius: 6, padding: '3px 8px', fontSize: 12, color: '#e4e4f0', outline: 'none', fontFamily: 'inherit' }} />
                         ) : (
                           <span onClick={() => { setEditingIdx(i); setEditingText(c.text) }}
                             title="Click to edit"
@@ -688,7 +688,7 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                 </div>
                 <button onClick={addTextOverlay} disabled={!newOverlayText.trim()} style={{
                   padding: '9px 0', borderRadius: 9, fontSize: 12, fontWeight: 700,
-                  background: '#5855D4', border: 'none', color: '#fff',
+                  background: '#7C5CFF', border: 'none', color: '#fff',
                   cursor: newOverlayText.trim() ? 'pointer' : 'default', opacity: newOverlayText.trim() ? 1 : 0.4,
                 }}>
                   Add at {currentTime.toFixed(1)}s
@@ -783,8 +783,8 @@ export default function SmartEditStudio({ videoUrl, duration, initialCaptions, c
                     {[['none','None'],['lofi','Lo-fi'],['hype','Hype'],['cinematic','Cinematic'],['corporate','Corporate'],['ambient','Ambient'],['emotional','Emotional'],['acoustic','Acoustic']].map(([id, label]) => (
                       <button key={id} onClick={() => { pushUndo(editState); setEditState(s => ({...s, music: id})) }} style={{
                         padding: '8px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, textAlign: 'left' as const,
-                        background: editState.music === id ? 'rgba(88,85,212,0.2)' : 'rgba(255,255,255,0.04)',
-                        border: editState.music === id ? '1px solid rgba(88,85,212,0.5)' : '1px solid rgba(255,255,255,0.07)',
+                        background: editState.music === id ? 'rgba(124, 92, 255,0.2)' : 'rgba(255,255,255,0.04)',
+                        border: editState.music === id ? '1px solid rgba(124, 92, 255,0.5)' : '1px solid rgba(255,255,255,0.07)',
                         color: editState.music === id ? '#a5a3f0' : '#666',
                         cursor: 'pointer', transition: 'all 120ms ease',
                       }}>

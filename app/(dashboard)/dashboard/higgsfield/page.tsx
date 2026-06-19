@@ -216,8 +216,8 @@ export default function HiggsfieldPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(99,102,241,0.12)' }}>
-                <Sparkles className="w-4 h-4 text-[#6366f1]" />
+                style={{ background: 'rgba(124, 92, 255,0.12)' }}>
+                <Sparkles className="w-4 h-4 text-[#7C5CFF]" />
               </div>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 700, color: '#FAFAFA' }}>AI Video Studio</p>
@@ -227,11 +227,11 @@ export default function HiggsfieldPage() {
           </div>
 
           {/* Mode */}
-          <div className="flex gap-1.5 p-1 rounded-xl" style={{ background: '#18181C' }}>
+          <div className="flex gap-1.5 p-1 rounded-xl" style={{ background: '#1A1530' }}>
             {(['auto', 'upload'] as Mode[]).map(m => (
               <button key={m} onClick={() => setMode(m)}
                 className="flex-1 py-2 rounded-lg text-[13px] font-semibold transition-all duration-150"
-                style={{ background: mode === m ? '#6366f1' : 'transparent', color: mode === m ? '#fff' : '#52525B' }}>
+                style={{ background: mode === m ? '#7C5CFF' : 'transparent', color: mode === m ? '#fff' : '#52525B' }}>
                 {m === 'auto' ? 'Text → Video' : 'Image → Video'}
               </button>
             ))}
@@ -247,13 +247,13 @@ export default function HiggsfieldPage() {
                 ? SCENE_EXAMPLES[Math.floor(Date.now() / 30000) % SCENE_EXAMPLES.length]
                 : MOTION_SUGGESTIONS[0]}
               className="w-full resize-none px-3.5 py-2.5 rounded-xl text-[13px] outline-none"
-              style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)', color: '#FAFAFA', lineHeight: 1.5 }}
+              style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.07)', color: '#FAFAFA', lineHeight: 1.5 }}
             />
             <div className="flex flex-wrap gap-1.5">
               {(mode === 'auto' ? SCENE_EXAMPLES : MOTION_SUGGESTIONS).slice(0, 3).map(s => (
                 <button key={s} onClick={() => setScenePrompt(s)}
                   className="text-[10px] px-2 py-0.5 rounded-md transition-colors"
-                  style={{ background: 'rgba(99,102,241,0.07)', color: '#6366f1', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                  style={{ background: 'rgba(124, 92, 255,0.07)', color: '#7C5CFF', border: '0.5px solid rgba(124, 92, 255,0.15)' }}>
                   {s.slice(0, 32)}…
                 </button>
               ))}
@@ -267,7 +267,7 @@ export default function HiggsfieldPage() {
               <textarea rows={2} value={motionPrompt} onChange={e => setMotionPrompt(e.target.value)}
                 placeholder="Slow cinematic push in, shallow depth of field…"
                 className="w-full resize-none px-3.5 py-2.5 rounded-xl text-[13px] outline-none"
-                style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)', color: '#FAFAFA', lineHeight: 1.5 }}
+                style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.07)', color: '#FAFAFA', lineHeight: 1.5 }}
               />
             </div>
           )}
@@ -279,7 +279,7 @@ export default function HiggsfieldPage() {
               <div ref={dropRef} onDragOver={e => e.preventDefault()} onDrop={handleDrop}
                 onClick={() => document.getElementById('hf-img-input')?.click()}
                 className="relative flex flex-col items-center justify-center gap-2 rounded-xl cursor-pointer transition-all"
-                style={{ height: 160, border: '1.5px dashed rgba(99,102,241,0.3)', background: uploadPreview ? 'transparent' : 'rgba(99,102,241,0.04)', overflow: 'hidden' }}>
+                style={{ height: 160, border: '1.5px dashed rgba(124, 92, 255,0.3)', background: uploadPreview ? 'transparent' : 'rgba(124, 92, 255,0.04)', overflow: 'hidden' }}>
                 {uploadPreview
                   // eslint-disable-next-line @next/next/no-img-element
                   ? <img src={uploadPreview} alt="preview" className="w-full h-full object-cover" />
@@ -309,12 +309,12 @@ export default function HiggsfieldPage() {
                 <button key={a.id} onClick={() => setAspect(a.id)}
                   className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl text-[12px] font-medium transition-all"
                   style={{
-                    background: aspect === a.id ? 'rgba(99,102,241,0.12)' : '#18181C',
-                    border: aspect === a.id ? '1px solid rgba(99,102,241,0.35)' : '0.5px solid rgba(255,255,255,0.06)',
+                    background: aspect === a.id ? 'rgba(124, 92, 255,0.12)' : '#1A1530',
+                    border: aspect === a.id ? '1px solid rgba(124, 92, 255,0.35)' : '0.5px solid rgba(255,255,255,0.06)',
                     color: aspect === a.id ? '#818cf8' : '#52525B',
                   }}>
                   <span style={{ fontWeight: 700 }}>{a.label}</span>
-                  <span style={{ fontSize: 10, color: aspect === a.id ? '#6366f1' : '#3f3f46' }}>{a.desc}</span>
+                  <span style={{ fontSize: 10, color: aspect === a.id ? '#7C5CFF' : '#3f3f46' }}>{a.desc}</span>
                 </button>
               ))}
             </div>
@@ -325,7 +325,7 @@ export default function HiggsfieldPage() {
             disabled={isGenerating || !scenePrompt.trim() || (mode === 'upload' && !uploadFile)}
             className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-semibold text-[14px] transition-all"
             style={{
-              background: isGenerating ? 'rgba(99,102,241,0.25)' : '#6366f1',
+              background: isGenerating ? 'rgba(124, 92, 255,0.25)' : '#7C5CFF',
               color: isGenerating ? '#818cf8' : '#fff',
               cursor: isGenerating ? 'not-allowed' : 'pointer',
               opacity: !scenePrompt.trim() || (mode === 'upload' && !uploadFile) ? 0.5 : 1,
@@ -375,11 +375,11 @@ export default function HiggsfieldPage() {
                   <div className="flex gap-2">
                     <a href={genVideo} download={`brandlift-${Date.now()}.mp4`} target="_blank" rel="noreferrer"
                       className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold hover:opacity-90 transition-opacity"
-                      style={{ background: '#6366f1', color: '#fff' }}>
+                      style={{ background: '#7C5CFF', color: '#fff' }}>
                       <Download className="w-4 h-4" />Download
                     </a>
                     <button onClick={() => navigator.clipboard.writeText(genVideo)}
-                      className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold hover:bg-[#18181C] transition-colors"
+                      className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold hover:bg-[#1A1530] transition-colors"
                       style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)', color: '#71717A' }}>
                       <Copy className="w-4 h-4" />URL
                     </button>
@@ -393,7 +393,7 @@ export default function HiggsfieldPage() {
                     <img src={genImage} alt="Generated scene" className="rounded-2xl w-full"
                       style={{ border: '0.5px solid rgba(255,255,255,0.08)', maxHeight: 300, objectFit: 'cover' }} />
                     <a href={genImage} download={`brandlift-scene-${Date.now()}.jpg`} target="_blank" rel="noreferrer"
-                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold hover:bg-[#18181C] transition-colors"
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-semibold hover:bg-[#1A1530] transition-colors"
                       style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)', color: '#71717A' }}>
                       <Download className="w-3.5 h-3.5" />Image
                     </a>
@@ -404,7 +404,7 @@ export default function HiggsfieldPage() {
           ) : isGenerating ? (
             <div className="flex flex-1 items-center justify-center">
               <div className="flex flex-col items-center gap-4 text-center">
-                <Loader2 className="w-10 h-10 text-[#6366f1] animate-spin" />
+                <Loader2 className="w-10 h-10 text-[#7C5CFF] animate-spin" />
                 <p style={{ fontSize: 14, color: '#71717A' }}>{stepLabel}</p>
                 <p style={{ fontSize: 12, color: '#3f3f46' }}>This typically takes 1–3 minutes</p>
               </div>
@@ -413,7 +413,7 @@ export default function HiggsfieldPage() {
             <div className="flex flex-1 items-center justify-center">
               <div className="flex flex-col items-center gap-4 text-center max-w-xs">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                  style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                  style={{ background: 'rgba(124, 92, 255,0.08)', border: '0.5px solid rgba(124, 92, 255,0.15)' }}>
                   <Film className="w-7 h-7 text-[#3f3f46]" />
                 </div>
                 <div>
@@ -433,7 +433,7 @@ export default function HiggsfieldPage() {
               <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
                 {history.map(h => (
                   <div key={h.id} className="flex flex-col gap-2 rounded-2xl overflow-hidden"
-                    style={{ border: '0.5px solid rgba(255,255,255,0.07)', background: '#111113' }}>
+                    style={{ border: '0.5px solid rgba(255,255,255,0.07)', background: '#110E1C' }}>
                     <div className="relative overflow-hidden" style={{ aspectRatio: h.aspect === '9:16' ? '9/16' : h.aspect === '1:1' ? '1' : '16/9', maxHeight: 220 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={h.imageUrl} alt={h.prompt} className="w-full h-full object-cover" />
@@ -441,7 +441,7 @@ export default function HiggsfieldPage() {
                         style={{ background: 'rgba(0,0,0,0.6)' }}>
                         <a href={h.videoUrl} download={`brandlift-${h.id}.mp4`} target="_blank" rel="noreferrer"
                           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-semibold"
-                          style={{ background: '#6366f1', color: '#fff' }}>
+                          style={{ background: '#7C5CFF', color: '#fff' }}>
                           <Download className="w-3.5 h-3.5" />Download
                         </a>
                       </div>
@@ -468,13 +468,13 @@ function StepChip({ label, done, active, skip }: { label: string; done: boolean;
     <div className="flex items-center gap-1.5">
       <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
         style={{
-          background: done || skip ? 'rgba(34,197,94,0.12)' : active ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
-          border: done || skip ? '1px solid rgba(34,197,94,0.4)' : active ? '1px solid rgba(99,102,241,0.5)' : '0.5px solid rgba(255,255,255,0.08)',
+          background: done || skip ? 'rgba(34,197,94,0.12)' : active ? 'rgba(124, 92, 255,0.2)' : 'rgba(255,255,255,0.04)',
+          border: done || skip ? '1px solid rgba(34,197,94,0.4)' : active ? '1px solid rgba(124, 92, 255,0.5)' : '0.5px solid rgba(255,255,255,0.08)',
         }}>
         {done || skip
           ? <CheckCircle2 className="w-3 h-3 text-green-400" />
           : active
-            ? <Loader2 className="w-3 h-3 text-[#6366f1] animate-spin" />
+            ? <Loader2 className="w-3 h-3 text-[#7C5CFF] animate-spin" />
             : <div className="w-1.5 h-1.5 rounded-full bg-[#3f3f46]" />}
       </div>
       <span style={{ fontSize: 12, fontWeight: 600, color: done || skip ? '#22c55e' : active ? '#818cf8' : '#3f3f46' }}>{label}</span>

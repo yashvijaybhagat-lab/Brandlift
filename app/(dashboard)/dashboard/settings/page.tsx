@@ -51,10 +51,10 @@ function ChipGroup<T extends string>({ options, value, multiple, onChange, onMul
           <button key={opt.value} type="button" onClick={() => handleClick(opt.value)}
             className={cn(
               'px-3 py-1.5 rounded-pill text-[13px] font-medium transition-colors duration-160',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60 overflow-hidden relative',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5CFF]/60 overflow-hidden relative',
               active
-                ? 'bg-[rgba(99,102,241,0.15)] text-[#6366f1] border border-[rgba(99,102,241,0.35)]'
-                : 'bg-[#18181C] text-[#71717A] border border-white/[0.06] hover:text-[#A1A1AA]',
+                ? 'bg-[rgba(124, 92, 255,0.15)] text-[#7C5CFF] border border-[rgba(124, 92, 255,0.35)]'
+                : 'bg-[#1A1530] text-[#71717A] border border-white/[0.06] hover:text-[#A1A1AA]',
             )}>
             {opt.label}
           </button>
@@ -193,10 +193,10 @@ export default function SettingsPage() {
                 rows={3}
                 className={cn(
                   'w-full px-3 py-2.5 rounded-[8px] text-[14px] resize-none',
-                  'bg-[#18181C] border border-white/[0.1] text-[#FAFAFA] placeholder:text-[#71717A]',
+                  'bg-[#1A1530] border border-white/[0.1] text-[#FAFAFA] placeholder:text-[#71717A]',
                   'transition-colors duration-160',
-                  'focus:outline-none focus:border-[rgba(99,102,241,0.5)] focus:ring-0',
-                  'focus-visible:ring-2 focus-visible:ring-[#6366f1]/40',
+                  'focus:outline-none focus:border-[rgba(124, 92, 255,0.5)] focus:ring-0',
+                  'focus-visible:ring-2 focus-visible:ring-[#7C5CFF]/40',
                 )} />
             </Field>
 

@@ -14,7 +14,7 @@ export default function NotFound() {
         alignItems: 'center',
         justifyContent: 'center',
         gap: 20,
-        background: '#0B1120',
+        background: '#08060F',
         padding: '24px',
         textAlign: 'center',
       }}
@@ -27,7 +27,7 @@ export default function NotFound() {
           lineHeight: 1,
           margin: 0,
           letterSpacing: '-0.04em',
-          background: 'linear-gradient(135deg, #7B78E8 0%, #5855D4 60%, #9B8AF0 100%)',
+          background: 'linear-gradient(135deg, #7B78E8 0%, #7C5CFF 60%, #9B8AF0 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
@@ -64,14 +64,14 @@ export default function NotFound() {
           alignItems: 'center',
           gap: 8,
           marginTop: 8,
-          background: '#5855D4',
+          background: '#7C5CFF',
           color: '#fff',
           fontSize: 15,
           fontWeight: 600,
           textDecoration: 'none',
           padding: '12px 24px',
           borderRadius: 12,
-          boxShadow: '0 0 0 1px rgba(88,85,212,0.5), 0 8px 28px rgba(88,85,212,0.4)',
+          boxShadow: '0 0 0 1px rgba(124, 92, 255,0.5), 0 8px 28px rgba(124, 92, 255,0.4)',
         }}
       >
         Back to home

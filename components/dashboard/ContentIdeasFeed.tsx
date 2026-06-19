@@ -117,12 +117,12 @@ function ContentIdeaCard({
         ...style,
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
         boxShadow: selected
-          ? '0 0 0 1.5px rgba(99,102,241,0.5), 0 12px 36px rgba(0,0,0,0.45)'
+          ? '0 0 0 1.5px rgba(124, 92, 255,0.5), 0 12px 36px rgba(0,0,0,0.45)'
           : hovered
-          ? '0 0 0 1px rgba(99,102,241,0.15), 0 12px 36px rgba(0,0,0,0.45)'
+          ? '0 0 0 1px rgba(124, 92, 255,0.15), 0 12px 36px rgba(0,0,0,0.45)'
           : '0 0 0 0.5px rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.2)',
         transition: 'transform 180ms cubic-bezier(0.23,1,0.32,1), box-shadow 180ms cubic-bezier(0.23,1,0.32,1), background 180ms ease',
-        background: selected ? '#13131a' : hovered ? '#141416' : '#111113',
+        background: selected ? '#13131a' : hovered ? '#141416' : '#110E1C',
         borderRadius: 14,
         overflow: 'hidden',
         cursor: 'pointer',
@@ -134,21 +134,21 @@ function ContentIdeaCard({
       {/* Left accent bar */}
       <div
         className="absolute left-0 top-0 bottom-0 w-[3px] transition-opacity duration-200"
-        style={{ background: 'linear-gradient(to bottom, #6366f1, #8b5cf6)', opacity: hovered ? 1 : 0, borderRadius: '0 2px 2px 0' }}
+        style={{ background: 'linear-gradient(to bottom, #7C5CFF, #A78BFA)', opacity: hovered ? 1 : 0, borderRadius: '0 2px 2px 0' }}
         aria-hidden
       />
 
       {/* Top glow */}
       <div
         className="absolute top-0 left-0 right-0 h-px transition-opacity duration-200"
-        style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.5) 50%, transparent 100%)', opacity: hovered ? 1 : 0 }}
+        style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(124, 92, 255,0.5) 50%, transparent 100%)', opacity: hovered ? 1 : 0 }}
         aria-hidden
       />
 
       <div className="flex flex-col gap-3 p-4">
         {/* Top row */}
         <div className="flex items-center justify-between gap-2">
-          <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', background: '#18181C', color: '#52525B', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', background: '#1A1530', color: '#52525B', border: '0.5px solid rgba(255,255,255,0.07)' }}>
             {FORMAT_LABELS[idea.format]}
           </span>
 
@@ -163,7 +163,7 @@ function ContentIdeaCard({
               onClick={e => { e.stopPropagation(); onToggleSave?.(idea) }}
               aria-label={isSaved ? 'Remove from saved' : 'Save idea'}
               className="transition-colors duration-150"
-              style={{ color: isSaved ? '#6366f1' : '#3f3f46', padding: '2px' }}
+              style={{ color: isSaved ? '#7C5CFF' : '#3f3f46', padding: '2px' }}
               onMouseEnter={e => { if (!isSaved) (e.currentTarget as HTMLButtonElement).style.color = '#71717A' }}
               onMouseLeave={e => { if (!isSaved) (e.currentTarget as HTMLButtonElement).style.color = '#3f3f46' }}
             >
@@ -192,7 +192,7 @@ function ContentIdeaCard({
           </span>
 
           <button
-            className="inline-flex items-center gap-1 text-[12px] font-medium rounded-md transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60"
+            className="inline-flex items-center gap-1 text-[12px] font-medium rounded-md transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5CFF]/60"
             style={{ color: selected ? '#818cf8' : hovered ? '#818cf8' : '#52525B' }}
             aria-label={`Create video for: ${idea.hook.slice(0, 50)}…`}
             onClick={e => {
@@ -219,7 +219,7 @@ function SkeletonCard({ index }: { index: number }) {
     <div
       style={{
         borderRadius: 14,
-        background: '#111113',
+        background: '#110E1C',
         border: '0.5px solid rgba(255,255,255,0.06)',
         padding: 16,
         opacity: 0,
@@ -228,17 +228,17 @@ function SkeletonCard({ index }: { index: number }) {
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-20 rounded" style={{ background: '#18181C', animation: 'pulse 1.5s ease-in-out infinite' }} />
-          <div className="h-4 w-16 rounded" style={{ background: '#18181C', animation: 'pulse 1.5s ease-in-out infinite 0.3s' }} />
+          <div className="h-4 w-20 rounded" style={{ background: '#1A1530', animation: 'pulse 1.5s ease-in-out infinite' }} />
+          <div className="h-4 w-16 rounded" style={{ background: '#1A1530', animation: 'pulse 1.5s ease-in-out infinite 0.3s' }} />
         </div>
         <div className="flex flex-col gap-1.5">
-          <div className="h-3.5 w-full rounded" style={{ background: '#18181C', animation: 'pulse 1.5s ease-in-out infinite' }} />
-          <div className="h-3.5 w-5/6 rounded" style={{ background: '#18181C', animation: 'pulse 1.5s ease-in-out infinite 0.2s' }} />
-          <div className="h-3.5 w-4/6 rounded" style={{ background: '#18181C', animation: 'pulse 1.5s ease-in-out infinite 0.4s' }} />
+          <div className="h-3.5 w-full rounded" style={{ background: '#1A1530', animation: 'pulse 1.5s ease-in-out infinite' }} />
+          <div className="h-3.5 w-5/6 rounded" style={{ background: '#1A1530', animation: 'pulse 1.5s ease-in-out infinite 0.2s' }} />
+          <div className="h-3.5 w-4/6 rounded" style={{ background: '#1A1530', animation: 'pulse 1.5s ease-in-out infinite 0.4s' }} />
         </div>
         <div className="flex gap-1.5">
-          <div className="h-5 w-14 rounded-full" style={{ background: '#18181C', animation: 'pulse 1.5s ease-in-out infinite' }} />
-          <div className="h-5 w-14 rounded-full" style={{ background: '#18181C', animation: 'pulse 1.5s ease-in-out infinite 0.2s' }} />
+          <div className="h-5 w-14 rounded-full" style={{ background: '#1A1530', animation: 'pulse 1.5s ease-in-out infinite' }} />
+          <div className="h-5 w-14 rounded-full" style={{ background: '#1A1530', animation: 'pulse 1.5s ease-in-out infinite 0.2s' }} />
         </div>
       </div>
     </div>
@@ -255,11 +255,11 @@ function TabChip({ active, onClick, children }: { active: boolean; onClick: () =
       onClick={onClick}
       className={cn(
         'relative inline-flex items-center px-3.5 py-1.5 rounded-pill text-[13px] font-medium',
-        'transition-colors duration-160 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60 overflow-hidden',
-        active ? 'text-[#FAFAFA]' : 'text-[#71717A] bg-[#18181C] border border-white/[0.06] hover:text-[#A1A1AA]',
+        'transition-colors duration-160 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5CFF]/60 overflow-hidden',
+        active ? 'text-[#FAFAFA]' : 'text-[#71717A] bg-[#1A1530] border border-white/[0.06] hover:text-[#A1A1AA]',
       )}
     >
-      <span aria-hidden className="absolute inset-0 rounded-pill" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', clipPath: active ? 'inset(0 0 0 0 round 24px)' : 'inset(0 100% 0 0 round 24px)', transition: 'clip-path 200ms cubic-bezier(0.23,1,0.32,1)' }} />
+      <span aria-hidden className="absolute inset-0 rounded-pill" style={{ background: 'linear-gradient(135deg, #7C5CFF, #A78BFA)', clipPath: active ? 'inset(0 0 0 0 round 24px)' : 'inset(0 100% 0 0 round 24px)', transition: 'clip-path 200ms cubic-bezier(0.23,1,0.32,1)' }} />
       <span className="relative z-10">{children}</span>
     </button>
   )
@@ -408,12 +408,12 @@ export function ContentIdeasFeed({
             className={cn(
               'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg',
               'text-[12px] font-medium transition-all duration-150',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1]/60',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5CFF]/60',
               'disabled:opacity-40 disabled:cursor-not-allowed',
             )}
-            style={{ color: '#52525B', border: '0.5px solid rgba(255,255,255,0.07)', background: '#111113' }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLButtonElement; el.style.color = '#A1A1AA'; el.style.borderColor = 'rgba(255,255,255,0.12)'; el.style.background = '#18181C' }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLButtonElement; el.style.color = '#52525B'; el.style.borderColor = 'rgba(255,255,255,0.07)'; el.style.background = '#111113' }}
+            style={{ color: '#52525B', border: '0.5px solid rgba(255,255,255,0.07)', background: '#110E1C' }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLButtonElement; el.style.color = '#A1A1AA'; el.style.borderColor = 'rgba(255,255,255,0.12)'; el.style.background = '#1A1530' }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLButtonElement; el.style.color = '#52525B'; el.style.borderColor = 'rgba(255,255,255,0.07)'; el.style.background = '#110E1C' }}
           >
             <RefreshCw className="w-3 h-3" style={{ transform: rotating ? 'rotate(360deg)' : 'rotate(0deg)', transition: rotating ? 'transform 400ms cubic-bezier(0.23,1,0.32,1)' : 'transform 0ms' }} />
             {refreshing ? 'Generating…' : 'Refresh'}
@@ -450,7 +450,7 @@ export function ContentIdeasFeed({
               <>
                 <Sparkles className="w-8 h-8 text-[#3f3f46]" />
                 <p className="text-[14px] text-[#A1A1AA]">Generating ideas for you…</p>
-                <button onClick={handleRefresh} className="text-[13px] text-[#6366f1] hover:underline">Try again</button>
+                <button onClick={handleRefresh} className="text-[13px] text-[#7C5CFF] hover:underline">Try again</button>
               </>
             )}
           </div>

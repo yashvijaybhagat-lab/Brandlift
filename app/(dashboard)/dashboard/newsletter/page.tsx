@@ -88,7 +88,7 @@ export default function NewsletterPage() {
                 Send to all subscribers
                 {subCount !== null && (
                   <span className="ml-2 px-2 py-0.5 rounded-full text-[11px] font-semibold"
-                    style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}>
+                    style={{ background: 'rgba(124, 92, 255,0.12)', color: '#818cf8' }}>
                     {subCount.toLocaleString()} active
                   </span>
                 )}
@@ -98,8 +98,8 @@ export default function NewsletterPage() {
 
           {/* Weekly tips note */}
           <div className="rounded-xl p-4 flex gap-3"
-            style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
-            <span style={{ fontSize: 11, color: '#6366f1', fontWeight: 700 }}>auto</span>
+            style={{ background: 'rgba(124, 92, 255,0.06)', border: '0.5px solid rgba(124, 92, 255,0.15)' }}>
+            <span style={{ fontSize: 11, color: '#7C5CFF', fontWeight: 700 }}>auto</span>
             <p className="text-[13px] text-[#71717A] leading-relaxed">
               <span className="text-[#A1A1AA] font-medium">Weekly tips are automatic.</span> Every Monday at 2pm UTC, a content marketing tip goes out to all subscribers automatically — no action needed. Use this page for product updates and announcements.
             </p>
@@ -113,7 +113,7 @@ export default function NewsletterPage() {
                 <button key={t.label} onClick={() => applyTemplate(t)}
                   className="px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors duration-150"
                   style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#A1A1AA' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'; e.currentTarget.style.color = '#FAFAFA' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.4)'; e.currentTarget.style.color = '#FAFAFA' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#A1A1AA' }}>
                   {t.label}
                 </button>
@@ -129,7 +129,7 @@ export default function NewsletterPage() {
                 placeholder="New in BrandLift: AI video enhancement"
                 className={cn(
                   'w-full px-3 py-2.5 rounded-[8px] text-[14px] text-[#FAFAFA] placeholder:text-[#3f3f46]',
-                  'bg-[#18181C] border border-white/[0.1] focus:outline-none focus:border-[rgba(99,102,241,0.5)]',
+                  'bg-[#1A1530] border border-white/[0.1] focus:outline-none focus:border-[rgba(124, 92, 255,0.5)]',
                 )} />
             </div>
 
@@ -139,7 +139,7 @@ export default function NewsletterPage() {
                 placeholder="We just shipped something you're going to love"
                 className={cn(
                   'w-full px-3 py-2.5 rounded-[8px] text-[14px] text-[#FAFAFA] placeholder:text-[#3f3f46]',
-                  'bg-[#18181C] border border-white/[0.1] focus:outline-none focus:border-[rgba(99,102,241,0.5)]',
+                  'bg-[#1A1530] border border-white/[0.1] focus:outline-none focus:border-[rgba(124, 92, 255,0.5)]',
                 )} />
             </div>
 
@@ -152,7 +152,7 @@ export default function NewsletterPage() {
                 placeholder="<p>Hey!</p>&#10;<p>We just shipped...</p>"
                 className={cn(
                   'w-full px-3 py-2.5 rounded-[8px] text-[13px] text-[#FAFAFA] placeholder:text-[#3f3f46] resize-y font-mono',
-                  'bg-[#18181C] border border-white/[0.1] focus:outline-none focus:border-[rgba(99,102,241,0.5)]',
+                  'bg-[#1A1530] border border-white/[0.1] focus:outline-none focus:border-[rgba(124, 92, 255,0.5)]',
                 )} />
               <p className="text-[11px] text-[#3f3f46] text-right">{body.length}/5000</p>
             </div>
@@ -163,7 +163,7 @@ export default function NewsletterPage() {
                 placeholder="See it in action →"
                 className={cn(
                   'w-full px-3 py-2.5 rounded-[8px] text-[14px] text-[#FAFAFA] placeholder:text-[#3f3f46]',
-                  'bg-[#18181C] border border-white/[0.1] focus:outline-none focus:border-[rgba(99,102,241,0.5)]',
+                  'bg-[#1A1530] border border-white/[0.1] focus:outline-none focus:border-[rgba(124, 92, 255,0.5)]',
                 )} />
             </div>
           </div>

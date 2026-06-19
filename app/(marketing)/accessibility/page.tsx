@@ -53,7 +53,7 @@ export default function AccessibilityPage() {
         <div style={{ marginBottom: 48 }}>
           <p
             className="text-xs font-bold uppercase tracking-widest mb-4"
-            style={{ color: '#6366f1', letterSpacing: '0.12em' }}
+            style={{ color: '#7C5CFF', letterSpacing: '0.12em' }}
           >
             Legal
           </p>
@@ -109,7 +109,7 @@ export default function AccessibilityPage() {
         {/* Feedback box */}
         <div
           className="mt-16 p-6 rounded-2xl"
-          style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.15)' }}
+          style={{ background: 'rgba(124, 92, 255,0.06)', border: '0.5px solid rgba(124, 92, 255,0.15)' }}
           role="complementary"
           aria-label="Accessibility feedback"
         >

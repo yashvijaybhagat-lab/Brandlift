@@ -37,9 +37,9 @@ interface GitHubPushState{ phase:'idle'|'pushing'|'done'|'error'; result:{type:'
 // ─── Color schemes ───────────────────────────────────────────
 
 const SCHEMES: { id: ColorScheme; label: string; bg: string; accent: string }[] = [
-  { id: 'dark',     label: 'Dark',     bg: '#05050a', accent: '#6366f1' },
-  { id: 'light',    label: 'Light',    bg: '#f8f8fc', accent: '#6366f1' },
-  { id: 'midnight', label: 'Midnight', bg: '#080412', accent: '#8b5cf6' },
+  { id: 'dark',     label: 'Dark',     bg: '#05050a', accent: '#7C5CFF' },
+  { id: 'light',    label: 'Light',    bg: '#f8f8fc', accent: '#7C5CFF' },
+  { id: 'midnight', label: 'Midnight', bg: '#080412', accent: '#A78BFA' },
   { id: 'ocean',    label: 'Ocean',    bg: '#020c1b', accent: '#0ea5e9' },
 ]
 
@@ -85,11 +85,11 @@ function CategoryCard({ name, data, index }: { name: string; data: CategoryScore
   return (
     <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay: 0.08 + index * 0.06 }}
       className="flex flex-col gap-3 p-4 rounded-[14px]"
-      style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+      style={{ background: '#110E1C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-[8px] flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.1)' }}>
-            <Icon className="w-3.5 h-3.5 text-[#6366f1]" />
+          <div className="w-7 h-7 rounded-[8px] flex items-center justify-center" style={{ background: 'rgba(124, 92, 255,0.1)' }}>
+            <Icon className="w-3.5 h-3.5 text-[#7C5CFF]" />
           </div>
           <span className="text-[12px] font-medium text-[#A1A1AA]">{label}</span>
         </div>
@@ -98,7 +98,7 @@ function CategoryCard({ name, data, index }: { name: string; data: CategoryScore
           <span className="text-[20px] font-bold leading-none tabular-nums" style={{ color }}>{data.score}</span>
         </div>
       </div>
-      <div className="h-1 rounded-full bg-[#18181C] overflow-hidden">
+      <div className="h-1 rounded-full bg-[#1A1530] overflow-hidden">
         <motion.div className="h-full rounded-full" style={{ background: color }}
           initial={{ width: 0 }} animate={{ width: `${data.score}%` }}
           transition={{ duration: 1, delay: 0.3 + index * 0.06, ease: 'easeOut' }} />
@@ -115,7 +115,7 @@ function IssueItem({ issue, index }: { issue: Issue; index: number }) {
   const cfg = {
     critical: { Icon: AlertCircle,   color: '#EF4444', bg: 'rgba(239,68,68,0.07)',   border: 'rgba(239,68,68,0.18)'  },
     warning:  { Icon: AlertTriangle, color: '#FBBF24', bg: 'rgba(251,191,36,0.07)',  border: 'rgba(251,191,36,0.18)' },
-    tip:      { Icon: Lightbulb,     color: '#6366f1', bg: 'rgba(99,102,241,0.07)', border: 'rgba(99,102,241,0.18)' },
+    tip:      { Icon: Lightbulb,     color: '#7C5CFF', bg: 'rgba(124, 92, 255,0.07)', border: 'rgba(124, 92, 255,0.18)' },
   }[issue.severity]
   return (
     <motion.div initial={{ opacity:0, x:-6 }} animate={{ opacity:1, x:0 }} transition={{ delay: index * 0.035 }}
@@ -160,7 +160,7 @@ function SectionCard({ section, index, onImprove }: { section: PageSection; inde
   return (
     <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay: 0.05 + index * 0.05 }}
       className="flex flex-col gap-2.5 p-4 rounded-[12px]"
-      style={{ background:'#111113', border:'0.5px solid rgba(255,255,255,0.06)' }}>
+      style={{ background:'#110E1C', border:'0.5px solid rgba(255,255,255,0.06)' }}>
       <div className="flex items-center gap-2">
         <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background:cfg.dot, boxShadow:`0 0 6px ${cfg.dot}80` }} />
         <span className="text-[13px] font-medium text-[#FAFAFA]">{section.name}</span>
@@ -169,7 +169,7 @@ function SectionCard({ section, index, onImprove }: { section: PageSection; inde
       <p className="text-[12px] text-[#71717A] leading-relaxed">{section.note}</p>
       {section.detectedCopy && <p className="text-[11px] text-[#3f3f46] italic truncate">"{section.detectedCopy}"</p>}
       <button onClick={() => onImprove(section)}
-        className="flex items-center gap-1.5 text-[12px] font-medium text-[#6366f1] hover:text-[#818cf8] transition-colors mt-0.5 w-fit">
+        className="flex items-center gap-1.5 text-[12px] font-medium text-[#7C5CFF] hover:text-[#818cf8] transition-colors mt-0.5 w-fit">
         {section.quality === 'missing' ? <Sparkles className="w-3 h-3" /> : <Wand2 className="w-3 h-3" />}
         {section.quality === 'missing' ? 'Generate copy' : 'Improve copy'}
       </button>
@@ -212,11 +212,11 @@ function ImproveModal({ section, domain, context, onClose }: { section: PageSect
       <motion.div initial={{opacity:0,y:24,scale:0.97}} animate={{opacity:1,y:0,scale:1}}
         exit={{opacity:0,y:24,scale:0.97}} transition={{duration:0.18}}
         className="w-full max-w-lg rounded-2xl overflow-hidden"
-        style={{background:'#111113',border:'0.5px solid rgba(255,255,255,0.1)'}}>
+        style={{background:'#110E1C',border:'0.5px solid rgba(255,255,255,0.1)'}}>
         <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:'0.5px solid rgba(255,255,255,0.07)'}}>
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{background:'rgba(99,102,241,0.12)'}}>
-              <Wand2 className="w-3.5 h-3.5 text-[#6366f1]" />
+            <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{background:'rgba(124, 92, 255,0.12)'}}>
+              <Wand2 className="w-3.5 h-3.5 text-[#7C5CFF]" />
             </div>
             <div>
               <p className="text-[14px] font-medium text-[#FAFAFA]">{section.quality==='missing'?`Generate ${section.name}`:`Improve ${section.name}`}</p>
@@ -246,12 +246,12 @@ function ImproveModal({ section, domain, context, onClose }: { section: PageSect
             </div>
           )}
           {(status==='loading'||result)&&(
-            <div className="rounded-[10px] p-4 min-h-[120px]" style={{background:'rgba(99,102,241,0.04)',border:'0.5px solid rgba(99,102,241,0.15)'}}>
-              <p className="text-[10px] text-[#6366f1] uppercase tracking-wider mb-2.5">
+            <div className="rounded-[10px] p-4 min-h-[120px]" style={{background:'rgba(124, 92, 255,0.04)',border:'0.5px solid rgba(124, 92, 255,0.15)'}}>
+              <p className="text-[10px] text-[#7C5CFF] uppercase tracking-wider mb-2.5">
                 {section.quality==='missing'?'Suggested copy':'Improved copy'}
               </p>
               <p className="text-[13px] text-[#E4E4E7] leading-relaxed whitespace-pre-wrap">
-                {result}{status==='loading'&&<span className="inline-block w-1.5 h-3.5 bg-[#6366f1] animate-pulse ml-0.5 align-middle rounded-sm"/>}
+                {result}{status==='loading'&&<span className="inline-block w-1.5 h-3.5 bg-[#7C5CFF] animate-pulse ml-0.5 align-middle rounded-sm"/>}
               </p>
             </div>
           )}
@@ -380,8 +380,8 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromS
           {/* Row 1: title + scheme picker + device + close */}
           <div className="flex items-center gap-3 px-5 py-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{background:'rgba(99,102,241,0.12)'}}>
-                <Sparkles className="w-3.5 h-3.5 text-[#6366f1]" />
+              <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{background:'rgba(124, 92, 255,0.12)'}}>
+                <Sparkles className="w-3.5 h-3.5 text-[#7C5CFF]" />
               </div>
               <div>
                 <p className="text-[13px] font-semibold text-[#FAFAFA] leading-none">Redesigned page</p>
@@ -412,13 +412,13 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromS
               <div className="flex rounded-[8px] overflow-hidden p-0.5" style={{background:'rgba(255,255,255,0.04)',border:'0.5px solid rgba(255,255,255,0.08)'}}>
                 <button onClick={()=>setDevice('desktop')}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-[11px] font-medium transition-all"
-                  style={{background:device==='desktop'?'rgba(99,102,241,0.15)':'transparent', color:device==='desktop'?'#818cf8':'#52525B'}}>
+                  style={{background:device==='desktop'?'rgba(124, 92, 255,0.15)':'transparent', color:device==='desktop'?'#818cf8':'#52525B'}}>
                   <Monitor className="w-3.5 h-3.5"/>
                   <span className="hidden sm:inline">Desktop</span>
                 </button>
                 <button onClick={()=>setDevice('mobile')}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-[11px] font-medium transition-all"
-                  style={{background:device==='mobile'?'rgba(99,102,241,0.15)':'transparent', color:device==='mobile'?'#818cf8':'#52525B'}}>
+                  style={{background:device==='mobile'?'rgba(124, 92, 255,0.15)':'transparent', color:device==='mobile'?'#818cf8':'#52525B'}}>
                   <Smartphone className="w-3.5 h-3.5"/>
                   <span className="hidden sm:inline">Mobile</span>
                 </button>
@@ -428,13 +428,13 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromS
               <div className="flex rounded-[8px] overflow-hidden p-0.5 ml-1" style={{background:'rgba(255,255,255,0.04)',border:'0.5px solid rgba(255,255,255,0.08)'}}>
                 <button onClick={()=>setViewMode('preview')}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-[11px] font-medium transition-all"
-                  style={{background:viewMode==='preview'?'rgba(99,102,241,0.15)':'transparent', color:viewMode==='preview'?'#818cf8':'#52525B'}}>
+                  style={{background:viewMode==='preview'?'rgba(124, 92, 255,0.15)':'transparent', color:viewMode==='preview'?'#818cf8':'#52525B'}}>
                   <Eye className="w-3.5 h-3.5"/>
                   <span className="hidden sm:inline">Preview</span>
                 </button>
                 <button onClick={()=>setViewMode('code')} disabled={!state.html}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] text-[11px] font-medium transition-all disabled:opacity-40"
-                  style={{background:viewMode==='code'?'rgba(99,102,241,0.15)':'transparent', color:viewMode==='code'?'#818cf8':'#52525B'}}>
+                  style={{background:viewMode==='code'?'rgba(124, 92, 255,0.15)':'transparent', color:viewMode==='code'?'#818cf8':'#52525B'}}>
                   <Code2 className="w-3.5 h-3.5"/>
                   <span className="hidden sm:inline">Code</span>
                 </button>
@@ -475,13 +475,13 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromS
                     placeholder="stripe.com, linear.app, etc."
                     className="flex-1 px-3 py-1.5 rounded-[8px] text-[12px] text-[#FAFAFA] outline-none"
                     style={{background:'rgba(24,24,28,0.9)',border:'0.5px solid rgba(255,255,255,0.1)'}}
-                    onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)'}}
+                    onFocus={e=>{e.currentTarget.style.borderColor='rgba(124, 92, 255,0.5)'}}
                     onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}}
                   />
                   <button
                     onClick={() => setShowInspiration(v => !v)}
                     className="px-2.5 py-1.5 rounded-[7px] text-[11px] font-medium transition-colors flex-shrink-0"
-                    style={{background:showInspiration?'rgba(99,102,241,0.15)':'rgba(255,255,255,0.04)', color:showInspiration?'#818cf8':'#52525B', border:'0.5px solid rgba(255,255,255,0.08)'}}>
+                    style={{background:showInspiration?'rgba(124, 92, 255,0.15)':'rgba(255,255,255,0.04)', color:showInspiration?'#818cf8':'#52525B', border:'0.5px solid rgba(255,255,255,0.08)'}}>
                     Presets
                   </button>
                 </div>
@@ -492,8 +492,8 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromS
                         title={p.hint}
                         className="px-2.5 py-1 rounded-[6px] text-[11px] font-medium transition-all"
                         style={{
-                          background: referenceUrl === p.url ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
-                          border: `0.5px solid ${referenceUrl === p.url ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                          background: referenceUrl === p.url ? 'rgba(124, 92, 255,0.18)' : 'rgba(255,255,255,0.04)',
+                          border: `0.5px solid ${referenceUrl === p.url ? 'rgba(124, 92, 255,0.4)' : 'rgba(255,255,255,0.08)'}`,
                           color: referenceUrl === p.url ? '#818cf8' : '#71717A',
                         }}>
                         {p.label}
@@ -521,7 +521,7 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromS
                   placeholder="e.g. animated pricing table, logo carousel, dark hero…"
                   className="px-3 py-1.5 rounded-[8px] text-[12px] text-[#FAFAFA] outline-none"
                   style={{background:'rgba(24,24,28,0.9)',border:'0.5px solid rgba(255,255,255,0.1)'}}
-                  onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)'}}
+                  onFocus={e=>{e.currentTarget.style.borderColor='rgba(124, 92, 255,0.5)'}}
                   onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}}
                 />
               </div>
@@ -531,7 +531,7 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromS
                 <div className="flex items-end pb-0.5">
                   <button onClick={() => generate(colorScheme)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[12px] font-medium transition-all"
-                    style={{background:'rgba(99,102,241,0.12)',border:'0.5px solid rgba(99,102,241,0.3)',color:'#818cf8'}}>
+                    style={{background:'rgba(124, 92, 255,0.12)',border:'0.5px solid rgba(124, 92, 255,0.3)',color:'#818cf8'}}>
                     <Sparkles className="w-3.5 h-3.5"/>Apply
                   </button>
                 </div>
@@ -542,7 +542,7 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromS
           {/* Progress bar when generating */}
           {isGenerating && (
             <div className="h-0.5 w-full" style={{background:'rgba(255,255,255,0.04)'}}>
-              <motion.div className="h-full" style={{background:'linear-gradient(90deg,#6366f1,#8b5cf6)'}}
+              <motion.div className="h-full" style={{background:'linear-gradient(90deg,#7C5CFF,#A78BFA)'}}
                 animate={{width:['0%','40%','70%','85%','90%']}}
                 transition={{duration:8, times:[0,0.2,0.5,0.75,1], ease:'easeOut'}} />
             </div>
@@ -557,8 +557,8 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromS
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 z-10"
               style={{background:'rgba(5,5,10,0.85)',backdropFilter:'blur(8px)'}}>
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                style={{background:'rgba(99,102,241,0.1)',border:'0.5px solid rgba(99,102,241,0.25)'}}>
-                <Sparkles className="w-8 h-8 text-[#6366f1]"/>
+                style={{background:'rgba(124, 92, 255,0.1)',border:'0.5px solid rgba(124, 92, 255,0.25)'}}>
+                <Sparkles className="w-8 h-8 text-[#7C5CFF]"/>
               </div>
               <div className="text-center">
                 <p className="text-[15px] font-medium text-[#FAFAFA] mb-1">Building your redesign…</p>
@@ -566,7 +566,7 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromS
               </div>
               <div className="flex gap-1.5">
                 {[0,1,2].map(i=>(
-                  <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{background:'#6366f1'}}
+                  <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{background:'#7C5CFF'}}
                     animate={{opacity:[0.2,1,0.2]}} transition={{duration:1.2,repeat:Infinity,delay:i*0.2}} />
                 ))}
               </div>
@@ -585,7 +585,7 @@ function RedesignModal({ domain, analysis, h1s, bodyPreview, onClose, buildFromS
           {/* Preview */}
           {viewMode==='preview' && state.html && (
             <div className="w-full h-full flex items-start justify-center overflow-auto"
-              style={{background:'#18181c', padding: device==='mobile'?'24px 0':'0'}}>
+              style={{background:'#1A1530', padding: device==='mobile'?'24px 0':'0'}}>
               <motion.div
                 animate={{ width: device==='mobile'?'390px':'100%' }}
                 transition={{duration:0.3,ease:'easeOut'}}
@@ -680,11 +680,11 @@ function GitHubPushModal({ domain, html, onClose }: { domain: string; html: stri
       <motion.div initial={{opacity:0,y:16,scale:0.97}} animate={{opacity:1,y:0,scale:1}}
         exit={{opacity:0,y:16,scale:0.97}} transition={{duration:0.15}}
         className="w-full max-w-md rounded-2xl overflow-hidden"
-        style={{background:'#111113',border:'0.5px solid rgba(255,255,255,0.1)'}}>
+        style={{background:'#110E1C',border:'0.5px solid rgba(255,255,255,0.1)'}}>
         <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:'0.5px solid rgba(255,255,255,0.07)'}}>
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{background:'rgba(99,102,241,0.12)'}}>
-              <GitBranch className="w-3.5 h-3.5 text-[#6366f1]"/>
+            <div className="w-7 h-7 rounded-[7px] flex items-center justify-center" style={{background:'rgba(124, 92, 255,0.12)'}}>
+              <GitBranch className="w-3.5 h-3.5 text-[#7C5CFF]"/>
             </div>
             <p className="text-[14px] font-medium text-[#FAFAFA]">Push to GitHub</p>
           </div>
@@ -725,13 +725,13 @@ function GitHubPushModal({ domain, html, onClose }: { domain: string; html: stri
             </div>
             <button onClick={()=>setCreatePR(v=>!v)} disabled={state.phase==='pushing'}
               className="flex items-center gap-2.5 p-3 rounded-[10px] text-left transition-colors"
-              style={{background:createPR?'rgba(99,102,241,0.06)':'rgba(255,255,255,0.03)',border:`0.5px solid ${createPR?'rgba(99,102,241,0.2)':'rgba(255,255,255,0.06)'}`}}>
+              style={{background:createPR?'rgba(124, 92, 255,0.06)':'rgba(255,255,255,0.03)',border:`0.5px solid ${createPR?'rgba(124, 92, 255,0.2)':'rgba(255,255,255,0.06)'}`}}>
               <div className="w-4 h-4 rounded-[4px] flex items-center justify-center flex-shrink-0"
-                style={{background:createPR?'#6366f1':'transparent',border:`1.5px solid ${createPR?'#6366f1':'rgba(255,255,255,0.2)'}`}}>
+                style={{background:createPR?'#7C5CFF':'transparent',border:`1.5px solid ${createPR?'#7C5CFF':'rgba(255,255,255,0.2)'}`}}>
                 {createPR&&<Check className="w-2.5 h-2.5 text-white"/>}
               </div>
               <div>
-                <div className="flex items-center gap-1.5"><GitPullRequest className="w-3 h-3 text-[#6366f1]"/><span className="text-[12px] font-medium text-[#FAFAFA]">Create pull request</span></div>
+                <div className="flex items-center gap-1.5"><GitPullRequest className="w-3 h-3 text-[#7C5CFF]"/><span className="text-[12px] font-medium text-[#FAFAFA]">Create pull request</span></div>
                 <p className="text-[11px] text-[#52525B] mt-0.5">{createPR?'New branch + PR for review':'Push directly to base branch'}</p>
               </div>
             </button>
@@ -761,12 +761,12 @@ function LoadingView({ url }: { url: string }) {
     <div className="flex flex-col items-center justify-center text-center py-20 gap-8">
       <div className="relative w-20 h-20">
         <div className="absolute inset-0 rounded-2xl flex items-center justify-center"
-          style={{background:'rgba(99,102,241,0.08)',border:'0.5px solid rgba(99,102,241,0.2)'}}>
-          <Globe className="w-10 h-10 text-[#6366f1]"/>
+          style={{background:'rgba(124, 92, 255,0.08)',border:'0.5px solid rgba(124, 92, 255,0.2)'}}>
+          <Globe className="w-10 h-10 text-[#7C5CFF]"/>
         </div>
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(99,102,241,0.15)" strokeWidth="3"/>
-          <motion.circle cx="40" cy="40" r="36" fill="none" stroke="#6366f1" strokeWidth="3" strokeLinecap="round"
+          <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(124, 92, 255,0.15)" strokeWidth="3"/>
+          <motion.circle cx="40" cy="40" r="36" fill="none" stroke="#7C5CFF" strokeWidth="3" strokeLinecap="round"
             strokeDasharray={`${2*Math.PI*36*0.22} ${2*Math.PI*36*0.78}`}
             animate={{rotate:360}} transition={{repeat:Infinity,duration:1.6,ease:'linear'}}
             style={{transformOrigin:'40px 40px'}}/>
@@ -778,7 +778,7 @@ function LoadingView({ url }: { url: string }) {
           {steps.map((label,i)=>(
             <div key={i} className="flex items-center gap-2.5">
               {i<step?<CheckCircle2 className="w-4 h-4 text-[#22c55e]"/>
-                :i===step?<div className="w-4 h-4 rounded-full border-2 border-[#6366f1] border-t-transparent animate-spin"/>
+                :i===step?<div className="w-4 h-4 rounded-full border-2 border-[#7C5CFF] border-t-transparent animate-spin"/>
                 :<div className="w-4 h-4 rounded-full" style={{border:'1.5px solid rgba(255,255,255,0.1)'}}/>}
               <span className="text-[13px]" style={{color:i<=step?'#A1A1AA':'#3f3f46'}}>{label}</span>
             </div>
@@ -889,7 +889,7 @@ export default function WebsitePage() {
                     <Icon className="w-3.5 h-3.5"/>
                     {label}
                     {buildMode===mode&&(
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{background:'#6366f1'}}/>
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{background:'#7C5CFF'}}/>
                     )}
                   </button>
                 ))}
@@ -899,8 +899,8 @@ export default function WebsitePage() {
               {buildMode==='analyze'&&(
                 <div className="flex flex-col items-center text-center py-12 px-6 gap-5">
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                    style={{background:'rgba(99,102,241,0.1)',border:'0.5px solid rgba(99,102,241,0.2)'}}>
-                    <Globe className="w-6 h-6 text-[#6366f1]"/>
+                    style={{background:'rgba(124, 92, 255,0.1)',border:'0.5px solid rgba(124, 92, 255,0.2)'}}>
+                    <Globe className="w-6 h-6 text-[#7C5CFF]"/>
                   </div>
                   <div>
                     <h2 className="text-[17px] font-semibold text-[#FAFAFA] mb-1.5" style={{letterSpacing:'-0.02em'}}>Analyze your website</h2>
@@ -913,7 +913,7 @@ export default function WebsitePage() {
                       placeholder="yourbusiness.com"
                       className="flex-1 min-w-0 px-4 py-2.5 rounded-xl text-[14px] text-[#FAFAFA] outline-none"
                       style={{background:'rgba(24,24,28,0.8)',border:'0.5px solid rgba(255,255,255,0.1)'}}
-                      onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.08)'}}
+                      onFocus={e=>{e.currentTarget.style.borderColor='rgba(124, 92, 255,0.5)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(124, 92, 255,0.08)'}}
                       onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)';e.currentTarget.style.boxShadow='none'}}/>
                     <Button type="submit" variant="primary" size="sm" className="gap-1.5 flex-shrink-0">
                       Analyze<ArrowRight className="w-3.5 h-3.5"/>
@@ -928,8 +928,8 @@ export default function WebsitePage() {
                 <div className="flex flex-col py-10 px-6 gap-5">
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{background:'rgba(99,102,241,0.1)',border:'0.5px solid rgba(99,102,241,0.2)'}}>
-                      <Sparkles className="w-5 h-5 text-[#6366f1]"/>
+                      style={{background:'rgba(124, 92, 255,0.1)',border:'0.5px solid rgba(124, 92, 255,0.2)'}}>
+                      <Sparkles className="w-5 h-5 text-[#7C5CFF]"/>
                     </div>
                     <div>
                       <h2 className="text-[17px] font-semibold text-[#FAFAFA]" style={{letterSpacing:'-0.02em'}}>Build from inspiration</h2>
@@ -945,7 +945,7 @@ export default function WebsitePage() {
                         placeholder="e.g. A SaaS tool for scheduling social media posts"
                         className="px-4 py-2.5 rounded-xl text-[13px] text-[#FAFAFA] outline-none"
                         style={{background:'rgba(24,24,28,0.8)',border:'0.5px solid rgba(255,255,255,0.1)'}}
-                        onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)'}}
+                        onFocus={e=>{e.currentTarget.style.borderColor='rgba(124, 92, 255,0.5)'}}
                         onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}}/>
                     </div>
 
@@ -956,7 +956,7 @@ export default function WebsitePage() {
                         placeholder="stripe.com, linear.app, vercel.com…"
                         className="px-4 py-2.5 rounded-xl text-[13px] text-[#FAFAFA] outline-none"
                         style={{background:'rgba(24,24,28,0.8)',border:'0.5px solid rgba(255,255,255,0.1)'}}
-                        onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)'}}
+                        onFocus={e=>{e.currentTarget.style.borderColor='rgba(124, 92, 255,0.5)'}}
                         onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}}/>
                       {/* Preset chips */}
                       <div className="flex flex-wrap gap-1.5 pt-0.5">
@@ -965,8 +965,8 @@ export default function WebsitePage() {
                             title={p.hint}
                             className="px-2.5 py-1 rounded-[6px] text-[11px] font-medium transition-all"
                             style={{
-                              background:scratchRef===p.url?'rgba(99,102,241,0.18)':'rgba(255,255,255,0.04)',
-                              border:`0.5px solid ${scratchRef===p.url?'rgba(99,102,241,0.4)':'rgba(255,255,255,0.08)'}`,
+                              background:scratchRef===p.url?'rgba(124, 92, 255,0.18)':'rgba(255,255,255,0.04)',
+                              border:`0.5px solid ${scratchRef===p.url?'rgba(124, 92, 255,0.4)':'rgba(255,255,255,0.08)'}`,
                               color:scratchRef===p.url?'#818cf8':'#52525B',
                             }}>
                             {p.label}
@@ -982,7 +982,7 @@ export default function WebsitePage() {
                         placeholder="e.g. animated pricing table, testimonials, email signup, sticky nav"
                         className="px-4 py-2.5 rounded-xl text-[13px] text-[#FAFAFA] outline-none"
                         style={{background:'rgba(24,24,28,0.8)',border:'0.5px solid rgba(255,255,255,0.1)'}}
-                        onFocus={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)'}}
+                        onFocus={e=>{e.currentTarget.style.borderColor='rgba(124, 92, 255,0.5)'}}
                         onBlur={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}}/>
                     </div>
 
@@ -1027,7 +1027,7 @@ export default function WebsitePage() {
 
               {/* Score header */}
               <div className="flex items-center gap-5 p-5 rounded-2xl relative overflow-hidden"
-                style={{background:'#111113',border:'0.5px solid rgba(255,255,255,0.07)'}}>
+                style={{background:'#110E1C',border:'0.5px solid rgba(255,255,255,0.07)'}}>
                 {/* Subtle glow behind ring */}
                 <div className="absolute left-0 top-0 w-40 h-full pointer-events-none"
                   style={{background:`radial-gradient(ellipse at left center, ${scoreColor}12 0%, transparent 70%)`}}/>
@@ -1069,7 +1069,7 @@ export default function WebsitePage() {
                 ] as const).map(tab=>(
                   <button key={tab.id} onClick={()=>setActiveTab(tab.id)}
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-[8px] text-[12px] font-medium transition-all"
-                    style={{background:activeTab===tab.id?'rgba(99,102,241,0.15)':'transparent',
+                    style={{background:activeTab===tab.id?'rgba(124, 92, 255,0.15)':'transparent',
                       color:activeTab===tab.id?'#818cf8':'#52525B'}}>
                     <tab.icon className="w-3.5 h-3.5"/>
                     <span className="hidden sm:inline">{tab.label}</span>
@@ -1086,7 +1086,7 @@ export default function WebsitePage() {
                       {id:'all'      as SeverityFilter, label:`All (${counts?.all??0})`,           color:'#A1A1AA'},
                       {id:'critical' as SeverityFilter, label:`Critical (${counts?.critical??0})`, color:'#EF4444'},
                       {id:'warning'  as SeverityFilter, label:`Warnings (${counts?.warning??0})`,  color:'#FBBF24'},
-                      {id:'tip'      as SeverityFilter, label:`Tips (${counts?.tip??0})`,           color:'#6366f1'},
+                      {id:'tip'      as SeverityFilter, label:`Tips (${counts?.tip??0})`,           color:'#7C5CFF'},
                     ]).map(f=>(
                       <button key={f.id} onClick={()=>setSeverityFilter(f.id)}
                         className="text-[11px] px-2.5 py-1 rounded-full transition-all"
@@ -1117,15 +1117,15 @@ export default function WebsitePage() {
               {/* Brief */}
               {activeTab==='brief'&&(
                 <motion.div key="brief" initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} className="flex flex-col gap-4">
-                  <div className="p-5 rounded-[12px]" style={{background:'#111113',border:'0.5px solid rgba(255,255,255,0.06)'}}>
-                    <div className="flex items-center gap-2 mb-3"><Sparkles className="w-4 h-4 text-[#6366f1]"/><span className="text-[13px] font-medium text-[#FAFAFA]">Summary</span></div>
+                  <div className="p-5 rounded-[12px]" style={{background:'#110E1C',border:'0.5px solid rgba(255,255,255,0.06)'}}>
+                    <div className="flex items-center gap-2 mb-3"><Sparkles className="w-4 h-4 text-[#7C5CFF]"/><span className="text-[13px] font-medium text-[#FAFAFA]">Summary</span></div>
                     <p className="text-[14px] text-[#A1A1AA] leading-relaxed">{analysis.summary}</p>
                   </div>
-                  <div className="p-5 rounded-[12px]" style={{background:'rgba(99,102,241,0.04)',border:'0.5px solid rgba(99,102,241,0.15)'}}>
-                    <div className="flex items-center gap-2 mb-3"><Wand2 className="w-4 h-4 text-[#6366f1]"/><span className="text-[13px] font-medium text-[#FAFAFA]">Redesign priorities</span></div>
+                  <div className="p-5 rounded-[12px]" style={{background:'rgba(124, 92, 255,0.04)',border:'0.5px solid rgba(124, 92, 255,0.15)'}}>
+                    <div className="flex items-center gap-2 mb-3"><Wand2 className="w-4 h-4 text-[#7C5CFF]"/><span className="text-[13px] font-medium text-[#FAFAFA]">Redesign priorities</span></div>
                     <p className="text-[14px] text-[#A1A1AA] leading-relaxed">{analysis.redesignBrief}</p>
                   </div>
-                  <div className="p-5 rounded-[12px]" style={{background:'#111113',border:'0.5px solid rgba(255,255,255,0.06)'}}>
+                  <div className="p-5 rounded-[12px]" style={{background:'#110E1C',border:'0.5px solid rgba(255,255,255,0.06)'}}>
                     <div className="flex items-center gap-2 mb-3"><Zap className="w-4 h-4 text-[#FBBF24]"/><span className="text-[13px] font-medium text-[#FAFAFA]">Quick wins</span></div>
                     <div className="flex flex-col gap-2.5">
                       {analysis.quickWins.map((win,i)=>(

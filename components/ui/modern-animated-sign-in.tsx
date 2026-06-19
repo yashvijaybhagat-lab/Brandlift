@@ -43,7 +43,7 @@ const Input = memo(
           background: useMotionTemplate`
             radial-gradient(
               ${visible ? radius + 'px' : '0px'} circle at ${mouseX}px ${mouseY}px,
-              #6366f1,
+              #7C5CFF,
               transparent 80%
             )
           `,
@@ -209,7 +209,7 @@ const Ripple = memo(function Ripple({
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              background: `radial-gradient(circle, rgba(99,102,241,${(mainCircleOpacity - i * 0.02).toFixed(2)}) 0%, transparent 70%)`,
+              background: `radial-gradient(circle, rgba(124, 92, 255,${(mainCircleOpacity - i * 0.02).toFixed(2)}) 0%, transparent 70%)`,
             }}
           />
         );
@@ -487,7 +487,7 @@ const AnimatedForm = memo(function AnimatedForm({
             className="group/btn relative w-full h-10 rounded-lg font-medium text-sm
               bg-indigo-600 hover:bg-indigo-500 text-white
               transition-colors duration-200 outline-hidden hover:cursor-pointer
-              shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+              shadow-[0_0_20px_rgba(124, 92, 255,0.3)]"
             type="submit"
           >
             {submitButton} →

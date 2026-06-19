@@ -78,7 +78,7 @@ function initials(name: string): string {
 /* ─── Avatar ─────────────────────────────────────────── */
 
 function Avatar({ src, name, size = 36 }: { src?: string; name: string; size?: number }) {
-  const colors = ['#6366f1', '#8b5cf6', '#0ea5e9', '#22c55e', '#f59e0b', '#ef4444']
+  const colors = ['#7C5CFF', '#A78BFA', '#0ea5e9', '#22c55e', '#f59e0b', '#ef4444']
   const color = colors[name.charCodeAt(0) % colors.length]
   return src ? (
     <img src={src} alt={name} width={size} height={size}
@@ -170,7 +170,7 @@ function CommentPanel({ postId, currentUserEmail, currentUserName, currentUserAv
             <div style={{ display: 'flex', gap: 5 }}>
               {[0, 1, 2].map(i => (
                 <motion.div key={i} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-                  style={{ width: 7, height: 7, borderRadius: '50%', background: '#6366f1' }} />
+                  style={{ width: 7, height: 7, borderRadius: '50%', background: '#7C5CFF' }} />
               ))}
             </div>
           </div>
@@ -212,7 +212,7 @@ function CommentPanel({ postId, currentUserEmail, currentUserName, currentUserAv
         <button
           onClick={submit}
           disabled={!input.trim() || posting}
-          style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: input.trim() ? 'pointer' : 'not-allowed', background: input.trim() ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: input.trim() ? 'pointer' : 'not-allowed', background: input.trim() ? 'linear-gradient(135deg,#7C5CFF,#A78BFA)' : 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
         >
           <Send className="w-4 h-4 text-white" />
         </button>
@@ -394,7 +394,7 @@ function VideoSlide({
               <Avatar src={post.userAvatar} name={post.userName} size={42} />
               <button
                 onClick={() => onFollow(post.userId)}
-                style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', width: 20, height: 20, borderRadius: '50%', background: isFollowing ? '#22c55e' : 'linear-gradient(135deg,#6366f1,#8b5cf6)', border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', width: 20, height: 20, borderRadius: '50%', background: isFollowing ? '#22c55e' : 'linear-gradient(135deg,#7C5CFF,#A78BFA)', border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
               >
                 {isFollowing
                   ? <UserCheck style={{ width: 10, height: 10, color: '#fff' }} />
@@ -421,7 +421,7 @@ function VideoSlide({
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
           <button
             onClick={() => setShowComments(s => !s)}
-            style={{ width: 46, height: 46, borderRadius: '50%', background: showComments ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.08)', border: `1px solid ${showComments ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.12)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+            style={{ width: 46, height: 46, borderRadius: '50%', background: showComments ? 'rgba(124, 92, 255,0.3)' : 'rgba(255,255,255,0.08)', border: `1px solid ${showComments ? 'rgba(124, 92, 255,0.5)' : 'rgba(255,255,255,0.12)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
           >
             <MessageCircle className="w-5 h-5 text-white" />
           </button>
@@ -552,7 +552,7 @@ function ChatWindow({ userId, userName, currentUserEmail, currentUserName, curre
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', flex: 1, alignItems: 'center' }}>
             <div style={{ display: 'flex', gap: 6 }}>
-              {[0, 1, 2].map(i => <motion.div key={i} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1' }} />)}
+              {[0, 1, 2].map(i => <motion.div key={i} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} style={{ width: 8, height: 8, borderRadius: '50%', background: '#7C5CFF' }} />)}
             </div>
           </div>
         ) : messages.length === 0 ? (
@@ -566,7 +566,7 @@ function ChatWindow({ userId, userName, currentUserEmail, currentUserName, curre
             <div key={msg.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', gap: 8, alignItems: 'flex-end' }}>
               {!isMine && <Avatar name={msg.senderName} src={msg.senderAvatar} size={26} />}
               <div style={{ maxWidth: '70%' }}>
-                <div style={{ padding: '10px 14px', borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px', background: isMine ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'var(--color-surface-elevated)', border: isMine ? 'none' : '0.5px solid var(--color-border)', fontSize: 14, color: isMine ? '#fff' : 'var(--color-text)', lineHeight: 1.5 }}>
+                <div style={{ padding: '10px 14px', borderRadius: isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px', background: isMine ? 'linear-gradient(135deg,#7C5CFF,#A78BFA)' : 'var(--color-surface-elevated)', border: isMine ? 'none' : '0.5px solid var(--color-border)', fontSize: 14, color: isMine ? '#fff' : 'var(--color-text)', lineHeight: 1.5 }}>
                   {msg.content}
                 </div>
                 <p style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 4, textAlign: isMine ? 'right' : 'left' }}>{timeAgo(msg.sentAt)}</p>
@@ -580,7 +580,7 @@ function ChatWindow({ userId, userName, currentUserEmail, currentUserName, curre
         <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} placeholder={`Message ${userName}…`}
           style={{ flex: 1, background: 'var(--color-surface-elevated)', border: '0.5px solid var(--color-border)', borderRadius: 12, padding: '10px 14px', fontSize: 14, color: 'var(--color-text)', outline: 'none' }} />
         <button onClick={send} disabled={!input.trim() || sending}
-          style={{ width: 40, height: 40, borderRadius: 12, border: 'none', flexShrink: 0, cursor: input.trim() ? 'pointer' : 'not-allowed', background: input.trim() ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'var(--color-surface-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+          style={{ width: 40, height: 40, borderRadius: 12, border: 'none', flexShrink: 0, cursor: input.trim() ? 'pointer' : 'not-allowed', background: input.trim() ? 'linear-gradient(135deg,#7C5CFF,#A78BFA)' : 'var(--color-surface-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
           <Send className="w-4 h-4" style={{ color: input.trim() ? '#fff' : 'var(--color-text-muted)' }} />
         </button>
       </div>
@@ -622,13 +622,13 @@ function MessagesTab({ currentUserEmail, currentUserName, currentUserAvatar, ini
       {loading ? (
         <div style={{ padding: 32, display: 'flex', justifyContent: 'center' }}>
           <div style={{ display: 'flex', gap: 6 }}>
-            {[0, 1, 2].map(i => <motion.div key={i} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1' }} />)}
+            {[0, 1, 2].map(i => <motion.div key={i} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }} style={{ width: 8, height: 8, borderRadius: '50%', background: '#7C5CFF' }} />)}
           </div>
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '48px 24px', textAlign: 'center' }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <MessageCircle className="w-6 h-6" style={{ color: '#6366f1' }} />
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(124, 92, 255,0.1)', border: '0.5px solid rgba(124, 92, 255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MessageCircle className="w-6 h-6" style={{ color: '#7C5CFF' }} />
           </div>
           <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)' }}>No messages yet</p>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', maxWidth: 260, lineHeight: 1.6 }}>Go to the Feed tab and tap DM on a video to start a conversation.</p>
@@ -738,7 +738,7 @@ export default function FeedPage() {
             background: tab === 'feed' ? (id === tab ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.2)') : 'none',
             color: tab === 'feed' ? (id === tab ? '#fff' : 'rgba(255,255,255,0.55)') : (id === tab ? 'var(--color-text)' : 'var(--color-text-muted)'),
             backdropFilter: tab === 'feed' ? 'blur(8px)' : undefined,
-            borderBottom: tab !== 'feed' && id === tab ? '2px solid #6366f1' : (tab !== 'feed' ? '2px solid transparent' : undefined),
+            borderBottom: tab !== 'feed' && id === tab ? '2px solid #7C5CFF' : (tab !== 'feed' ? '2px solid transparent' : undefined),
           }}>
             <Icon className="w-3.5 h-3.5" />{label}
           </button>
@@ -766,7 +766,7 @@ export default function FeedPage() {
                 <div style={{ height: '100%', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      {[0, 1, 2].map(i => <motion.div key={i} animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }} style={{ width: 10, height: 10, borderRadius: '50%', background: '#6366f1' }} />)}
+                      {[0, 1, 2].map(i => <motion.div key={i} animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }} style={{ width: 10, height: 10, borderRadius: '50%', background: '#7C5CFF' }} />)}
                     </div>
                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Loading feed…</p>
                   </div>
@@ -775,17 +775,17 @@ export default function FeedPage() {
                 <div style={{ height: '100%', background: feedTab === 'following' ? '#000' : 'var(--color-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '0 32px', textAlign: 'center' }}>
                   {feedTab === 'following' ? (
                     <>
-                      <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(99,102,241,0.15)', border: '0.5px solid rgba(99,102,241,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(124, 92, 255,0.15)', border: '0.5px solid rgba(124, 92, 255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <UserPlus className="w-8 h-8" style={{ color: '#818cf8' }} />
                       </div>
                       <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff', letterSpacing: '-0.03em' }}>Follow creators first</h2>
                       <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', maxWidth: 280, lineHeight: 1.65 }}>Tap the + on any creator's avatar in the For You feed to follow them.</p>
-                      <button onClick={() => setFeedTab('foryou')} style={{ marginTop: 8, padding: '10px 24px', borderRadius: 999, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Go to For You</button>
+                      <button onClick={() => setFeedTab('foryou')} style={{ marginTop: 8, padding: '10px 24px', borderRadius: 999, background: 'linear-gradient(135deg,#7C5CFF,#A78BFA)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Go to For You</button>
                     </>
                   ) : (
                     <>
-                      <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Users className="w-8 h-8" style={{ color: '#6366f1' }} />
+                      <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(124, 92, 255,0.08)', border: '0.5px solid rgba(124, 92, 255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Users className="w-8 h-8" style={{ color: '#7C5CFF' }} />
                       </div>
                       <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.03em' }}>Be the first to share</h2>
                       <p style={{ fontSize: 14, color: 'var(--color-text-muted)', maxWidth: 300, lineHeight: 1.65 }}>Go to My Videos and click Share to add your first post.</p>

@@ -63,7 +63,7 @@ function MarkdownText({ text }: { text: string }) {
         <ul key={`ul-${i}`} style={{ margin: '4px 0', paddingLeft: 0, listStyle: 'none' }}>
           {items.map((item, j) => (
             <li key={j} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', marginBottom: 3 }}>
-              <span style={{ color: '#6366f1', fontSize: 12, marginTop: 2, flexShrink: 0 }}>•</span>
+              <span style={{ color: '#7C5CFF', fontSize: 12, marginTop: 2, flexShrink: 0 }}>•</span>
               <span style={{ fontSize: 13, color: '#E4E4E7', lineHeight: 1.6 }}>{inlineRender(item)}</span>
             </li>
           ))}
@@ -79,7 +79,7 @@ function MarkdownText({ text }: { text: string }) {
         <ol key={`ol-${i}`} style={{ margin: '4px 0', paddingLeft: 0, listStyle: 'none' }}>
           {items.map((item, j) => (
             <li key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 3 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', minWidth: 16, marginTop: 2, flexShrink: 0 }}>{num++}.</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#7C5CFF', minWidth: 16, marginTop: 2, flexShrink: 0 }}>{num++}.</span>
               <span style={{ fontSize: 13, color: '#E4E4E7', lineHeight: 1.6 }}>{inlineRender(item)}</span>
             </li>
           ))}
@@ -110,7 +110,7 @@ function inlineRender(text: string): React.ReactNode {
     const candidates = [
       boldMatch   && { idx: boldMatch.index!,   len: boldMatch[0].length,   node: <strong key={key++} style={{ color: '#FAFAFA', fontWeight: 700 }}>{boldMatch[1]}</strong> },
       italicMatch && { idx: italicMatch.index!, len: italicMatch[0].length, node: <em key={key++} style={{ color: '#c4b5fd', fontStyle: 'italic' }}>{italicMatch[1]}</em> },
-      codeMatch   && { idx: codeMatch.index!,   len: codeMatch[0].length,   node: <code key={key++} style={{ background: '#18181C', color: '#a5b4fc', padding: '1px 5px', borderRadius: 4, fontSize: 12, fontFamily: 'monospace' }}>{codeMatch[1]}</code> },
+      codeMatch   && { idx: codeMatch.index!,   len: codeMatch[0].length,   node: <code key={key++} style={{ background: '#1A1530', color: '#a5b4fc', padding: '1px 5px', borderRadius: 4, fontSize: 12, fontFamily: 'monospace' }}>{codeMatch[1]}</code> },
       linkMatch   && { idx: linkMatch.index!,   len: linkMatch[0].length,   node: <a key={key++} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'underline' }}>{linkMatch[1]}</a> },
     ].filter(Boolean) as { idx: number; len: number; node: React.ReactNode }[]
 
@@ -130,8 +130,8 @@ function LyraIcon({ size = 20 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
       <defs>
         <linearGradient id="lyra-g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#6366f1" />
-          <stop offset="100%" stopColor="#8b5cf6" />
+          <stop offset="0%" stopColor="#7C5CFF" />
+          <stop offset="100%" stopColor="#A78BFA" />
         </linearGradient>
       </defs>
       <circle cx="12" cy="5"  r="1.5" fill="url(#lyra-g)" />
@@ -139,7 +139,7 @@ function LyraIcon({ size = 20 }: { size?: number }) {
       <circle cx="17" cy="10" r="1.2" fill="url(#lyra-g)" />
       <circle cx="9"  cy="17" r="1.2" fill="url(#lyra-g)" />
       <circle cx="15" cy="17" r="1.2" fill="url(#lyra-g)" />
-      <circle cx="12" cy="20" r="1.5" fill="#8b5cf6" opacity="0.7" />
+      <circle cx="12" cy="20" r="1.5" fill="#A78BFA" opacity="0.7" />
       <line x1="12" y1="5"  x2="7"  y2="10" stroke="url(#lyra-g)" strokeWidth="0.9" opacity="0.6" />
       <line x1="12" y1="5"  x2="17" y2="10" stroke="url(#lyra-g)" strokeWidth="0.9" opacity="0.6" />
       <line x1="7"  y1="10" x2="9"  y2="17" stroke="url(#lyra-g)" strokeWidth="0.9" opacity="0.6" />
@@ -155,7 +155,7 @@ function TypingDots() {
   return (
     <div style={{ display: 'flex', gap: 4, padding: '4px 0' }}>
       {[0, 1, 2].map(i => (
-        <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', animation: `lyra-dot 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+        <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#7C5CFF', animation: `lyra-dot 1.2s ease-in-out ${i * 0.2}s infinite` }} />
       ))}
     </div>
   )
@@ -165,7 +165,7 @@ function TypingDots() {
 function AttachmentCard({ att, onRemove }: { att: Attachment; onRemove?: () => void }) {
   const icon = att.type.startsWith('image/') ? 'img' : att.type.startsWith('video/') ? 'vid' : att.type === 'application/pdf' ? 'pdf' : 'file'
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 10px', borderRadius: 10, background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.2)', maxWidth: 220 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 10px', borderRadius: 10, background: 'rgba(124, 92, 255,0.08)', border: '0.5px solid rgba(124, 92, 255,0.2)', maxWidth: 220 }}>
       <span style={{ fontSize: 13, flexShrink: 0 }}>{icon}</span>
       <a href={att.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#a5b4fc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, textDecoration: 'none' }} title={att.name}>
         {att.name.length > 24 ? `${att.name.slice(0, 22)}…` : att.name}
@@ -420,18 +420,18 @@ export function LyraChat() {
             position: 'fixed', bottom: 80, right: 0, zIndex: 9001,
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '10px 10px 10px 12px',
-            background: 'linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)',
+            background: 'linear-gradient(135deg,#7C5CFF 0%,#A78BFA 100%)',
             border: 'none',
             borderRadius: '12px 0 0 12px',
             cursor: 'pointer',
-            boxShadow: '-4px 4px 20px rgba(99,102,241,0.35)',
+            boxShadow: '-4px 4px 20px rgba(124, 92, 255,0.35)',
           }}
           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.paddingRight = '14px' }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.paddingRight = '10px' }}
         >
           {/* New message dot */}
           {hasNewMsg && (
-            <div style={{ position: 'absolute', top: 6, left: 6, width: 8, height: 8, borderRadius: '50%', background: '#4ADE80', border: '1.5px solid #6366f1', animation: 'lyra-badge 1s ease infinite' }} />
+            <div style={{ position: 'absolute', top: 6, left: 6, width: 8, height: 8, borderRadius: '50%', background: '#4ADE80', border: '1.5px solid #7C5CFF', animation: 'lyra-badge 1s ease infinite' }} />
           )}
           <LyraIcon size={16} />
           {/* Arrow pointing left (into view) */}
@@ -490,14 +490,14 @@ export function LyraChat() {
                 position: 'absolute', right: 70,
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '6px 12px',
-                background: 'linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)',
+                background: 'linear-gradient(135deg,#7C5CFF 0%,#A78BFA 100%)',
                 borderRadius: 24,
                 whiteSpace: 'nowrap',
                 pointerEvents: 'none',
                 opacity: 0,
                 transform: 'translateX(8px)',
                 transition: 'opacity 0.2s ease, transform 0.2s ease',
-                boxShadow: '0 4px 16px rgba(99,102,241,0.4)',
+                boxShadow: '0 4px 16px rgba(124, 92, 255,0.4)',
               }}>
                 <LyraIcon size={13} />
                 <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>Lyra AI</span>
@@ -507,7 +507,7 @@ export function LyraChat() {
             {/* Pulsing rings — only when closed */}
             {!open && (
               <>
-                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(99,102,241,0.35)', animation: 'lyra-ring 2s ease-out infinite', zIndex: -1 }} />
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(124, 92, 255,0.35)', animation: 'lyra-ring 2s ease-out infinite', zIndex: -1 }} />
                 <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(139,92,246,0.25)', animation: 'lyra-ring 2s ease-out 0.6s infinite', zIndex: -1 }} />
               </>
             )}
@@ -519,16 +519,16 @@ export function LyraChat() {
               style={{
                 width: 60, height: 60, borderRadius: '50%',
                 background: open
-                  ? 'rgba(99,102,241,0.15)'
+                  ? 'rgba(124, 92, 255,0.15)'
                   : 'linear-gradient(135deg,#5254f0 0%,#7c3aed 100%)',
                 border: open
-                  ? '1px solid rgba(99,102,241,0.4)'
+                  ? '1px solid rgba(124, 92, 255,0.4)'
                   : '2px solid rgba(255,255,255,0.15)',
                 cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: open
-                  ? '0 4px 24px rgba(99,102,241,0.2)'
-                  : '0 8px 32px rgba(99,102,241,0.55), 0 2px 8px rgba(0,0,0,0.4)',
+                  ? '0 4px 24px rgba(124, 92, 255,0.2)'
+                  : '0 8px 32px rgba(124, 92, 255,0.55), 0 2px 8px rgba(0,0,0,0.4)',
                 transition: 'all 0.2s cubic-bezier(.34,1.56,.64,1)',
                 position: 'relative',
               }}
@@ -541,7 +541,7 @@ export function LyraChat() {
               }
               {/* New message badge */}
               {hasNewMsg && !open && (
-                <div style={{ position: 'absolute', top: 3, right: 3, width: 12, height: 12, borderRadius: '50%', background: '#4ADE80', border: '2px solid #0A0A0B', animation: 'lyra-badge 1s ease infinite' }} />
+                <div style={{ position: 'absolute', top: 3, right: 3, width: 12, height: 12, borderRadius: '50%', background: '#4ADE80', border: '2px solid #08060F', animation: 'lyra-badge 1s ease infinite' }} />
               )}
             </button>
           </div>
@@ -560,20 +560,20 @@ export function LyraChat() {
             backdropFilter: 'blur(24px)',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: 20,
-            boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.04)',
+            boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(124, 92, 255,0.2), inset 0 1px 0 rgba(255,255,255,0.04)',
             overflow: 'hidden',
             transition: 'width 0.2s ease, height 0.2s ease',
           }}
         >
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.07)', background: 'rgba(99,102,241,0.04)', flexShrink: 0 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg,rgba(99,102,241,0.2) 0%,rgba(139,92,246,0.2) 100%)', border: '0.5px solid rgba(99,102,241,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.07)', background: 'rgba(124, 92, 255,0.04)', flexShrink: 0 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg,rgba(124, 92, 255,0.2) 0%,rgba(139,92,246,0.2) 100%)', border: '0.5px solid rgba(124, 92, 255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <LyraIcon size={18} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#FAFAFA', letterSpacing: '-0.02em' }}>Lyra</span>
-                <span style={{ fontSize: 9, fontWeight: 700, color: '#6366f1', letterSpacing: '0.08em', padding: '1px 5px', borderRadius: 4, background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.25)', textTransform: 'uppercase' }}>AI</span>
+                <span style={{ fontSize: 9, fontWeight: 700, color: '#7C5CFF', letterSpacing: '0.08em', padding: '1px 5px', borderRadius: 4, background: 'rgba(124, 92, 255,0.1)', border: '0.5px solid rgba(124, 92, 255,0.25)', textTransform: 'uppercase' }}>AI</span>
               </div>
               <p style={{ fontSize: 10, color: '#52525B', marginTop: 0 }}>BrandLift co-pilot · Gemini powered</p>
             </div>
@@ -611,8 +611,8 @@ export function LyraChat() {
 
           {/* Debug mode banner — only for founders */}
           {beta.isOwner && debugMode && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 14px', background: 'rgba(99,102,241,0.08)', borderBottom: '0.5px solid rgba(99,102,241,0.2)', flexShrink: 0 }}>
-              <span style={{ fontSize: 9, fontWeight: 800, color: '#6366f1', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '1px 5px', borderRadius: 3, background: 'rgba(99,102,241,0.15)', border: '0.5px solid rgba(99,102,241,0.3)' }}>DEBUG ON</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 14px', background: 'rgba(124, 92, 255,0.08)', borderBottom: '0.5px solid rgba(124, 92, 255,0.2)', flexShrink: 0 }}>
+              <span style={{ fontSize: 9, fontWeight: 800, color: '#7C5CFF', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '1px 5px', borderRadius: 3, background: 'rgba(124, 92, 255,0.15)', border: '0.5px solid rgba(124, 92, 255,0.3)' }}>DEBUG ON</span>
               <span style={{ fontSize: 10, color: '#52525B', flex: 1 }}>Model · latency · tokens shown per message</span>
               <button onClick={() => setDebugMode(false)} style={{ fontSize: 10, color: '#52525B', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>✕ off</button>
             </div>
@@ -630,9 +630,9 @@ export function LyraChat() {
           )}
 
           {/* Web search toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.05)', background: webSearch ? 'rgba(99,102,241,0.03)' : 'transparent', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.05)', background: webSearch ? 'rgba(124, 92, 255,0.03)' : 'transparent', flexShrink: 0 }}>
             <button onClick={() => setWebSearch(p => !p)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 10px', borderRadius: 20, background: webSearch ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)', border: `0.5px solid ${webSearch ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)'}`, color: webSearch ? '#a5b4fc' : '#52525B', cursor: 'pointer', fontSize: 11, fontWeight: 600, transition: 'all 0.15s' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 10px', borderRadius: 20, background: webSearch ? 'rgba(124, 92, 255,0.15)' : 'rgba(255,255,255,0.03)', border: `0.5px solid ${webSearch ? 'rgba(124, 92, 255,0.4)' : 'rgba(255,255,255,0.08)'}`, color: webSearch ? '#a5b4fc' : '#52525B', cursor: 'pointer', fontSize: 11, fontWeight: 600, transition: 'all 0.15s' }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
               Web search {webSearch ? 'on' : 'off'}
             </button>
@@ -645,7 +645,7 @@ export function LyraChat() {
             {isEmpty && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, paddingBottom: 16 }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 16, margin: '0 auto 12px', background: 'linear-gradient(135deg,rgba(99,102,241,0.15) 0%,rgba(139,92,246,0.15) 100%)', border: '1px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 16, margin: '0 auto 12px', background: 'linear-gradient(135deg,rgba(124, 92, 255,0.15) 0%,rgba(139,92,246,0.15) 100%)', border: '1px solid rgba(124, 92, 255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <LyraIcon size={26} />
                   </div>
                   <p style={{ fontSize: 15, fontWeight: 700, color: '#FAFAFA', letterSpacing: '-0.02em' }}>Hey, I&apos;m Lyra</p>
@@ -654,9 +654,9 @@ export function LyraChat() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, width: '100%' }}>
                   {QUICK_ACTIONS.map(q => (
                     <button key={q.label} onClick={() => { setInput(q.prompt); send(q.prompt) }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, textAlign: 'left', background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)', cursor: 'pointer', transition: 'all 0.15s' }}
-                      onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = 'rgba(99,102,241,0.35)'; b.style.background = 'rgba(99,102,241,0.06)' }}
-                      onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = 'rgba(255,255,255,0.07)'; b.style.background = '#111113' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, textAlign: 'left', background: '#110E1C', border: '0.5px solid rgba(255,255,255,0.07)', cursor: 'pointer', transition: 'all 0.15s' }}
+                      onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = 'rgba(124, 92, 255,0.35)'; b.style.background = 'rgba(124, 92, 255,0.06)' }}
+                      onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = 'rgba(255,255,255,0.07)'; b.style.background = '#110E1C' }}>
                       <span style={{ fontSize: 14, flexShrink: 0 }}>{q.emoji}</span>
                       <span style={{ fontSize: 11, fontWeight: 600, color: '#A1A1AA', lineHeight: 1.3 }}>{q.label}</span>
                     </button>
@@ -668,12 +668,12 @@ export function LyraChat() {
             {messages.map((msg, idx) => (
               <div key={msg.id} className="lyra-msg" style={{ display: 'flex', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 8 }}>
                 {msg.role === 'assistant' && (
-                  <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 2, background: 'linear-gradient(135deg,rgba(99,102,241,0.2) 0%,rgba(139,92,246,0.2) 100%)', border: '0.5px solid rgba(99,102,241,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 2, background: 'linear-gradient(135deg,rgba(124, 92, 255,0.2) 0%,rgba(139,92,246,0.2) 100%)', border: '0.5px solid rgba(124, 92, 255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <LyraIcon size={14} />
                   </div>
                 )}
                 <div style={{ maxWidth: '80%', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div style={{ padding: msg.role === 'user' ? '8px 12px' : '10px 12px', borderRadius: msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px', background: msg.role === 'user' ? 'linear-gradient(135deg,rgba(99,102,241,0.22) 0%,rgba(139,92,246,0.18) 100%)' : '#111113', border: msg.role === 'user' ? '0.5px solid rgba(99,102,241,0.3)' : msg.error ? '0.5px solid rgba(239,68,68,0.25)' : '0.5px solid rgba(255,255,255,0.07)' }}>
+                  <div style={{ padding: msg.role === 'user' ? '8px 12px' : '10px 12px', borderRadius: msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px', background: msg.role === 'user' ? 'linear-gradient(135deg,rgba(124, 92, 255,0.22) 0%,rgba(139,92,246,0.18) 100%)' : '#110E1C', border: msg.role === 'user' ? '0.5px solid rgba(124, 92, 255,0.3)' : msg.error ? '0.5px solid rgba(239,68,68,0.25)' : '0.5px solid rgba(255,255,255,0.07)' }}>
                     {msg.role === 'assistant' && msg.usedSearch && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#52525B" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -685,7 +685,7 @@ export function LyraChat() {
                       : msg.content ? <MarkdownText text={msg.content} /> : <TypingDots />
                     }
                     {msg.role === 'assistant' && streaming && messages[messages.length - 1]?.id === msg.id && msg.content && (
-                      <span style={{ display: 'inline-block', width: 2, height: 14, background: '#6366f1', borderRadius: 1, marginLeft: 2, verticalAlign: 'text-bottom', animation: 'lyra-dot 0.8s ease-in-out infinite' }} />
+                      <span style={{ display: 'inline-block', width: 2, height: 14, background: '#7C5CFF', borderRadius: 1, marginLeft: 2, verticalAlign: 'text-bottom', animation: 'lyra-dot 0.8s ease-in-out infinite' }} />
                     )}
                   </div>
                   {msg.attachments && msg.attachments.length > 0 && (
@@ -696,7 +696,7 @@ export function LyraChat() {
                   {msg.role === 'assistant' && msg.content && !streaming && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       {debugMode && (
-                        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', padding: '4px 8px', borderRadius: 6, background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', padding: '4px 8px', borderRadius: 6, background: 'rgba(124, 92, 255,0.06)', border: '0.5px solid rgba(124, 92, 255,0.15)' }}>
                           <span style={{ fontSize: 9, fontFamily: 'monospace', fontWeight: 700, color: '#a5b4fc' }}>
                             {msg.model ?? 'gemini-2.5-flash-lite'}
                           </span>
@@ -742,20 +742,20 @@ export function LyraChat() {
 
           {/* Input */}
           <div style={{ padding: '10px 12px', borderTop: '0.5px solid rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, padding: '8px 10px', background: '#111113', border: '0.5px solid rgba(255,255,255,0.09)', borderRadius: 14, transition: 'border-color 0.15s' }}
-              onFocusCapture={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(99,102,241,0.4)' }}
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, padding: '8px 10px', background: '#110E1C', border: '0.5px solid rgba(255,255,255,0.09)', borderRadius: 14, transition: 'border-color 0.15s' }}
+              onFocusCapture={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(124, 92, 255,0.4)' }}
               onBlurCapture={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.09)' }}>
               {/* Attach / compress status */}
               {compressStatus ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '2px 4px', flexShrink: 0 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2.2" strokeLinecap="round" style={{ animation: 'lyra-dot 1s ease infinite' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7C5CFF" strokeWidth="2.2" strokeLinecap="round" style={{ animation: 'lyra-dot 1s ease infinite' }}>
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                   </svg>
-                  <span style={{ fontSize: 10, color: '#6366f1', fontWeight: 600 }}>{compressStatus}</span>
+                  <span style={{ fontSize: 10, color: '#7C5CFF', fontWeight: 600 }}>{compressStatus}</span>
                 </div>
               ) : (
                 <button onClick={() => fileInputRef.current?.click()} disabled={uploading} title="Attach file"
-                  style={{ background: 'none', border: 'none', cursor: uploading ? 'default' : 'pointer', color: uploading ? '#6366f1' : '#3f3f46', padding: '2px 4px', display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'color 0.15s' }}
+                  style={{ background: 'none', border: 'none', cursor: uploading ? 'default' : 'pointer', color: uploading ? '#7C5CFF' : '#3f3f46', padding: '2px 4px', display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'color 0.15s' }}
                   onMouseEnter={e => { if (!uploading) (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA' }}
                   onMouseLeave={e => { if (!uploading) (e.currentTarget as HTMLButtonElement).style.color = '#3f3f46' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation: uploading ? 'lyra-dot 1s ease infinite' : 'none' }}>
@@ -775,7 +775,7 @@ export function LyraChat() {
                 </button>
               ) : (
                 <button onClick={() => send()} disabled={!input.trim() && pendingAtts.length === 0}
-                  style={{ width: 30, height: 30, borderRadius: 8, background: input.trim() || pendingAtts.length > 0 ? 'linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)' : '#18181C', border: 'none', cursor: input.trim() || pendingAtts.length > 0 ? 'pointer' : 'default', color: input.trim() || pendingAtts.length > 0 ? '#fff' : '#3f3f46', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', boxShadow: input.trim() ? '0 2px 12px rgba(99,102,241,0.35)' : 'none' }}>
+                  style={{ width: 30, height: 30, borderRadius: 8, background: input.trim() || pendingAtts.length > 0 ? 'linear-gradient(135deg,#7C5CFF 0%,#A78BFA 100%)' : '#1A1530', border: 'none', cursor: input.trim() || pendingAtts.length > 0 ? 'pointer' : 'default', color: input.trim() || pendingAtts.length > 0 ? '#fff' : '#3f3f46', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', boxShadow: input.trim() ? '0 2px 12px rgba(124, 92, 255,0.35)' : 'none' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 </button>
               )}

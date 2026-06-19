@@ -15,14 +15,14 @@ const cardData = {
     description: "AI-generated hooks & scripts",
     icon: Lightbulb,
     stat: "24 ideas this week",
-    color: "#6366f1",
+    color: "#7C5CFF",
   },
   2: {
     title: "My Videos",
     description: "Published & scheduled content",
     icon: Video,
     stat: "8 videos published",
-    color: "#8b5cf6",
+    color: "#A78BFA",
   },
   3: {
     title: "Growth Stats",

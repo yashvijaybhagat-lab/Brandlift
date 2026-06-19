@@ -160,7 +160,7 @@ export default function StepGenerating({ onComplete }: StepGeneratingProps) {
       className="relative flex flex-col items-center justify-center min-h-screen w-full px-4"
       style={{
         background:
-          'radial-gradient(ellipse 60% 50% at 50% 60%, rgba(99,102,241,0.04) 0%, transparent 70%)',
+          'radial-gradient(ellipse 60% 50% at 50% 60%, rgba(124, 92, 255,0.04) 0%, transparent 70%)',
       }}
     >
       {/* Logo mark */}

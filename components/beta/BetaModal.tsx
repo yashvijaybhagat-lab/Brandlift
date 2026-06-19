@@ -139,7 +139,7 @@ export function BetaModalProvider({ children }: { children: React.ReactNode }) {
               background: 'rgba(139,92,246,0.06)',
               border: '0.5px solid rgba(139,92,246,0.14)',
             }}>
-              <span style={{ fontSize: 12, color: '#8b5cf6', flexShrink: 0, lineHeight: 1.5 }}>{f.icon}</span>
+              <span style={{ fontSize: 12, color: '#A78BFA', flexShrink: 0, lineHeight: 1.5 }}>{f.icon}</span>
               <div>
                 <p style={{ fontSize: 11, fontWeight: 700, color: '#c4b5fd', margin: 0 }}>{f.label}</p>
                 <p style={{ fontSize: 10, color: '#52525b', margin: 0, marginTop: 2, lineHeight: 1.4 }}>{f.desc}</p>

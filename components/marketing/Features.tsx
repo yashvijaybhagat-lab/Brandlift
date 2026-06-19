@@ -106,7 +106,7 @@ function OnboardingMockup() {
   }, [])
 
   return (
-    <MockupFrame accent="#5855D4">
+    <MockupFrame accent="#7C5CFF">
     <div
       id="onboarding-mockup"
       className="p-6 flex flex-col gap-5"
@@ -153,13 +153,13 @@ function OnboardingMockup() {
           <div
             className="flex items-start gap-2.5 p-3 rounded-interactive"
             style={{
-              background: 'rgba(88,85,212,0.06)',
-              border: '0.5px solid rgba(88,85,212,0.2)',
+              background: 'rgba(124, 92, 255,0.06)',
+              border: '0.5px solid rgba(124, 92, 255,0.2)',
             }}
           >
             <div
               className="w-4 h-4 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center"
-              style={{ background: 'var(--color-primary)', fontSize: 9, color: '#0A0A0B', fontWeight: 700 }}
+              style={{ background: 'var(--color-primary)', fontSize: 9, color: '#08060F', fontWeight: 700 }}
             >
               AI
             </div>
@@ -184,7 +184,7 @@ function OnboardingMockup() {
             style={{
               background: i === 0 ? 'var(--color-primary)' : 'var(--color-border-strong)',
               transition: 'background 200ms var(--ease-out)',
-              boxShadow: i === 0 ? '0 0 8px rgba(88,85,212,0.6)' : undefined,
+              boxShadow: i === 0 ? '0 0 8px rgba(124, 92, 255,0.6)' : undefined,
             }}
           />
         ))}
@@ -224,7 +224,7 @@ const CONTENT_IDEAS = [
 
 function ContentMockup() {
   return (
-    <MockupFrame accent="#5855D4">
+    <MockupFrame accent="#7C5CFF">
     <div
       className="p-5 grid grid-cols-2 gap-3"
       style={{ background: 'var(--color-surface)' }}
@@ -237,7 +237,7 @@ function ContentMockup() {
             background: 'var(--color-surface-elevated)',
             border: '0.5px solid var(--color-border)',
           }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(88,85,212,0.3)' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124, 92, 255,0.3)' }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)' }}
         >
           <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text)' }}>

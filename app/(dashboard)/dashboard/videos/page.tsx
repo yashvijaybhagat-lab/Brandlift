@@ -144,14 +144,14 @@ const SCRIPT_TEMPLATES = [
 ]
 
 const GENZ_IDEAS = [
-  { tag: 'POV', title: 'Only Business NOT Doing Video', hook: 'POV: every competitor in your area is posting and you\'re still relying on word of mouth. It\'s giving 2009.', vibe: 'Relatable dread', accent: '#6366f1' },
+  { tag: 'POV', title: 'Only Business NOT Doing Video', hook: 'POV: every competitor in your area is posting and you\'re still relying on word of mouth. It\'s giving 2009.', vibe: 'Relatable dread', accent: '#7C5CFF' },
   { tag: 'VIRAL', title: 'The Audacity of That Yelp Review', hook: 'Dramatic reading of the wildest review you ever got. Spoiler: they gave you 1 star because you were closed on Christmas.', vibe: 'Comedy gold', accent: '#f43f5e' },
   { tag: 'REAL', title: 'Day in the Life Speedrun', hook: '5am to close. Chaotic. Unfiltered. The reason you\'re always tired. People eat this up.', vibe: 'Real & raw', accent: '#10b981' },
   { tag: 'FEELS', title: 'That One Regular Customer', hook: 'Every business has a Margaret. Film her order. She\'ll cry. Your comments will too.', vibe: 'Emotional bait', accent: '#f59e0b' },
   { tag: 'TRUTH', title: 'Expectation vs Reality of Owning a Business', hook: 'Expectation: living your dream. Reality: you\'re the CEO, janitor, accountant, and therapist. All at once.', vibe: 'Brutally honest', accent: '#ef4444' },
-  { tag: 'TREND', title: 'Rating Local Businesses in My City', hook: 'Walk into your own spot as if you\'re a stranger. Rate it out of 10. Roast yourself. The algorithm loves self-awareness.', vibe: 'Trendy format', accent: '#8b5cf6' },
+  { tag: 'TREND', title: 'Rating Local Businesses in My City', hook: 'Walk into your own spot as if you\'re a stranger. Rate it out of 10. Roast yourself. The algorithm loves self-awareness.', vibe: 'Trendy format', accent: '#A78BFA' },
   { tag: 'LOL', title: 'Explaining My Business to My Parents', hook: '"So you\'re just... on your phone?" Yes dad. But make it entrepreneurship.', vibe: 'Gen gap comedy', accent: '#06b6d4' },
-  { tag: 'STORY', title: 'Why I Quit My 9-5', hook: 'Left the salary. Bought the dream. People said I was unhinged. Numbers said otherwise.', vibe: 'Inspirational arc', accent: '#5855D4' },
+  { tag: 'STORY', title: 'Why I Quit My 9-5', hook: 'Left the salary. Bought the dream. People said I was unhinged. Numbers said otherwise.', vibe: 'Inspirational arc', accent: '#7C5CFF' },
   { tag: 'RELATABLE', title: 'Things Customers Say vs What They Mean', hook: '"I\'ll think about it" = I\'m going to your competitor. "You\'re a bit pricey" = I want it for free.', vibe: 'Sarcasm as a service', accent: '#f97316' },
   { tag: 'BOLD', title: "This Is Why We're Different", hook: "Not a promo. Just facts. Here's what we actually do that nobody else does. No background music. Just eye contact.", vibe: 'Confident energy', accent: '#10b981' },
 ]
@@ -235,7 +235,7 @@ function parseWhisperOutput(output: unknown): Caption[] {
 /* ─── Sub-components ─────────────────────────────────── */
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
-    <button onClick={onToggle} style={{ position: 'relative', width: 36, height: 20, borderRadius: 10, background: on ? '#6366f1' : '#27272a', border: on ? '0.5px solid rgba(99,102,241,0.5)' : '0.5px solid rgba(255,255,255,0.08)', transition: 'background 0.2s', flexShrink: 0 }}>
+    <button onClick={onToggle} style={{ position: 'relative', width: 36, height: 20, borderRadius: 10, background: on ? '#7C5CFF' : '#27272a', border: on ? '0.5px solid rgba(124, 92, 255,0.5)' : '0.5px solid rgba(255,255,255,0.08)', transition: 'background 0.2s', flexShrink: 0 }}>
       <span style={{ position: 'absolute', top: 2, left: on ? 17 : 2, width: 14, height: 14, borderRadius: '50%', background: 'white', transition: 'left 0.18s' }} />
     </button>
   )
@@ -246,11 +246,11 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
     <div className="flex flex-col gap-2">
       <div className="flex justify-between">
         <span style={{ fontSize: 13, color: '#A1A1AA' }}>{label}</span>
-        <span style={{ fontSize: 13, color: '#6366f1', fontVariantNumeric: 'tabular-nums' }}>{Math.round(value)}%</span>
+        <span style={{ fontSize: 13, color: '#7C5CFF', fontVariantNumeric: 'tabular-nums' }}>{Math.round(value)}%</span>
       </div>
-      <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: '#18181C' }}>
+      <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: '#1A1530' }}>
         <div className="h-full rounded-full transition-all duration-300"
-          style={{ width: `${value}%`, background: 'linear-gradient(90deg,#6366f1 0%,#8b5cf6 100%)', boxShadow: '0 0 8px rgba(99,102,241,0.5)' }} />
+          style={{ width: `${value}%`, background: 'linear-gradient(90deg,#7C5CFF 0%,#A78BFA 100%)', boxShadow: '0 0 8px rgba(124, 92, 255,0.5)' }} />
       </div>
     </div>
   )
@@ -259,7 +259,7 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
 function StepDot({ n, active, done }: { n: number; active: boolean; done: boolean }) {
   return (
     <div className="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold flex-shrink-0"
-      style={{ background: done ? 'rgba(74,222,128,0.08)' : active ? 'rgba(99,102,241,0.15)' : '#18181C', border: done ? '0.5px solid rgba(74,222,128,0.3)' : active ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.07)', color: done ? '#4ADE80' : active ? '#818cf8' : '#3f3f46' }}>
+      style={{ background: done ? 'rgba(74,222,128,0.08)' : active ? 'rgba(124, 92, 255,0.15)' : '#1A1530', border: done ? '0.5px solid rgba(74,222,128,0.3)' : active ? '1px solid rgba(124, 92, 255,0.4)' : '0.5px solid rgba(255,255,255,0.07)', color: done ? '#4ADE80' : active ? '#818cf8' : '#3f3f46' }}>
       {done ? '✓' : n}
     </div>
   )
@@ -291,7 +291,7 @@ function RangeSlider({ label, value, min, max, unit, onChange }: { label: string
       </div>
       <input type="range" min={min} max={max} value={value}
         onChange={e => onChange(Number(e.target.value))}
-        className="w-full" style={{ accentColor: '#6366f1', height: 3, cursor: 'pointer' }} />
+        className="w-full" style={{ accentColor: '#7C5CFF', height: 3, cursor: 'pointer' }} />
     </div>
   )
 }
@@ -331,17 +331,17 @@ function GenZInspirationPanel({ onSelect }: { onSelect: (hook: string) => void }
 
           <div style={{ width: 112, height: 198, borderRadius: 20, overflow: 'hidden', border: '1.5px solid rgba(255,255,255,0.1)', boxShadow: `0 0 0 1px rgba(0,0,0,0.5), 0 6px 32px ${idea.accent}22, 0 2px 8px rgba(0,0,0,0.8)`, position: 'relative', zIndex: 1, background: '#000', transition: 'box-shadow 400ms ease' }}>
             <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'brightness(0.8) saturate(1.65) contrast(1.3)', borderRadius: 19 }} src="https://videos.pexels.com/video-files/4812205/4812205-hd_1080_1920_30fps.mp4" aria-hidden />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(18,38,72,0.15) 0%, rgba(88,85,212,0.04) 50%, rgba(110,55,20,0.1) 100%)', mixBlendMode: 'color', borderRadius: 19 }} aria-hidden />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(18,38,72,0.15) 0%, rgba(124, 92, 255,0.04) 50%, rgba(110,55,20,0.1) 100%)', mixBlendMode: 'color', borderRadius: 19 }} aria-hidden />
             <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: '7%', background: '#000', borderRadius: '19px 19px 0 0' }} aria-hidden />
             <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height: '42%', background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, transparent 100%)', borderRadius: '0 0 19px 19px', zIndex: 2 }} aria-hidden />
             <div className="absolute bottom-0 left-0 right-0 px-2 pb-2.5" style={{ zIndex: 3 }}>
               <p style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.95)', lineHeight: 1.45, textAlign: 'center', textShadow: '0 1px 4px rgba(0,0,0,0.9)', fontWeight: 700 }}>{idea.hook.slice(0, 55)}…</p>
             </div>
             <div className="absolute top-1.5 left-1.5" style={{ zIndex: 4 }}>
-              <span style={{ fontSize: 5.5, background: 'rgba(88,85,212,0.3)', color: '#c4b5fd', border: '1px solid rgba(88,85,212,0.45)', borderRadius: 100, padding: '1px 4px', fontWeight: 700, letterSpacing: '0.04em' }}>AI-polished</span>
+              <span style={{ fontSize: 5.5, background: 'rgba(124, 92, 255,0.3)', color: '#c4b5fd', border: '1px solid rgba(124, 92, 255,0.45)', borderRadius: 100, padding: '1px 4px', fontWeight: 700, letterSpacing: '0.04em' }}>AI-polished</span>
             </div>
             <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-0.5" style={{ zIndex: 4 }}>
-              {[{ dot: '#10B981', label: 'Graded' }, { dot: '#5855D4', label: 'Captions' }].map(({ dot, label }) => (
+              {[{ dot: '#10B981', label: 'Graded' }, { dot: '#7C5CFF', label: 'Captions' }].map(({ dot, label }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 2, background: 'rgba(0,0,0,0.8)', borderRadius: 3, padding: '1px 3px' }}>
                   <span style={{ color: dot, fontSize: 5 }}>&#9679;</span>
                   <span style={{ fontSize: 5.5, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>{label}</span>
@@ -563,7 +563,7 @@ function VideosInner() {
     textShadow:
       captionStyle === 'bold'    ? '-2px -2px 4px #000,2px -2px 4px #000,-2px 2px 4px #000,2px 2px 4px #000,0 0 8px rgba(0,0,0,0.8)' :
       captionStyle === 'minimal' ? '0 1px 3px rgba(0,0,0,0.9)' :
-      captionStyle === 'neon'    ? '0 0 12px rgba(99,102,241,0.9),0 0 24px rgba(99,102,241,0.5)' : undefined,
+      captionStyle === 'neon'    ? '0 0 12px rgba(124, 92, 255,0.9),0 0 24px rgba(124, 92, 255,0.5)' : undefined,
   }
 
   /* ── Effects ──────────────────────────────────────── */
@@ -1186,7 +1186,7 @@ function VideosInner() {
                 <button
                   onClick={() => setShowSmartEdit(true)}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-semibold transition-all"
-                  style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.15))', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.35)', boxShadow: '0 0 12px rgba(99,102,241,0.15)' }}>
+                  style={{ background: 'linear-gradient(135deg,rgba(124, 92, 255,0.15),rgba(139,92,246,0.15))', color: '#a5b4fc', border: '0.5px solid rgba(124, 92, 255,0.35)', boxShadow: '0 0 12px rgba(124, 92, 255,0.15)' }}>
                   Smart Edit
                 </button>
               )}
@@ -1224,10 +1224,10 @@ function VideosInner() {
 
           {/* ── STEP 1: SCRIPT ──────────────────────────── */}
           {stage === 'script' && (
-            <div className="flex flex-col gap-5 p-6 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+            <div className="flex flex-col gap-5 p-6 rounded-2xl" style={{ background: '#110E1C', border: '0.5px solid rgba(255,255,255,0.07)' }}>
               {hasIdea && !writeOwn && (
-                <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                  <Sparkles className="w-4 h-4 text-[#6366f1] flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(124, 92, 255,0.06)', border: '1px solid rgba(124, 92, 255,0.2)' }}>
+                  <Sparkles className="w-4 h-4 text-[#7C5CFF] flex-shrink-0 mt-0.5" />
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 600, color: '#818cf8' }}>AI Script</p>
                     <p style={{ fontSize: 13, color: '#A1A1AA', marginTop: 2 }} className="italic">&ldquo;{ideaHook}&rdquo;</p>
@@ -1247,8 +1247,8 @@ function VideosInner() {
                       onChange={e => setProductDesc(e.target.value)}
                       placeholder="e.g. handmade candles, Austin TX, lavender + cedar scents, $24 — the AI will use this for every script"
                       className="w-full px-3 py-2.5 rounded-[10px] text-[13px]"
-                      style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', color: '#E4E4E7', outline: 'none' }}
-                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                      style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.08)', color: '#E4E4E7', outline: 'none' }}
+                      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.4)' }}
                       onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
                     />
                   </div>
@@ -1262,7 +1262,7 @@ function VideosInner() {
                       {SCRIPT_TEMPLATES.map(t => (
                         <button key={t.id} onClick={() => setSelectedTemplate(t.id)}
                           className="flex items-center gap-2 p-3 rounded-xl text-left transition-all duration-150"
-                          style={{ background: selectedTemplate === t.id ? 'rgba(99,102,241,0.1)' : '#18181C', border: selectedTemplate === t.id ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                          style={{ background: selectedTemplate === t.id ? 'rgba(124, 92, 255,0.1)' : '#1A1530', border: selectedTemplate === t.id ? '1px solid rgba(124, 92, 255,0.4)' : '0.5px solid rgba(255,255,255,0.06)' }}>
                           <span style={{ fontSize: 13, fontWeight: 500, color: selectedTemplate === t.id ? '#a5b4fc' : '#71717A' }}>{t.label}</span>
                         </button>
                       ))}
@@ -1276,7 +1276,7 @@ function VideosInner() {
                   <label style={{ fontSize: 13, fontWeight: 500, color: '#A1A1AA' }}>
                     {hasIdea ? 'Generated script' : 'Your script / talking points'}
                   </label>
-                  {isGenerating && <span className="flex items-center gap-1.5" style={{ fontSize: 12, color: '#6366f1' }}><Sparkles className="w-3 h-3 animate-pulse" />Writing…</span>}
+                  {isGenerating && <span className="flex items-center gap-1.5" style={{ fontSize: 12, color: '#7C5CFF' }}><Sparkles className="w-3 h-3 animate-pulse" />Writing…</span>}
                   {generationDone && <span style={{ fontSize: 12, color: '#4ADE80' }}>✓ Script ready</span>}
                   {/* AI disclosure — FTC/EU AI Act compliance: disclose AI-generated content at point of creation */}
                   {generationDone && <span style={{ fontSize: 10, color: '#3f3f46', marginLeft: 4 }}>AI-generated · review before publishing</span>}
@@ -1285,8 +1285,8 @@ function VideosInner() {
                   value={scriptText} onChange={e => setScriptText(e.target.value)}
                   rows={6} placeholder={currentTemplate.placeholder}
                   className="w-full px-3 py-2.5 rounded-[10px] text-[14px] resize-none leading-relaxed"
-                  style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', color: '#E4E4E7', outline: 'none' }}
-                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                  style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.08)', color: '#E4E4E7', outline: 'none' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.4)' }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }} />
                 {scriptGenError && (
                   <div className="flex flex-col gap-1.5 p-3 rounded-lg" style={{ background: 'rgba(239,68,68,0.06)', border: '0.5px solid rgba(239,68,68,0.2)' }}>
@@ -1315,7 +1315,7 @@ function VideosInner() {
                     variant="ghost" size="md"
                     onClick={generateFromTemplate}
                     className="flex items-center gap-1.5"
-                    style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', color: '#a5b4fc' }}>
+                    style={{ background: 'rgba(124, 92, 255,0.08)', border: '1px solid rgba(124, 92, 255,0.2)', color: '#a5b4fc' }}>
                     <Sparkles className="w-3.5 h-3.5" />Generate with AI
                   </Button>
                 )}
@@ -1337,7 +1337,7 @@ function VideosInner() {
                       onClick={generateHashtags}
                       disabled={generatingHashtags}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150"
-                      style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.25)', color: '#a5b4fc', cursor: generatingHashtags ? 'default' : 'pointer', opacity: generatingHashtags ? 0.6 : 1 }}
+                      style={{ background: 'rgba(124, 92, 255,0.08)', border: '0.5px solid rgba(124, 92, 255,0.25)', color: '#a5b4fc', cursor: generatingHashtags ? 'default' : 'pointer', opacity: generatingHashtags ? 0.6 : 1 }}
                     >
                       <span style={{ fontWeight: 700 }}>#</span>
                       {generatingHashtags ? 'Generating…' : 'Hashtags'}
@@ -1373,13 +1373,13 @@ function VideosInner() {
 
                   {/* Hashtags panel */}
                   {hashtagsOpen && (
-                    <div className="flex flex-col gap-2.5 p-3 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+                    <div className="flex flex-col gap-2.5 p-3 rounded-xl" style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.07)' }}>
                       <div className="flex items-center justify-between">
                         <p style={{ fontSize: 11, color: '#71717A', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Hashtags</p>
                         <div className="flex items-center gap-3">
                           {hashtags.length > 0 && (
                             <button onClick={() => navigator.clipboard.writeText(hashtags.join(' '))}
-                              style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>
+                              style={{ fontSize: 11, color: '#7C5CFF', cursor: 'pointer', background: 'none', border: 'none' }}>
                               Copy all
                             </button>
                           )}
@@ -1397,9 +1397,9 @@ function VideosInner() {
                           {hashtags.map(tag => (
                             <button key={tag} onClick={() => navigator.clipboard.writeText(tag)} title="Click to copy"
                               className="px-2.5 py-1 rounded-lg text-[12px] font-medium transition-all duration-150"
-                              style={{ background: 'rgba(99,102,241,0.08)', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.2)', cursor: 'pointer' }}
-                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.18)' }}
-                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.08)' }}
+                              style={{ background: 'rgba(124, 92, 255,0.08)', color: '#a5b4fc', border: '0.5px solid rgba(124, 92, 255,0.2)', cursor: 'pointer' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124, 92, 255,0.18)' }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124, 92, 255,0.08)' }}
                             >
                               {tag}
                             </button>
@@ -1411,7 +1411,7 @@ function VideosInner() {
 
                   {/* Social captions panel */}
                   {socialOpen && (
-                    <div className="flex flex-col gap-2.5 p-3 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+                    <div className="flex flex-col gap-2.5 p-3 rounded-xl" style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.07)' }}>
                       <div className="flex items-center justify-between">
                         <p style={{ fontSize: 11, color: '#71717A', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Social Captions</p>
                         <button onClick={() => setSocialOpen(false)} style={{ fontSize: 13, color: '#52525B', cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1 }}>✕</button>
@@ -1429,7 +1429,7 @@ function VideosInner() {
                               <div className="flex items-center justify-between">
                                 <span style={{ fontSize: 10, fontWeight: 700, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{platform}</span>
                                 <button onClick={() => navigator.clipboard.writeText(caption)}
-                                  style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                  style={{ fontSize: 11, color: '#7C5CFF', cursor: 'pointer', background: 'none', border: 'none' }}>
                                   Copy
                                 </button>
                               </div>
@@ -1443,7 +1443,7 @@ function VideosInner() {
 
                   {/* Hook Ideas panel */}
                   {hooksOpen && (
-                    <div className="flex flex-col gap-2.5 p-3 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(251,146,60,0.15)' }}>
+                    <div className="flex flex-col gap-2.5 p-3 rounded-xl" style={{ background: '#1A1530', border: '0.5px solid rgba(251,146,60,0.15)' }}>
                       <div className="flex items-center justify-between">
                         <p style={{ fontSize: 11, color: '#fb923c', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Hook Ideas</p>
                         <button onClick={() => setHooksOpen(false)} style={{ fontSize: 13, color: '#52525B', cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1 }}>✕</button>
@@ -1473,7 +1473,7 @@ function VideosInner() {
                                 <button
                                   onClick={() => navigator.clipboard.writeText(hook.text)}
                                   className="px-2 py-1 rounded text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
-                                  style={{ background: 'rgba(99,102,241,0.08)', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.2)' }}>
+                                  style={{ background: 'rgba(124, 92, 255,0.08)', color: '#a5b4fc', border: '0.5px solid rgba(124, 92, 255,0.2)' }}>
                                   Copy
                                 </button>
                               </div>
@@ -1486,7 +1486,7 @@ function VideosInner() {
 
                   {/* Virality Score panel */}
                   {scoreOpen && (
-                    <div className="flex flex-col gap-3 p-3 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(74,222,128,0.12)' }}>
+                    <div className="flex flex-col gap-3 p-3 rounded-xl" style={{ background: '#1A1530', border: '0.5px solid rgba(74,222,128,0.12)' }}>
                       <div className="flex items-center justify-between">
                         <p style={{ fontSize: 11, color: '#4ADE80', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Virality Score</p>
                         <button onClick={() => setScoreOpen(false)} style={{ fontSize: 13, color: '#52525B', cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1 }}>✕</button>
@@ -1550,9 +1550,9 @@ function VideosInner() {
               onDragOver={e => { e.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
               className="flex flex-col items-center justify-center gap-4 p-12 rounded-2xl cursor-pointer transition-all duration-200"
-              style={{ border: `1.5px dashed ${dragging ? 'rgba(99,102,241,0.6)' : 'rgba(255,255,255,0.1)'}`, background: dragging ? 'rgba(99,102,241,0.04)' : '#111113', minHeight: 240 }}>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                <Upload className="w-6 h-6 text-[#6366f1]" />
+              style={{ border: `1.5px dashed ${dragging ? 'rgba(124, 92, 255,0.6)' : 'rgba(255,255,255,0.1)'}`, background: dragging ? 'rgba(124, 92, 255,0.04)' : '#110E1C', minHeight: 240 }}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(124, 92, 255,0.1)', border: '1px solid rgba(124, 92, 255,0.2)' }}>
+                <Upload className="w-6 h-6 text-[#7C5CFF]" />
               </div>
               <div className="text-center">
                 <p style={{ fontSize: 15, fontWeight: 600, color: '#FAFAFA' }}>Drop your video here</p>
@@ -1583,15 +1583,15 @@ function VideosInner() {
                   onKeyDown={e => { if (e.key === 'Enter') searchPexels(pexelsQuery) }}
                   placeholder="coffee shop, yoga, restaurant kitchen…"
                   className="flex-1 px-3 py-2.5 rounded-xl text-[13px]"
-                  style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.1)', color: '#E4E4E7', outline: 'none' }}
-                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                  style={{ background: '#110E1C', border: '0.5px solid rgba(255,255,255,0.1)', color: '#E4E4E7', outline: 'none' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.4)' }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
                 />
                 <button
                   onClick={() => searchPexels(pexelsQuery)}
                   disabled={pexelsSearching || !pexelsQuery.trim()}
                   className="px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150 flex-shrink-0"
-                  style={{ background: pexelsSearching || !pexelsQuery.trim() ? '#18181C' : 'rgba(99,102,241,0.15)', color: pexelsSearching || !pexelsQuery.trim() ? '#52525B' : '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.2)', cursor: pexelsSearching || !pexelsQuery.trim() ? 'not-allowed' : 'pointer' }}
+                  style={{ background: pexelsSearching || !pexelsQuery.trim() ? '#1A1530' : 'rgba(124, 92, 255,0.15)', color: pexelsSearching || !pexelsQuery.trim() ? '#52525B' : '#a5b4fc', border: '0.5px solid rgba(124, 92, 255,0.2)', cursor: pexelsSearching || !pexelsQuery.trim() ? 'not-allowed' : 'pointer' }}
                 >
                   {pexelsSearching ? 'Searching…' : 'Search'}
                 </button>
@@ -1605,7 +1605,7 @@ function VideosInner() {
                       key={tag}
                       onClick={() => { setPexelsQuery(tag); searchPexels(tag) }}
                       className="px-2.5 py-1 rounded-lg text-[12px] transition-all duration-150"
-                      style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.07)', color: '#71717A', cursor: 'pointer' }}
+                      style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.07)', color: '#71717A', cursor: 'pointer' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#A1A1AA'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)' }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#71717A'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)' }}
                     >
@@ -1636,7 +1636,7 @@ function VideosInner() {
                         key={video.id}
                         onClick={() => useStockVideo(video)}
                         className="relative rounded-xl overflow-hidden group"
-                        style={{ aspectRatio: '9/16', cursor: 'pointer', background: '#18181C' }}
+                        style={{ aspectRatio: '9/16', cursor: 'pointer', background: '#1A1530' }}
                         title={`By ${video.photographer} · ${video.duration}s`}
                       >
                         <img
@@ -1650,7 +1650,7 @@ function VideosInner() {
                           className="absolute inset-0 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
                           style={{ background: 'rgba(10,10,11,0.75)', backdropFilter: 'blur(4px)' }}
                         >
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.9)' }}>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(124, 92, 255,0.9)' }}>
                             <Plus className="w-4 h-4 text-white" />
                           </div>
                           <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Use clip</span>
@@ -1675,10 +1675,10 @@ function VideosInner() {
 
           {/* ── UPLOADING ────────────────────────────────── */}
           {stage === 'uploading' && (
-            <div className="p-6 rounded-2xl flex flex-col gap-4" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+            <div className="p-6 rounded-2xl flex flex-col gap-4" style={{ background: '#110E1C', border: '0.5px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.1)' }}>
-                  <Video className="w-5 h-5 text-[#6366f1]" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(124, 92, 255,0.1)' }}>
+                  <Video className="w-5 h-5 text-[#7C5CFF]" />
                 </div>
                 <div className="flex-1">
                   <p style={{ fontSize: 14, fontWeight: 500, color: '#FAFAFA' }}>Uploading video…</p>
@@ -1720,21 +1720,21 @@ function VideosInner() {
                     <button
                       onClick={() => { if (activeClip) runEnhancementInBackground(activeClip.url, activeClip.id) }}
                       className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] transition-colors"
-                      style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.25)', color: '#818cf8', cursor: 'pointer' }}>
+                      style={{ background: 'rgba(124, 92, 255,0.08)', border: '0.5px solid rgba(124, 92, 255,0.25)', color: '#818cf8', cursor: 'pointer' }}>
                       <Sparkles className="w-2.5 h-2.5" />4K Enhance
                     </button>
                   )}
                   {pipelineStage === 'idle' && !beta.has('enhancement') && (
                     <button onClick={() => openBetaModal('4K Enhance')}
                       className="flex items-center gap-1 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px] transition-colors"
-                      style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.25)', color: '#8b5cf6' }}>
+                      style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.25)', color: '#A78BFA' }}>
                       <Lock className="w-2.5 h-2.5" />4K Enhance
                     </button>
                   )}
                   {pipelineStage !== 'idle' && pipelineStage !== 'failed' && pipelineStage !== 'export' && (() => {
                     const meta = STAGE_META[pipelineStage as PipelineStage]
                     return (
-                      <span className="flex items-center gap-1.5 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.3)', color: '#818cf8' }}>
+                      <span className="flex items-center gap-1.5 flex-shrink-0 px-2 py-0.5 rounded-full text-[11px]" style={{ background: 'rgba(124, 92, 255,0.1)', border: '0.5px solid rgba(124, 92, 255,0.3)', color: '#818cf8' }}>
                         <Sparkles className="w-3 h-3 animate-pulse" />
                         {meta?.label ?? 'Processing'}… {pipelineProgress > 0 && `${pipelineProgress}%`}
                       </span>
@@ -1755,7 +1755,7 @@ function VideosInner() {
                     </button>
                   )}
                   {beta.unlocked && (
-                    <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest" style={{ background: 'rgba(99,102,241,0.12)', border: '0.5px solid rgba(99,102,241,0.3)', color: '#6366f1', letterSpacing: '0.1em' }}>
+                    <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest" style={{ background: 'rgba(124, 92, 255,0.12)', border: '0.5px solid rgba(124, 92, 255,0.3)', color: '#7C5CFF', letterSpacing: '0.1em' }}>
                       BETA
                     </span>
                   )}
@@ -1766,8 +1766,8 @@ function VideosInner() {
                   ) : (
                     <button onClick={() => addClipInputRef.current?.click()}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150"
-                      style={{ color: '#71717A', border: '0.5px solid rgba(255,255,255,0.08)', background: '#111113' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#818cf8'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.3)' }}
+                      style={{ color: '#71717A', border: '0.5px solid rgba(255,255,255,0.08)', background: '#110E1C' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#818cf8'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(124, 92, 255,0.3)' }}
                       onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#71717A'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)' }}>
                       <Plus className="w-3.5 h-3.5" />Add clip
                     </button>
@@ -1782,7 +1782,7 @@ function VideosInner() {
                   {clips.map((c, i) => (
                     <button key={c.id} onClick={() => setActiveClipId(c.id)}
                       className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150"
-                      style={{ background: activeClip?.id === c.id ? 'rgba(99,102,241,0.1)' : '#18181C', border: activeClip?.id === c.id ? '1px solid rgba(99,102,241,0.3)' : '0.5px solid rgba(255,255,255,0.06)', color: activeClip?.id === c.id ? '#a5b4fc' : '#52525B' }}>
+                      style={{ background: activeClip?.id === c.id ? 'rgba(124, 92, 255,0.1)' : '#1A1530', border: activeClip?.id === c.id ? '1px solid rgba(124, 92, 255,0.3)' : '0.5px solid rgba(255,255,255,0.06)', color: activeClip?.id === c.id ? '#a5b4fc' : '#52525B' }}>
                       <Film className="w-3 h-3" />Clip {i + 1}
                     </button>
                   ))}
@@ -1791,7 +1791,7 @@ function VideosInner() {
 
               {/* Video preview */}
               <div className="relative w-full rounded-2xl overflow-hidden"
-                style={{ border: '0.5px solid rgba(255,255,255,0.08)', boxShadow: '0 0 32px rgba(0,0,0,0.6), 0 0 1px rgba(99,102,241,0.15)' }}>
+                style={{ border: '0.5px solid rgba(255,255,255,0.08)', boxShadow: '0 0 32px rgba(0,0,0,0.6), 0 0 1px rgba(124, 92, 255,0.15)' }}>
 
                 {/* Preview label */}
                 <div className="absolute top-3 left-3 z-10 pointer-events-none">
@@ -1872,9 +1872,9 @@ function VideosInner() {
                         className="flex flex-col items-start gap-2 p-2.5 rounded-xl flex-shrink-0 transition-all duration-150"
                         style={{
                           width: 104,
-                          background: active ? 'rgba(99,102,241,0.1)' : '#111113',
-                          border: active ? '1px solid rgba(99,102,241,0.45)' : '0.5px solid rgba(255,255,255,0.07)',
-                          boxShadow: active ? '0 0 0 1px rgba(99,102,241,0.15)' : 'none',
+                          background: active ? 'rgba(124, 92, 255,0.1)' : '#110E1C',
+                          border: active ? '1px solid rgba(124, 92, 255,0.45)' : '0.5px solid rgba(255,255,255,0.07)',
+                          boxShadow: active ? '0 0 0 1px rgba(124, 92, 255,0.15)' : 'none',
                         }}
                       >
                         <div className="w-full h-12 rounded-lg flex-shrink-0" style={{ background: look.swatch, boxShadow: active ? `0 2px 8px rgba(0,0,0,0.4)` : 'none' }} />
@@ -1882,7 +1882,7 @@ function VideosInner() {
                           <p style={{ fontSize: 11, fontWeight: 700, color: active ? '#a5b4fc' : '#E4E4E7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{look.label}</p>
                           <p style={{ fontSize: 10, color: '#52525B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{look.desc}</p>
                         </div>
-                        {active && <div className="w-full h-0.5 rounded-full" style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6)' }} />}
+                        {active && <div className="w-full h-0.5 rounded-full" style={{ background: 'linear-gradient(90deg,#7C5CFF,#A78BFA)' }} />}
                       </button>
                     )
                   })}
@@ -1890,7 +1890,7 @@ function VideosInner() {
               </div>
 
               {/* Studio panel */}
-              <div className="rounded-2xl overflow-hidden" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+              <div className="rounded-2xl overflow-hidden" style={{ background: '#110E1C', border: '0.5px solid rgba(255,255,255,0.07)' }}>
 
                 {/* Tab bar */}
                 <div className="flex overflow-x-auto" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -1908,7 +1908,7 @@ function VideosInner() {
                       style={{ color: activeTab === id ? '#FAFAFA' : '#3f3f46', background: 'transparent', letterSpacing: '0.05em' }}>
                       <Icon className="w-3 h-3 flex-shrink-0" />{label}
                       {activeTab === id && (
-                        <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg,#6366f1,#8b5cf6)', boxShadow: '0 0 8px rgba(99,102,241,0.7)' }} />
+                        <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg,#7C5CFF,#A78BFA)', boxShadow: '0 0 8px rgba(124, 92, 255,0.7)' }} />
                       )}
                     </button>
                   ))}
@@ -1943,16 +1943,16 @@ function VideosInner() {
                                 height: 58,
                                 borderRadius: 10,
                                 background: swatch,
-                                outline: colorGrade === key ? '2px solid #6366f1' : '1px solid rgba(255,255,255,0.08)',
+                                outline: colorGrade === key ? '2px solid #7C5CFF' : '1px solid rgba(255,255,255,0.08)',
                                 outlineOffset: colorGrade === key ? 2 : 0,
                                 boxShadow: colorGrade === key
-                                  ? '0 0 20px rgba(99,102,241,0.45), 0 4px 12px rgba(0,0,0,0.5)'
+                                  ? '0 0 20px rgba(124, 92, 255,0.45), 0 4px 12px rgba(0,0,0,0.5)'
                                   : '0 2px 8px rgba(0,0,0,0.4)',
                               }}>
                               {/* Subtle inner border for depth */}
                               <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)', borderRadius: 'inherit', pointerEvents: 'none' }} />
                               {colorGrade === key && (
-                                <div style={{ position: 'absolute', top: 7, right: 6, width: 14, height: 14, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 8px rgba(99,102,241,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ position: 'absolute', top: 7, right: 6, width: 14, height: 14, borderRadius: '50%', background: '#7C5CFF', boxShadow: '0 0 8px rgba(124, 92, 255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                   <span style={{ fontSize: 8, color: '#fff', fontWeight: 900 }}>✓</span>
                                 </div>
                               )}
@@ -1966,13 +1966,13 @@ function VideosInner() {
                       </div>
 
                       {/* Clarity — micro-contrast enhancement */}
-                      <div className="flex items-center justify-between p-3.5 rounded-xl" style={{ background: '#0d0d10', border: `0.5px solid ${noiseReduce ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'}` }}>
+                      <div className="flex items-center justify-between p-3.5 rounded-xl" style={{ background: '#0d0d10', border: `0.5px solid ${noiseReduce ? 'rgba(124, 92, 255,0.2)' : 'rgba(255,255,255,0.05)'}` }}>
                         <div className="flex flex-col gap-0.5">
                           <div className="flex items-center gap-2">
                             <span style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA' }}>Clarity</span>
                             {!beta.has('noise_reduce') && (
                               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold"
-                                style={{ background: 'rgba(139,92,246,0.1)', color: '#8b5cf6', border: '0.5px solid rgba(139,92,246,0.25)' }}>
+                                style={{ background: 'rgba(139,92,246,0.1)', color: '#A78BFA', border: '0.5px solid rgba(139,92,246,0.25)' }}>
                                 <Lock className="w-2 h-2" />BETA
                               </span>
                             )}
@@ -1994,9 +1994,9 @@ function VideosInner() {
 
                       {/* Custom controls */}
                       {colorGrade === 'custom' && (
-                        <div className="flex flex-col gap-4 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                        <div className="flex flex-col gap-4 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(124, 92, 255,0.15)' }}>
                           <div className="flex items-center justify-between">
-                            <p style={{ fontSize: 10, fontWeight: 700, color: '#6366f1', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Tone</p>
+                            <p style={{ fontSize: 10, fontWeight: 700, color: '#7C5CFF', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Tone</p>
                             <button onClick={() => setCustomColor(DEFAULT_CUSTOM)} style={{ fontSize: 10, fontWeight: 600, color: '#3f3f46', cursor: 'pointer', letterSpacing: '0.04em' }}
                               onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA'}
                               onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#3f3f46'}>
@@ -2008,7 +2008,7 @@ function VideosInner() {
                           <RangeSlider label="Highlights" value={customColor.highlights} min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, highlights: v }))} />
                           <RangeSlider label="Shadows"    value={customColor.shadows}    min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, shadows: v }))} />
                           <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '2px 0' }} />
-                          <p style={{ fontSize: 10, fontWeight: 700, color: '#6366f1', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Color</p>
+                          <p style={{ fontSize: 10, fontWeight: 700, color: '#7C5CFF', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Color</p>
                           <RangeSlider label="Saturation"  value={customColor.saturation}  min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, saturation: v }))} />
                           <RangeSlider label="Temperature" value={customColor.temperature} min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, temperature: v }))} />
                           <RangeSlider label="Tint"        value={customColor.tint}        min={-100} max={100} onChange={v => setCustomColor(p => ({ ...p, tint: v }))} />
@@ -2034,7 +2034,7 @@ function VideosInner() {
                           {/* From audio — Whisper AI */}
                           <button onClick={() => transcribeFromAudio()} disabled={transcribing}
                             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200"
-                            style={{ background: transcribing ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: transcribing ? '#52525B' : '#a5b4fc' }}>
+                            style={{ background: transcribing ? 'rgba(124, 92, 255,0.06)' : 'rgba(124, 92, 255,0.12)', border: '1px solid rgba(124, 92, 255,0.3)', color: transcribing ? '#52525B' : '#a5b4fc' }}>
                             {transcribing
                               ? <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Transcribing…</>
                               : <><Sparkles className="w-3.5 h-3.5" />From audio (AI)</>}
@@ -2043,15 +2043,15 @@ function VideosInner() {
                           <button
                             onClick={() => { const sc = buildCaptions(scriptText); if (sc.length) { setCaptions(sc); setCaptionsEnabled(true) } }}
                             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200"
-                            style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', color: '#71717A' }}
+                            style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.08)', color: '#71717A' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#A1A1AA'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.14)' }}
                             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#71717A'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)' }}>
                             From script
                           </button>
                         </div>
                         {transcribing && (
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(99,102,241,0.05)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
-                            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#6366f1' }} />
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(124, 92, 255,0.05)', border: '0.5px solid rgba(124, 92, 255,0.15)' }}>
+                            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#7C5CFF' }} />
                             <p style={{ fontSize: 12, color: '#818cf8' }}>
                               AI is reading your audio — this takes 30–90 seconds. You can keep editing.
                             </p>
@@ -2073,12 +2073,12 @@ function VideosInner() {
                           {CAPTION_STYLE_META.map(s => (
                             <button key={s.id} onClick={() => setCaptionStyle(s.id)}
                               className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl transition-all duration-150"
-                              style={{ background: captionStyle === s.id ? 'rgba(99,102,241,0.1)' : '#18181C', border: captionStyle === s.id ? '1px solid rgba(99,102,241,0.35)' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                              style={{ background: captionStyle === s.id ? 'rgba(124, 92, 255,0.1)' : '#1A1530', border: captionStyle === s.id ? '1px solid rgba(124, 92, 255,0.35)' : '0.5px solid rgba(255,255,255,0.06)' }}>
                               <span style={{
                                 fontSize: 13,
                                 fontWeight: s.id === 'bold' ? 900 : s.id === 'minimal' ? 400 : 700,
                                 color: s.id === 'neon' ? '#a5b4fc' : '#FAFAFA',
-                                textShadow: s.id === 'bold' ? '-1px -1px 2px #000,1px 1px 2px #000' : s.id === 'neon' ? '0 0 8px rgba(99,102,241,0.8)' : 'none',
+                                textShadow: s.id === 'bold' ? '-1px -1px 2px #000,1px 1px 2px #000' : s.id === 'neon' ? '0 0 8px rgba(124, 92, 255,0.8)' : 'none',
                                 background: s.id === 'film' ? 'rgba(0,0,0,0.65)' : 'none',
                                 padding: s.id === 'film' ? '0 4px' : 0,
                                 borderRadius: s.id === 'film' ? 2 : 0,
@@ -2098,7 +2098,7 @@ function VideosInner() {
                             {CAPTION_POSITIONS.map(p => (
                               <button key={p.id} onClick={() => setCaptionPos(p.id)}
                                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all duration-150"
-                                style={{ background: captionPos === p.id ? 'rgba(99,102,241,0.1)' : 'transparent', border: captionPos === p.id ? '0.5px solid rgba(99,102,241,0.3)' : '0.5px solid transparent' }}>
+                                style={{ background: captionPos === p.id ? 'rgba(124, 92, 255,0.1)' : 'transparent', border: captionPos === p.id ? '0.5px solid rgba(124, 92, 255,0.3)' : '0.5px solid transparent' }}>
                                 <span style={{ fontSize: 11, color: captionPos === p.id ? '#818cf8' : '#3f3f46', width: 14 }}>{p.icon}</span>
                                 <span style={{ fontSize: 12, fontWeight: 500, color: captionPos === p.id ? '#a5b4fc' : '#71717A' }}>{p.label}</span>
                               </button>
@@ -2111,7 +2111,7 @@ function VideosInner() {
                             {CAPTION_SIZES.map(s => (
                               <button key={s.id} onClick={() => setCaptionSize(s.id)}
                                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all duration-150"
-                                style={{ background: captionSize === s.id ? 'rgba(99,102,241,0.1)' : 'transparent', border: captionSize === s.id ? '0.5px solid rgba(99,102,241,0.3)' : '0.5px solid transparent' }}>
+                                style={{ background: captionSize === s.id ? 'rgba(124, 92, 255,0.1)' : 'transparent', border: captionSize === s.id ? '0.5px solid rgba(124, 92, 255,0.3)' : '0.5px solid transparent' }}>
                                 <span style={{ fontSize: Math.round(s.id * 11), fontWeight: 700, color: captionSize === s.id ? '#818cf8' : '#3f3f46', lineHeight: 1, minWidth: 14, textAlign: 'center' }}>A</span>
                                 <span style={{ fontSize: 12, fontWeight: 500, color: captionSize === s.id ? '#a5b4fc' : '#71717A' }}>{s.label}</span>
                               </button>
@@ -2138,10 +2138,10 @@ function VideosInner() {
                                 style={{
                                   width: 26, height: 26, borderRadius: '50%',
                                   background: c.hex,
-                                  border: captionColor === c.hex ? '2px solid #6366f1' : '2px solid transparent',
-                                  outline: captionColor === c.hex ? '1px solid rgba(99,102,241,0.4)' : 'none',
+                                  border: captionColor === c.hex ? '2px solid #7C5CFF' : '2px solid transparent',
+                                  outline: captionColor === c.hex ? '1px solid rgba(124, 92, 255,0.4)' : 'none',
                                   outlineOffset: 2,
-                                  boxShadow: captionColor === c.hex ? '0 0 8px rgba(99,102,241,0.5)' : '0 1px 4px rgba(0,0,0,0.4)',
+                                  boxShadow: captionColor === c.hex ? '0 0 8px rgba(124, 92, 255,0.5)' : '0 1px 4px rgba(0,0,0,0.4)',
                                   cursor: 'pointer', flexShrink: 0,
                                 }} />
                             ))}
@@ -2163,7 +2163,7 @@ function VideosInner() {
                             ] as const).map(f => (
                               <button key={f.id} onClick={() => setCaptionFont(f.id)}
                                 className="flex flex-col items-center gap-0.5 py-2 rounded-lg transition-all duration-150"
-                                style={{ background: captionFont === f.id ? 'rgba(99,102,241,0.12)' : '#0d0d10', border: captionFont === f.id ? '1px solid rgba(99,102,241,0.35)' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                                style={{ background: captionFont === f.id ? 'rgba(124, 92, 255,0.12)' : '#0d0d10', border: captionFont === f.id ? '1px solid rgba(124, 92, 255,0.35)' : '0.5px solid rgba(255,255,255,0.06)' }}>
                                 <span style={{ fontFamily: f.ff, fontSize: 14, fontWeight: 700, color: captionFont === f.id ? '#a5b4fc' : '#52525B', lineHeight: 1 }}>{f.preview}</span>
                                 <span style={{ fontSize: 9, fontWeight: 600, color: captionFont === f.id ? '#818cf8' : '#3f3f46', letterSpacing: '0.04em' }}>{f.label}</span>
                               </button>
@@ -2173,7 +2173,7 @@ function VideosInner() {
                       </div>
 
                       {/* AI Voice Narration */}
-                      <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                      <div className="flex flex-col gap-3 p-4 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(124, 92, 255,0.15)' }}>
                         <div className="flex items-center gap-2">
                           <p style={{ fontSize: 12, fontWeight: 700, color: '#a5b4fc', letterSpacing: '0.04em' }}>AI Voice Narration</p>
                         </div>
@@ -2184,7 +2184,7 @@ function VideosInner() {
                             <span style={{ fontSize: 11, color: '#52525B', fontWeight: 600 }}>What to say</span>
                             {scriptText.trim() && !ttsText && (
                               <button onClick={() => setTtsText(scriptText)}
-                                style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                style={{ fontSize: 11, color: '#7C5CFF', cursor: 'pointer', background: 'none', border: 'none' }}>
                                 Fill from script
                               </button>
                             )}
@@ -2195,8 +2195,8 @@ function VideosInner() {
                             rows={3}
                             placeholder="Type what you want the AI voice to say…"
                             className="w-full px-3 py-2.5 rounded-lg text-[13px] text-[#FAFAFA] outline-none resize-none"
-                            style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', lineHeight: 1.6 }}
-                            onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                            style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.08)', lineHeight: 1.6 }}
+                            onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.4)' }}
                             onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
                           />
                           <span style={{ fontSize: 10, color: '#3f3f46', textAlign: 'right' }}>{(ttsText || scriptText).length}/500</span>
@@ -2214,7 +2214,7 @@ function VideosInner() {
                             ] as const).map(v => (
                               <button key={v.id} onClick={() => setTtsVoice(v.id)}
                                 className="flex flex-col items-center gap-0.5 py-2 rounded-lg transition-all duration-150"
-                                style={{ background: ttsVoice === v.id ? 'rgba(99,102,241,0.15)' : '#18181C', border: ttsVoice === v.id ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                                style={{ background: ttsVoice === v.id ? 'rgba(124, 92, 255,0.15)' : '#1A1530', border: ttsVoice === v.id ? '1px solid rgba(124, 92, 255,0.4)' : '0.5px solid rgba(255,255,255,0.06)' }}>
                                 <span style={{ fontSize: 10, fontWeight: 700, color: ttsVoice === v.id ? '#a5b4fc' : '#71717A' }}>{v.label}</span>
                                 <span style={{ fontSize: 9, color: ttsVoice === v.id ? '#818cf8' : '#3f3f46' }}>{v.desc}</span>
                               </button>
@@ -2227,7 +2227,7 @@ function VideosInner() {
                           onClick={generateVoice}
                           disabled={ttsGenerating || (!ttsText.trim() && !scriptText.trim())}
                           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 disabled:opacity-40"
-                          style={{ background: ttsGenerating ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.35)', color: ttsGenerating ? '#52525B' : '#a5b4fc' }}>
+                          style={{ background: ttsGenerating ? 'rgba(124, 92, 255,0.06)' : 'rgba(124, 92, 255,0.15)', border: '1px solid rgba(124, 92, 255,0.35)', color: ttsGenerating ? '#52525B' : '#a5b4fc' }}>
                           {ttsGenerating ? (
                             <><Sparkles className="w-3.5 h-3.5 animate-pulse" />Generating voice… (~30–90s)</>
                           ) : (
@@ -2237,8 +2237,8 @@ function VideosInner() {
 
                         {/* Progress hint */}
                         {ttsGenerating && ttsJobId && (
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(99,102,241,0.05)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
-                            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#6366f1' }} />
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(124, 92, 255,0.05)', border: '0.5px solid rgba(124, 92, 255,0.15)' }}>
+                            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#7C5CFF' }} />
                             <p style={{ fontSize: 11, color: '#818cf8' }}>AI is generating your voice — this takes 30–90 seconds.</p>
                           </div>
                         )}
@@ -2261,7 +2261,7 @@ function VideosInner() {
                               className="w-full"
                               style={{ height: 32, borderRadius: 8, filter: 'invert(0.85) hue-rotate(180deg)' }}
                             />
-                            <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                            <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.06)' }}>
                               <div className="flex flex-col gap-0.5">
                                 <span style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA' }}>Include in export</span>
                                 <span style={{ fontSize: 10, color: '#3f3f46' }}>Replaces original audio · music ducked to 14%</span>
@@ -2300,7 +2300,7 @@ function VideosInner() {
                             </button>
                             <button
                               onClick={() => { setShowAddCaption(p => !p); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('') }}
-                              style={{ fontSize: 11, fontWeight: 600, color: '#6366f1', cursor: 'pointer' }}>
+                              style={{ fontSize: 11, fontWeight: 600, color: '#7C5CFF', cursor: 'pointer' }}>
                               {showAddCaption ? 'Cancel' : '+ Add'}
                             </button>
                           </div>
@@ -2308,24 +2308,24 @@ function VideosInner() {
 
                         {/* Add caption form */}
                         {showAddCaption && (
-                          <div className="flex flex-col gap-2 p-3 rounded-xl" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                          <div className="flex flex-col gap-2 p-3 rounded-xl" style={{ background: 'rgba(124, 92, 255,0.06)', border: '1px solid rgba(124, 92, 255,0.2)' }}>
                             <input
                               value={newCaptionText} onChange={e => setNewCaptionText(e.target.value)}
                               placeholder="Caption text…"
                               className="w-full px-3 py-2 rounded-lg text-[13px] text-[#FAFAFA] outline-none"
-                              style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)' }} />
+                              style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.08)' }} />
                             <div className="flex gap-2 items-center">
                               <input
                                 value={newCaptionStart} onChange={e => setNewCaptionStart(e.target.value)}
                                 placeholder="Start (s)"
                                 className="flex-1 px-3 py-2 rounded-lg text-[12px] text-[#FAFAFA] outline-none"
-                                style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', fontFamily: 'monospace' }} />
+                                style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.08)', fontFamily: 'monospace' }} />
                               <span style={{ fontSize: 12, color: '#3f3f46' }}>→</span>
                               <input
                                 value={newCaptionEnd} onChange={e => setNewCaptionEnd(e.target.value)}
                                 placeholder="End (s)"
                                 className="flex-1 px-3 py-2 rounded-lg text-[12px] text-[#FAFAFA] outline-none"
-                                style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.08)', fontFamily: 'monospace' }} />
+                                style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.08)', fontFamily: 'monospace' }} />
                               <button
                                 onClick={() => {
                                   const start = parseFloat(newCaptionStart)
@@ -2336,7 +2336,7 @@ function VideosInner() {
                                   setShowAddCaption(false); setNewCaptionText(''); setNewCaptionStart(''); setNewCaptionEnd('')
                                 }}
                                 className="px-3 py-2 rounded-lg text-[12px] font-semibold"
-                                style={{ background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.4)', flexShrink: 0 }}>
+                                style={{ background: 'rgba(124, 92, 255,0.2)', color: '#a5b4fc', border: '1px solid rgba(124, 92, 255,0.4)', flexShrink: 0 }}>
                                 Add
                               </button>
                             </div>
@@ -2357,7 +2357,7 @@ function VideosInner() {
                                     autoFocus
                                     defaultValue={c.text}
                                     className="flex-1 bg-transparent text-[12px] text-[#FAFAFA] outline-none border-b"
-                                    style={{ borderColor: 'rgba(99,102,241,0.4)' }}
+                                    style={{ borderColor: 'rgba(124, 92, 255,0.4)' }}
                                     onBlur={e => {
                                       const txt = e.target.value.trim()
                                       if (txt) setCaptions(prev => prev.map((cap, idx) => idx === i ? { ...cap, text: txt } : cap))
@@ -2411,8 +2411,8 @@ function VideosInner() {
                             <button key={m.id} onClick={() => playMusic(m.id)}
                               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150"
                               style={{
-                                background: selectedMusic === m.id ? 'rgba(99,102,241,0.07)' : 'transparent',
-                                borderLeft: selectedMusic === m.id ? '2px solid #6366f1' : '2px solid transparent',
+                                background: selectedMusic === m.id ? 'rgba(124, 92, 255,0.07)' : 'transparent',
+                                borderLeft: selectedMusic === m.id ? '2px solid #7C5CFF' : '2px solid transparent',
                               }}>
                               {/* Waveform bars / icon */}
                               <div style={{ width: 26, height: 18, display: 'flex', alignItems: 'flex-end', gap: 2, flexShrink: 0 }}>
@@ -2465,7 +2465,7 @@ function VideosInner() {
                           { label: 'Opening hook (top)', key: 'hook' as const, text: hookText, setText: setHookText, on: showHook, setOn: setShowHook, placeholder: 'e.g. This changed everything for my business…' },
                           { label: 'Call to action (bottom)', key: 'cta' as const, text: ctaText, setText: setCtaText, on: showCta, setOn: setShowCta, placeholder: 'e.g. Follow for more tips!' },
                         ].map(item => (
-                          <div key={item.key} className="flex flex-col gap-2 p-4 rounded-xl" style={{ background: '#18181C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                          <div key={item.key} className="flex flex-col gap-2 p-4 rounded-xl" style={{ background: '#1A1530', border: '0.5px solid rgba(255,255,255,0.06)' }}>
                             <div className="flex items-center justify-between">
                               <span style={{ fontSize: 12, fontWeight: 600, color: '#A1A1AA' }}>{item.label}</span>
                               <Toggle on={item.on} onToggle={() => item.setOn(p => !p)} />
@@ -2474,7 +2474,7 @@ function VideosInner() {
                               placeholder={item.placeholder}
                               className="w-full rounded-lg px-3 py-2 text-[13px] text-[#FAFAFA] outline-none"
                               style={{ background: 'rgba(10,10,11,0.8)', border: '0.5px solid rgba(255,255,255,0.08)' }}
-                              onFocus={e => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)' }}
+                              onFocus={e => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.4)' }}
                               onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }} />
                           </div>
                         ))}
@@ -2492,17 +2492,17 @@ function VideosInner() {
                         </div>
                         <button onClick={() => addClipInputRef.current?.click()}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium"
-                          style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc' }}>
+                          style={{ background: 'rgba(124, 92, 255,0.1)', border: '1px solid rgba(124, 92, 255,0.3)', color: '#a5b4fc' }}>
                           <Plus className="w-3.5 h-3.5" />Add clip
                         </button>
                       </div>
 
                       {clips.map((c, i) => (
                         <div key={c.id} className="flex flex-col gap-3 p-4 rounded-xl"
-                          style={{ background: activeClip?.id === c.id ? 'rgba(99,102,241,0.06)' : '#18181C', border: activeClip?.id === c.id ? '1px solid rgba(99,102,241,0.25)' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                          style={{ background: activeClip?.id === c.id ? 'rgba(124, 92, 255,0.06)' : '#1A1530', border: activeClip?.id === c.id ? '1px solid rgba(124, 92, 255,0.25)' : '0.5px solid rgba(255,255,255,0.06)' }}>
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.1)' }}>
-                              <Film className="w-4 h-4 text-[#6366f1]" />
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(124, 92, 255,0.1)' }}>
+                              <Film className="w-4 h-4 text-[#7C5CFF]" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p style={{ fontSize: 13, fontWeight: 500, color: '#FAFAFA' }} className="truncate">{c.name}</p>
@@ -2514,7 +2514,7 @@ function VideosInner() {
                             </div>
                             <div className="flex items-center gap-1">
                               <button onClick={() => setActiveClipId(c.id)} className="text-[11px] px-2 py-1 rounded transition-colors"
-                                style={{ color: activeClip?.id === c.id ? '#818cf8' : '#52525B', background: activeClip?.id === c.id ? 'rgba(99,102,241,0.08)' : 'transparent' }}>
+                                style={{ color: activeClip?.id === c.id ? '#818cf8' : '#52525B', background: activeClip?.id === c.id ? 'rgba(124, 92, 255,0.08)' : 'transparent' }}>
                                 Preview
                               </button>
                               <button onClick={() => moveClip(c.id, -1)} disabled={i === 0} className="p-1 rounded transition-colors disabled:opacity-20" style={{ color: '#52525B' }}
@@ -2543,14 +2543,14 @@ function VideosInner() {
                               </div>
                               <input type="range" min={0} max={c.trimEnd - 1} value={c.trimStart}
                                 onChange={e => updateClipTrim(c.id, 'trimStart', Number(e.target.value))}
-                                className="w-full" style={{ accentColor: '#6366f1' }} />
+                                className="w-full" style={{ accentColor: '#7C5CFF' }} />
                               <div className="flex items-center justify-between">
                                 <span style={{ fontSize: 11, color: '#52525B' }}>Trim end</span>
                                 <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#818cf8' }}>{fmtSec((c.trimEnd / 100) * c.duration)}</span>
                               </div>
                               <input type="range" min={c.trimStart + 1} max={100} value={c.trimEnd}
                                 onChange={e => updateClipTrim(c.id, 'trimEnd', Number(e.target.value))}
-                                className="w-full" style={{ accentColor: '#6366f1' }} />
+                                className="w-full" style={{ accentColor: '#7C5CFF' }} />
                             </div>
                           )}
                         </div>
@@ -2574,7 +2574,7 @@ function VideosInner() {
                         {TRANSITION_OPTIONS.map(t => (
                           <button key={t.id} onClick={() => setTransition(t.id)}
                             className="flex flex-col gap-2 p-4 rounded-xl transition-all duration-150"
-                            style={{ background: transition === t.id ? 'rgba(99,102,241,0.1)' : '#18181C', border: transition === t.id ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.06)' }}>
+                            style={{ background: transition === t.id ? 'rgba(124, 92, 255,0.1)' : '#1A1530', border: transition === t.id ? '1px solid rgba(124, 92, 255,0.4)' : '0.5px solid rgba(255,255,255,0.06)' }}>
                             <span style={{ fontSize: 12, fontWeight: 700, color: transition === t.id ? '#a5b4fc' : '#A1A1AA' }}>{t.label}</span>
                             <span style={{ fontSize: 11, color: '#52525B' }}>{t.desc}</span>
                           </button>
@@ -2589,7 +2589,7 @@ function VideosInner() {
                           </div>
                           <input type="range" min={20} max={150} value={Math.round(transitionDuration * 100)}
                             onChange={e => setTransitionDuration(Number(e.target.value) / 100)}
-                            className="w-full" style={{ accentColor: '#6366f1' }} />
+                            className="w-full" style={{ accentColor: '#7C5CFF' }} />
                           <div className="flex justify-between" style={{ fontSize: 10, color: '#3f3f46' }}>
                             <span>0.2s</span><span>1.5s</span>
                           </div>
@@ -2597,7 +2597,7 @@ function VideosInner() {
                       )}
 
                       {clips.length > 1 && (
-                        <div className="px-3 py-3 rounded-lg" style={{ background: 'rgba(99,102,241,0.05)', border: '0.5px solid rgba(99,102,241,0.15)' }}>
+                        <div className="px-3 py-3 rounded-lg" style={{ background: 'rgba(124, 92, 255,0.05)', border: '0.5px solid rgba(124, 92, 255,0.15)' }}>
                           <p style={{ fontSize: 12, color: '#818cf8' }}>
                             {transition === 'none'
                               ? `Hard cuts between ${clips.length} clips`
@@ -2622,9 +2622,9 @@ function VideosInner() {
                           <button key={p} onClick={() => setCopyPlatform(p)}
                             className="flex-1 py-2 rounded-lg text-[11px] font-bold capitalize transition-all duration-150"
                             style={{
-                              background: copyPlatform === p ? 'rgba(99,102,241,0.15)' : '#18181C',
+                              background: copyPlatform === p ? 'rgba(124, 92, 255,0.15)' : '#1A1530',
                               color: copyPlatform === p ? '#a5b4fc' : '#52525B',
-                              border: copyPlatform === p ? '1px solid rgba(99,102,241,0.4)' : '0.5px solid rgba(255,255,255,0.06)',
+                              border: copyPlatform === p ? '1px solid rgba(124, 92, 255,0.4)' : '0.5px solid rgba(255,255,255,0.06)',
                             }}>
                             {p === 'tiktok' ? 'TikTok' : p === 'instagram' ? 'Instagram' : p === 'youtube' ? 'YouTube' : 'LinkedIn'}
                           </button>
@@ -2636,7 +2636,7 @@ function VideosInner() {
                         onClick={() => generatePostCopy(copyPlatform)}
                         disabled={copyLoading || !scriptText.trim()}
                         className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-150 disabled:opacity-40"
-                        style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc' }}>
+                        style={{ background: 'rgba(124, 92, 255,0.12)', border: '1px solid rgba(124, 92, 255,0.3)', color: '#a5b4fc' }}>
                         <Sparkles className="w-3.5 h-3.5" />
                         {copyLoading ? 'Generating…' : `Generate ${copyPlatform === 'tiktok' ? 'TikTok' : copyPlatform === 'instagram' ? 'Instagram' : copyPlatform === 'youtube' ? 'YouTube' : 'LinkedIn'} copy`}
                       </button>
@@ -2650,7 +2650,7 @@ function VideosInner() {
                             <div className="flex flex-col gap-1.5 p-3 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.06)' }}>
                               <div className="flex items-center justify-between">
                                 <span style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Title / Hook</span>
-                                <button onClick={() => navigator.clipboard.writeText(c.title)} style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>Copy</button>
+                                <button onClick={() => navigator.clipboard.writeText(c.title)} style={{ fontSize: 11, color: '#7C5CFF', cursor: 'pointer', background: 'none', border: 'none' }}>Copy</button>
                               </div>
                               <p style={{ fontSize: 13, color: '#FAFAFA', fontWeight: 600, lineHeight: 1.4 }}>{c.title}</p>
                             </div>
@@ -2658,7 +2658,7 @@ function VideosInner() {
                             <div className="flex flex-col gap-1.5 p-3 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.06)' }}>
                               <div className="flex items-center justify-between">
                                 <span style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Caption</span>
-                                <button onClick={() => navigator.clipboard.writeText(c.caption)} style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>Copy</button>
+                                <button onClick={() => navigator.clipboard.writeText(c.caption)} style={{ fontSize: 11, color: '#7C5CFF', cursor: 'pointer', background: 'none', border: 'none' }}>Copy</button>
                               </div>
                               <p style={{ fontSize: 12, color: '#E4E4E7', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{c.caption}</p>
                             </div>
@@ -2667,15 +2667,15 @@ function VideosInner() {
                               <div className="flex flex-col gap-1.5 p-3 rounded-xl" style={{ background: '#0d0d10', border: '0.5px solid rgba(255,255,255,0.06)' }}>
                                 <div className="flex items-center justify-between">
                                   <span style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Hashtags</span>
-                                  <button onClick={() => navigator.clipboard.writeText(c.hashtags.join(' '))} style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none' }}>Copy all</button>
+                                  <button onClick={() => navigator.clipboard.writeText(c.hashtags.join(' '))} style={{ fontSize: 11, color: '#7C5CFF', cursor: 'pointer', background: 'none', border: 'none' }}>Copy all</button>
                                 </div>
                                 <div className="flex flex-wrap gap-1.5">
                                   {c.hashtags.map(tag => (
                                     <button key={tag} onClick={() => navigator.clipboard.writeText(tag)}
                                       className="px-2 py-0.5 rounded text-[11px] transition-all"
-                                      style={{ background: 'rgba(99,102,241,0.08)', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.2)' }}
-                                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.18)' }}
-                                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.08)' }}>
+                                      style={{ background: 'rgba(124, 92, 255,0.08)', color: '#a5b4fc', border: '0.5px solid rgba(124, 92, 255,0.2)' }}
+                                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124, 92, 255,0.18)' }}
+                                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124, 92, 255,0.08)' }}>
                                       {tag}
                                     </button>
                                   ))}
@@ -2689,14 +2689,14 @@ function VideosInner() {
                                   <span style={{ fontSize: 10, fontWeight: 700, color: '#3f3f46', textTransform: 'uppercase', letterSpacing: '0.07em' }}>CTA</span>
                                   <p style={{ fontSize: 12, color: '#E4E4E7' }}>{c.cta}</p>
                                 </div>
-                                <button onClick={() => navigator.clipboard.writeText(c.cta)} style={{ fontSize: 11, color: '#6366f1', cursor: 'pointer', background: 'none', border: 'none', flexShrink: 0 }}>Copy</button>
+                                <button onClick={() => navigator.clipboard.writeText(c.cta)} style={{ fontSize: 11, color: '#7C5CFF', cursor: 'pointer', background: 'none', border: 'none', flexShrink: 0 }}>Copy</button>
                               </div>
                             )}
                             {/* Copy everything */}
                             <button
                               onClick={() => navigator.clipboard.writeText(`${c.title}\n\n${c.caption}\n\n${c.hashtags?.join(' ') ?? ''}\n\n${c.cta}`)}
                               className="w-full py-2 rounded-xl text-[12px] font-semibold transition-all"
-                              style={{ background: 'rgba(99,102,241,0.08)', border: '0.5px solid rgba(99,102,241,0.2)', color: '#818cf8' }}>
+                              style={{ background: 'rgba(124, 92, 255,0.08)', border: '0.5px solid rgba(124, 92, 255,0.2)', color: '#818cf8' }}>
                               Copy everything
                             </button>
                           </div>
@@ -2716,7 +2716,7 @@ function VideosInner() {
               </div>
 
               {/* Export panel */}
-              <div className="flex flex-col gap-4 p-5 rounded-2xl" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+              <div className="flex flex-col gap-4 p-5 rounded-2xl" style={{ background: '#110E1C', border: '0.5px solid rgba(255,255,255,0.07)' }}>
                 {exporting ? (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
@@ -2727,7 +2727,7 @@ function VideosInner() {
                           {letterbox ? ' · Letterbox' : ''}{halation > 0 ? ' · Halation' : ''}
                         </p>
                       </div>
-                      <span style={{ fontSize: 14, fontFamily: 'monospace', fontWeight: 700, color: '#6366f1' }}>{Math.round(exportProgress)}%</span>
+                      <span style={{ fontSize: 14, fontFamily: 'monospace', fontWeight: 700, color: '#7C5CFF' }}>{Math.round(exportProgress)}%</span>
                     </div>
                     <ProgressBar value={exportProgress} label={exportLabel || 'Rendering…'} />
                     <p style={{ fontSize: 11, color: '#3f3f46', textAlign: 'center', letterSpacing: '0.02em' }}>
@@ -2757,7 +2757,7 @@ function VideosInner() {
                                 className="flex-1 py-2 text-[11px] font-bold transition-all duration-150 flex items-center justify-center gap-1 relative"
                                 title={locked ? 'Beta access required' : q}
                                 style={{
-                                  background: exportQuality === q && !locked ? '#6366f1' : 'transparent',
+                                  background: exportQuality === q && !locked ? '#7C5CFF' : 'transparent',
                                   color: locked ? '#27272a' : exportQuality === q ? '#fff' : '#3f3f46',
                                   borderRight: i < 3 ? '1px solid rgba(255,255,255,0.07)' : 'none',
                                 }}>
@@ -2776,7 +2776,7 @@ function VideosInner() {
                               className="flex-1 py-2 text-[11px] font-bold transition-all duration-150"
                               title={p.desc}
                               style={{
-                                background: exportAspect === p.id ? '#6366f1' : 'transparent',
+                                background: exportAspect === p.id ? '#7C5CFF' : 'transparent',
                                 color: exportAspect === p.id ? '#fff' : '#3f3f46',
                                 borderRight: i < PLATFORM_OPTIONS.length - 1 ? '1px solid rgba(255,255,255,0.07)' : 'none',
                               }}>
@@ -2790,9 +2790,9 @@ function VideosInner() {
                     {/* Export CTA */}
                     <button onClick={handleExport}
                       className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all duration-200"
-                      style={{ background: 'linear-gradient(135deg,#6366f1 0%,#7c3aed 100%)', boxShadow: '0 0 0 1px rgba(99,102,241,0.5), 0 8px 32px rgba(99,102,241,0.25)', letterSpacing: '-0.01em' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.6), 0 16px 40px rgba(99,102,241,0.35)' }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 1px rgba(99,102,241,0.5), 0 8px 32px rgba(99,102,241,0.25)' }}>
+                      style={{ background: 'linear-gradient(135deg,#7C5CFF 0%,#7c3aed 100%)', boxShadow: '0 0 0 1px rgba(124, 92, 255,0.5), 0 8px 32px rgba(124, 92, 255,0.25)', letterSpacing: '-0.01em' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 1px rgba(124, 92, 255,0.6), 0 16px 40px rgba(124, 92, 255,0.35)' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 0 1px rgba(124, 92, 255,0.5), 0 8px 32px rgba(124, 92, 255,0.25)' }}>
                       <Sparkles className="w-4 h-4" />
                       Export {exportQuality} · {exportAspect}{clips.length > 1 ? ` · ${clips.length} clips` : ''}
                     </button>
@@ -2822,9 +2822,9 @@ function VideosInner() {
 
                 {/* Social Export Panel — appears after export completes */}
                 {exportedBlobUrl && !exporting && (
-                  <div style={{ marginTop: 4, padding: '16px', borderRadius: 14, background: 'rgba(99,102,241,0.04)', border: '0.5px solid rgba(99,102,241,0.18)' }}>
+                  <div style={{ marginTop: 4, padding: '16px', borderRadius: 14, background: 'rgba(124, 92, 255,0.04)', border: '0.5px solid rgba(124, 92, 255,0.18)' }}>
                     <div className="flex items-center justify-between mb-3">
-                      <p style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Share to Social</p>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: '#7C5CFF', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Share to Social</p>
                       <button
                         onClick={() => {
                           if (!exportedBlob) return
@@ -2872,7 +2872,7 @@ function VideosInner() {
                       ))}
                     </div>
                     <p style={{ fontSize: 10, color: '#27272a', marginTop: 10, textAlign: 'center' }}>
-                      Need platform captions? Use the <span style={{ color: '#6366f1' }}>Copy</span> tab → generate post copy
+                      Need platform captions? Use the <span style={{ color: '#7C5CFF' }}>Copy</span> tab → generate post copy
                     </p>
                   </div>
                 )}
@@ -2886,9 +2886,9 @@ function VideosInner() {
             <div className="flex flex-col gap-3">
               <h2 style={{ fontSize: 14, fontWeight: 600, color: '#A1A1AA' }}>Previous videos</h2>
               {videos.slice(0, 5).map(v => (
-                <div key={v.id} className="flex items-center gap-4 p-4 rounded-[12px]" style={{ background: '#111113', border: '0.5px solid rgba(255,255,255,0.06)' }}>
-                  <div className="w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.2)' }}>
-                    <CheckCircle2 className="w-4 h-4 text-[#6366f1]" />
+                <div key={v.id} className="flex items-center gap-4 p-4 rounded-[12px]" style={{ background: '#110E1C', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                  <div className="w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(124, 92, 255,0.1)', border: '0.5px solid rgba(124, 92, 255,0.2)' }}>
+                    <CheckCircle2 className="w-4 h-4 text-[#7C5CFF]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p style={{ fontSize: 14, fontWeight: 500, color: '#FAFAFA' }} className="truncate">{v.name}</p>
@@ -2901,8 +2901,8 @@ function VideosInner() {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all"
                       style={{
                         color: sharedIds.has(v.id) ? '#22c55e' : '#818cf8',
-                        border: `0.5px solid ${sharedIds.has(v.id) ? 'rgba(34,197,94,0.3)' : 'rgba(99,102,241,0.3)'}`,
-                        background: sharedIds.has(v.id) ? 'rgba(34,197,94,0.08)' : 'rgba(99,102,241,0.06)',
+                        border: `0.5px solid ${sharedIds.has(v.id) ? 'rgba(34,197,94,0.3)' : 'rgba(124, 92, 255,0.3)'}`,
+                        background: sharedIds.has(v.id) ? 'rgba(34,197,94,0.08)' : 'rgba(124, 92, 255,0.06)',
                         opacity: sharingId === v.id ? 0.6 : 1,
                         cursor: sharingId === v.id || sharedIds.has(v.id) ? 'default' : 'pointer',
                       }}

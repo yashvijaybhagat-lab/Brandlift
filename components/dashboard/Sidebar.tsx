@@ -69,7 +69,7 @@ function BusinessAvatar({ name, size = 32 }: { name: string; size?: number }) {
 
   // Deterministic color from name
   const colors = [
-    'bg-[#5855D4]',
+    'bg-[#7C5CFF]',
     'bg-[#3B4555]',
     'bg-[#2D3748]',
     'bg-[#374151]',
@@ -185,9 +185,9 @@ export function Sidebar({
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             className={cn(
               'flex-shrink-0 w-6 h-6 rounded-[6px] flex items-center justify-center',
-              'text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#18181C]',
+              'text-[#71717A] hover:text-[#FAFAFA] hover:bg-[#1A1530]',
               'transition-colors duration-160',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5855D4]/60',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5CFF]/60',
             )}
           >
             {collapsed ? (
@@ -216,21 +216,21 @@ export function Sidebar({
                     'relative flex items-center gap-3 rounded-[8px] h-9 px-2.5',
                     'text-[13px] font-medium select-none',
                     'transition-all duration-160',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5855D4]/60',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5CFF]/60',
                     isActive
                       ? ['text-[#C4C2F0]']
                       : ['text-[#52525B]', 'hover:bg-white/[0.04]', 'hover:text-[#8B949E]']
                   )}
                   style={{
-                    background: isActive ? 'rgba(88, 85, 212, 0.08)' : undefined,
-                    boxShadow: isActive ? 'inset 2px 0 0 0 #5855D4' : undefined,
+                    background: isActive ? 'rgba(124, 92, 255, 0.08)' : undefined,
+                    boxShadow: isActive ? 'inset 2px 0 0 0 #7C5CFF' : undefined,
                   }}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon
                     className="flex-shrink-0 w-4 h-4"
                     style={{
-                      color: isActive ? '#8B87E6' : undefined,
+                      color: isActive ? '#B9A5FF' : undefined,
                     }}
                   />
                   <span
@@ -260,11 +260,11 @@ export function Sidebar({
               pointerEvents: collapsed ? 'none' : 'auto',
               padding: '8px 10px',
               borderRadius: 10,
-              background: 'rgba(88,85,212,0.07)',
-              border: '0.5px solid rgba(88,85,212,0.18)',
+              background: 'rgba(124, 92, 255,0.07)',
+              border: '0.5px solid rgba(124, 92, 255,0.18)',
             }}
           >
-            <p style={{ fontSize: 10, fontWeight: 700, color: '#5855D4', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: '#7C5CFF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>
               Our Mission
             </p>
             <p style={{ fontSize: 11, color: '#52525b', lineHeight: 1.5, letterSpacing: '-0.01em' }}>
@@ -274,10 +274,10 @@ export function Sidebar({
 
           {/* User row */}
           <NavTooltip label={userEmail} collapsed={collapsed}>
-            <div className="flex items-center gap-2.5 px-1 py-1 rounded-[8px] hover:bg-[#18181C] transition-colors duration-160 cursor-pointer">
+            <div className="flex items-center gap-2.5 px-1 py-1 rounded-[8px] hover:bg-[#1A1530] transition-colors duration-160 cursor-pointer">
               {/* User avatar */}
               <div
-                className="flex-shrink-0 w-7 h-7 rounded-full bg-[#5855D4] flex items-center justify-center text-white font-semibold"
+                className="flex-shrink-0 w-7 h-7 rounded-full bg-[#7C5CFF] flex items-center justify-center text-white font-semibold"
                 style={{ fontSize: 11 }}
               >
                 {userEmail[0]?.toUpperCase() ?? 'U'}

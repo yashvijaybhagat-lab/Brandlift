@@ -32,7 +32,7 @@ export default function SignUpPage() {
     <div className="flex h-[100dvh] w-full items-center justify-center" style={{ background: '#080809' }}>
       <div
         className="pointer-events-none absolute inset-0"
-        style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(88,85,212,0.07) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(124, 92, 255,0.07) 0%, transparent 70%)' }}
       />
 
       <div className="relative z-10 w-full max-w-[380px] px-8">
@@ -40,7 +40,7 @@ export default function SignUpPage() {
         <div className="flex justify-center mb-10">
           <div
             className="w-10 h-10 rounded-2xl flex items-center justify-center"
-            style={{ background: '#5855D4' }}
+            style={{ background: '#7C5CFF' }}
           >
             <svg viewBox="0 0 28 28" fill="none" width="24" height="24">
               <path d="M4 5h8a4 4 0 0 1 0 8H4V5zm0 8h8.5a4.5 4.5 0 0 1 0 9H4V13z" fill="white" opacity="0.95" />
@@ -92,9 +92,9 @@ export default function SignUpPage() {
           {/* GDPR/CCPA consent notice — shown before any auth action */}
           <p style={{ fontSize: 11, color: '#52525B', textAlign: 'center', lineHeight: 1.6 }}>
             By signing up you agree to our{' '}
-            <a href="/terms" style={{ color: '#8B87E6' }}>Terms of Service</a>
+            <a href="/terms" style={{ color: '#B9A5FF' }}>Terms of Service</a>
             {' '}and{' '}
-            <a href="/privacy" style={{ color: '#8B87E6' }}>Privacy Policy</a>.
+            <a href="/privacy" style={{ color: '#B9A5FF' }}>Privacy Policy</a>.
             We use your email only to operate your account.
           </p>
 
@@ -112,7 +112,7 @@ export default function SignUpPage() {
               placeholder="Business email"
               className="w-full px-4 py-3 rounded-xl text-[14px] text-[#FAFAFA] outline-none"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.45)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88,85,212,0.1)' }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.45)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(124, 92, 255,0.1)' }}
               onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.boxShadow = 'none' }}
             />
             <input
@@ -121,7 +121,7 @@ export default function SignUpPage() {
               placeholder="Password"
               className="w-full px-4 py-3 rounded-xl text-[14px] text-[#FAFAFA] outline-none"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(88,85,212,0.45)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(88,85,212,0.1)' }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.45)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(124, 92, 255,0.1)' }}
               onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.boxShadow = 'none' }}
             />
             <button
@@ -129,8 +129,8 @@ export default function SignUpPage() {
               disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-[14px] font-semibold text-white mt-1"
               style={{
-                background: '#5855D4',
-                boxShadow: '0 0 0 1px rgba(88,85,212,0.4), 0 8px 24px rgba(88,85,212,0.25)',
+                background: '#7C5CFF',
+                boxShadow: '0 0 0 1px rgba(124, 92, 255,0.4), 0 8px 24px rgba(124, 92, 255,0.25)',
                 opacity: loading ? 0.75 : 1,
               }}
             >
@@ -142,7 +142,7 @@ export default function SignUpPage() {
 
         <p className="mt-7 text-center" style={{ fontSize: 13, color: '#3f3f46' }}>
           Already have an account?{' '}
-          <Link href="/sign-in" style={{ color: '#8B87E6' }}>Sign in →</Link>
+          <Link href="/sign-in" style={{ color: '#B9A5FF' }}>Sign in →</Link>
         </p>
       </div>
     </div>

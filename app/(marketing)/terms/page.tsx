@@ -74,13 +74,13 @@ const SECTIONS = [
 
 export default function TermsPage() {
   return (
-    <div style={{ background: '#0A0A0B', minHeight: '100vh' }}>
+    <div style={{ background: '#08060F', minHeight: '100vh' }}>
       {/* Nav */}
       <header
         className="sticky top-0 z-50 flex items-center justify-between px-6 py-4"
         style={{ background: 'rgba(10,10,11,0.85)', backdropFilter: 'blur(16px)', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}
       >
-        <Link href="/" style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, color: '#6366f1', letterSpacing: '-0.03em' }}>
+        <Link href="/" style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, color: '#7C5CFF', letterSpacing: '-0.03em' }}>
           BrandLift
         </Link>
         <Link
@@ -97,7 +97,7 @@ export default function TermsPage() {
         <div className="mb-12">
           <div
             className="inline-block text-[11px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full mb-5"
-            style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '0.5px solid rgba(99,102,241,0.2)' }}
+            style={{ background: 'rgba(124, 92, 255,0.1)', color: '#818cf8', border: '0.5px solid rgba(124, 92, 255,0.2)' }}
           >
             Legal
           </div>
@@ -134,7 +134,7 @@ export default function TermsPage() {
         {/* Contact */}
         <div
           className="mt-16 p-6 rounded-2xl"
-          style={{ background: 'rgba(99,102,241,0.06)', border: '0.5px solid rgba(99,102,241,0.15)' }}
+          style={{ background: 'rgba(124, 92, 255,0.06)', border: '0.5px solid rgba(124, 92, 255,0.15)' }}
         >
           <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, color: '#FAFAFA', marginBottom: 8 }}>
             Questions about these terms?

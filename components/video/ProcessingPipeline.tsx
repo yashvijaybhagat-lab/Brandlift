@@ -61,8 +61,8 @@ function StageIndicator({ progress, complete }: { progress: number; complete: bo
       <span
         className="flex-shrink-0 w-5 h-5 rounded-full"
         style={{
-          border: '1.5px solid rgba(99, 102, 241, 0.2)',
-          borderLeftColor: '#6366f1',
+          border: '1.5px solid rgba(124, 92, 255, 0.2)',
+          borderLeftColor: '#7C5CFF',
           animation: 'pipelineSpin 800ms linear infinite',
         }}
         aria-label="In progress"
@@ -131,7 +131,7 @@ function StageRow({ stage, index }: { stage: PipelineStage; index: number }) {
           <span
             className="text-[12px] tabular-nums flex-shrink-0"
             style={{
-              color: stage.complete ? '#4ADE80' : '#6366f1',
+              color: stage.complete ? '#4ADE80' : '#7C5CFF',
               opacity: showPercent ? 1 : 0,
               transition: 'opacity 280ms cubic-bezier(0.23,1,0.32,1)',
             }}
@@ -158,7 +158,7 @@ function StageRow({ stage, index }: { stage: PipelineStage; index: number }) {
               borderRadius: 'inherit',
               background: stage.complete
                 ? '#4ADE80'
-                : 'linear-gradient(90deg, #6366f1 0%, #4f46e5 100%)',
+                : 'linear-gradient(90deg, #7C5CFF 0%, #6A45F5 100%)',
               width: `${stage.progress}%`,
               transition: 'width 400ms ease-in-out, background 300ms cubic-bezier(0.23,1,0.32,1)',
               // Completion bounce — scale-x pulse when hitting 100%

@@ -51,7 +51,7 @@ export default function Nav() {
           className="flex items-center gap-2.5"
           style={{ textDecoration: 'none' }}
         >
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#5855D4' }}>
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#7C5CFF' }}>
             <svg viewBox="0 0 28 28" fill="none" width="18" height="18">
               <path d="M4 5h9a4.5 4.5 0 0 1 0 9H4V5zm0 9h9.5a5 5 0 0 1 0 10H4V14z" fill="white" opacity="0.95" />
             </svg>
@@ -94,7 +94,7 @@ export default function Nav() {
           className="pressable text-sm font-medium px-4 py-2 rounded-interactive"
           style={{
             backgroundColor: 'var(--color-primary)',
-            color: '#0A0A0B',
+            color: '#08060F',
           }}
         >
           Get started free

@@ -5,12 +5,14 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Menu, X, ArrowRight } from 'lucide-react'
 import { useMotionValue, useTransform, motion as m, useScroll } from 'motion/react'
+import ShinyText from '@/components/reactbits/ShinyText'
+import CountUp from '@/components/reactbits/CountUp'
 
 /* ─── BrandLift Logo ──────────────────────────────────────────────────────── */
 const Logo = ({ className }: { className?: string }) => (
   <div className={cn('flex items-center gap-2.5', className)}>
     <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 flex-shrink-0">
-      <rect width="28" height="28" rx="7" fill="#5855D4" />
+      <rect width="28" height="28" rx="7" fill="#7C5CFF" />
       <path d="M8 7h7a4 4 0 0 1 0 8H8V7zm0 8h7.5a4.5 4.5 0 0 1 0 9H8v-9z" fill="white" opacity="0.95" />
     </svg>
     <span style={{ color: '#fff', fontWeight: 700, fontSize: 17, letterSpacing: '-0.03em', fontFamily: 'var(--font-display)' }}>
@@ -44,7 +46,7 @@ const HeroHeader = () => {
         background: scrolled ? 'rgba(11,17,32,0.9)' : 'transparent',
         backdropFilter: scrolled ? 'blur(20px)' : 'none',
         WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(88,85,212,0.15)' : '1px solid transparent',
+        borderBottom: scrolled ? '1px solid rgba(124, 92, 255,0.15)' : '1px solid transparent',
         transition: 'background 200ms ease, border-color 200ms ease',
       }}
     >
@@ -77,25 +79,25 @@ const HeroHeader = () => {
           <Link
             href="/sign-up"
             style={{
-              background: '#5855D4',
+              background: '#7C5CFF',
               color: '#fff',
               fontSize: 14,
               fontWeight: 600,
               textDecoration: 'none',
               padding: '9px 20px',
               borderRadius: 10,
-              boxShadow: '0 0 0 1px rgba(88,85,212,0.5), 0 4px 20px rgba(88,85,212,0.35)',
+              boxShadow: '0 0 0 1px rgba(124, 92, 255,0.5), 0 4px 20px rgba(124, 92, 255,0.35)',
               transition: 'box-shadow 160ms ease, transform 160ms ease',
               display: 'inline-block',
             }}
             onMouseEnter={(e) => {
               const el = e.currentTarget as HTMLAnchorElement
-              el.style.boxShadow = '0 0 0 1px rgba(88,85,212,0.8), 0 6px 28px rgba(88,85,212,0.5)'
+              el.style.boxShadow = '0 0 0 1px rgba(124, 92, 255,0.8), 0 6px 28px rgba(124, 92, 255,0.5)'
               el.style.transform = 'translateY(-1px)'
             }}
             onMouseLeave={(e) => {
               const el = e.currentTarget as HTMLAnchorElement
-              el.style.boxShadow = '0 0 0 1px rgba(88,85,212,0.5), 0 4px 20px rgba(88,85,212,0.35)'
+              el.style.boxShadow = '0 0 0 1px rgba(124, 92, 255,0.5), 0 4px 20px rgba(124, 92, 255,0.35)'
               el.style.transform = 'translateY(0)'
             }}
           >
@@ -114,7 +116,7 @@ const HeroHeader = () => {
       </div>
 
       {menuOpen && (
-        <div className="lg:hidden fixed inset-0 z-30 flex flex-col" style={{ background: '#0B1120', paddingTop: 64 }}>
+        <div className="lg:hidden fixed inset-0 z-30 flex flex-col" style={{ background: '#08060F', paddingTop: 64 }}>
           <div className="flex flex-col gap-6 px-8 pt-8">
             {menuItems.map((item) => (
               <Link key={item.name} href={item.href} onClick={() => setMenuOpen(false)}
@@ -124,7 +126,7 @@ const HeroHeader = () => {
             ))}
             <div className="flex flex-col gap-3 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <Link href="/sign-in" style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', padding: '12px', textDecoration: 'none' }}>Sign in</Link>
-              <Link href="/sign-up" style={{ background: '#5855D4', color: '#fff', textAlign: 'center', padding: '12px', borderRadius: 10, textDecoration: 'none', fontWeight: 600 }}>
+              <Link href="/sign-up" style={{ background: '#7C5CFF', color: '#fff', textAlign: 'center', padding: '12px', borderRadius: 10, textDecoration: 'none', fontWeight: 600 }}>
                 Get started free
               </Link>
             </div>
@@ -185,10 +187,10 @@ function BeforeAfterSlider() {
         maxHeight: 'none',
         height: 'min(85vh, 880px)',
         borderRadius: 20,
-        border: '1px solid rgba(88,85,212,0.2)',
+        border: '1px solid rgba(124, 92, 255,0.2)',
         background: '#0e0a06',
         overflow: 'hidden',
-        boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 32px 80px rgba(0,0,0,0.6), 0 0 60px rgba(88,85,212,0.12)',
+        boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 32px 80px rgba(0,0,0,0.6), 0 0 60px rgba(124, 92, 255,0.12)',
       }}
       role="img"
       aria-label="Before and after video comparison"
@@ -258,11 +260,11 @@ function BeforeAfterSlider() {
       </div>
 
       {/* AFTER */}
-      <m.div className="absolute inset-0 overflow-hidden" style={{ clipPath: afterClip, borderLeft: '1px solid rgba(88,85,212,0.4)' }}>
+      <m.div className="absolute inset-0 overflow-hidden" style={{ clipPath: afterClip, borderLeft: '1px solid rgba(124, 92, 255,0.4)' }}>
         <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover"
           style={{ filter: 'brightness(0.85) saturate(1.55) contrast(1.25)' }}
           src="https://videos.pexels.com/video-files/4812205/4812205-hd_1080_1920_30fps.mp4" aria-hidden />
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(18,38,72,0.2) 0%, rgba(88,85,212,0.06) 50%, rgba(110,55,20,0.14) 100%)', mixBlendMode: 'color' }} aria-hidden />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(18,38,72,0.2) 0%, rgba(124, 92, 255,0.06) 50%, rgba(110,55,20,0.14) 100%)', mixBlendMode: 'color' }} aria-hidden />
         <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: '9%', background: '#000' }} aria-hidden />
         <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height: '9%', background: '#000' }} aria-hidden />
         <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 90px rgba(0,0,0,0.65)' }} aria-hidden />
@@ -270,7 +272,7 @@ function BeforeAfterSlider() {
         <div className="absolute top-12 right-3 flex flex-col items-end gap-1.5" style={{ zIndex: 2 }}>
           {[
             { dot: '#10B981', label: 'Stabilized' },
-            { dot: '#5855D4', label: 'Color graded' },
+            { dot: '#7C5CFF', label: 'Color graded' },
             { dot: '#94A3B8', label: 'Captioned' },
           ].map(({ dot, label }) => (
             <div key={label} className="flex items-center gap-1 text-[7px] px-1.5 py-0.5 rounded"
@@ -281,7 +283,7 @@ function BeforeAfterSlider() {
         </div>
 
         <div className="absolute top-4 right-3 text-[8px] px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(88,85,212,0.2)', color: '#A5A3F0', border: '1px solid rgba(88,85,212,0.4)', fontWeight: 700, letterSpacing: '0.03em' }}>
+          style={{ background: 'rgba(124, 92, 255,0.2)', color: '#A5A3F0', border: '1px solid rgba(124, 92, 255,0.4)', fontWeight: 700, letterSpacing: '0.03em' }}>
           AI-polished
         </div>
 
@@ -299,9 +301,9 @@ function BeforeAfterSlider() {
         className="absolute top-0 bottom-0 flex items-center justify-center"
         style={{ x, left: '50%', marginLeft: -20, width: 40, cursor: 'ew-resize', zIndex: 20 }}
         aria-label="Drag to compare">
-        <div className="absolute top-0 bottom-0 w-px" style={{ background: 'rgba(88,85,212,0.6)', left: '50%', boxShadow: '0 0 8px rgba(88,85,212,0.4)' }} aria-hidden />
+        <div className="absolute top-0 bottom-0 w-px" style={{ background: 'rgba(124, 92, 255,0.6)', left: '50%', boxShadow: '0 0 8px rgba(124, 92, 255,0.4)' }} aria-hidden />
         <div className="relative flex items-center justify-center w-9 h-9 rounded-full"
-          style={{ background: '#5855D4', boxShadow: '0 0 0 3px rgba(88,85,212,0.3), 0 4px 16px rgba(0,0,0,0.5)' }}>
+          style={{ background: '#7C5CFF', boxShadow: '0 0 0 3px rgba(124, 92, 255,0.3), 0 4px 16px rgba(0,0,0,0.5)' }}>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
             <path d="M5 8H11M5 8L3 6M5 8L3 10M11 8L13 6M11 8L13 10" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -379,8 +381,8 @@ function BetaCodeWidget() {
             fontWeight: 700,
             letterSpacing: '0.08em',
             color: '#A5A3F0',
-            background: 'rgba(88,85,212,0.12)',
-            border: '1px solid rgba(88,85,212,0.25)',
+            background: 'rgba(124, 92, 255,0.12)',
+            border: '1px solid rgba(124, 92, 255,0.25)',
             borderRadius: 8,
             padding: '6px 12px',
           }}>
@@ -441,15 +443,15 @@ function BetaCodeWidget() {
             width: 180,
             transition: 'border-color 150ms ease',
           }}
-          onFocus={(e) => { if (status === 'idle') e.currentTarget.style.borderColor = 'rgba(88,85,212,0.6)' }}
+          onFocus={(e) => { if (status === 'idle') e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.6)' }}
           onBlur={(e) => { if (status === 'idle') e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
         />
         <button
           type="submit"
           disabled={status === 'loading' || !code.trim()}
           style={{
-            background: status === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(88,85,212,0.18)',
-            border: status === 'success' ? '1px solid rgba(16,185,129,0.4)' : '1px solid rgba(88,85,212,0.35)',
+            background: status === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(124, 92, 255,0.18)',
+            border: status === 'success' ? '1px solid rgba(16,185,129,0.4)' : '1px solid rgba(124, 92, 255,0.35)',
             borderRadius: 10,
             color: status === 'success' ? '#34D399' : '#A5A3F0',
             fontSize: 14,
@@ -495,20 +497,20 @@ function HeroSection5() {
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <span style={{
                   display: 'flex', alignItems: 'center', gap: 8,
-                  background: 'rgba(88,85,212,0.12)',
-                  border: '1px solid rgba(88,85,212,0.3)',
+                  background: 'rgba(124, 92, 255,0.12)',
+                  border: '1px solid rgba(124, 92, 255,0.3)',
                   color: '#A5A3F0',
                   borderRadius: 100,
                   padding: '5px 14px 5px 8px',
                   fontSize: 12,
                   fontWeight: 600,
                 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: 'rgba(88,85,212,0.25)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: '50%', background: 'rgba(124, 92, 255,0.25)' }}>
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden>
                       <path d="M6 1L7.5 4.5L11 5.5L8.5 8L9 11.5L6 10L3 11.5L3.5 8L1 5.5L4.5 4.5L6 1Z" fill="#A5A3F0" />
                     </svg>
                   </span>
-                  Now in beta · free to join
+                  <ShinyText text="Now in beta · free to join" color="#A5A3F0" shineColor="#ffffff" speed={4} />
                 </span>
               </div>
 
@@ -536,7 +538,7 @@ function HeroSection5() {
                     lineHeight: 0.93,
                     margin: 0,
                     marginTop: '0.06em',
-                    background: 'linear-gradient(135deg, #7B78E8 0%, #5855D4 45%, #9B8AF0 100%)',
+                    background: 'linear-gradient(135deg, #7B78E8 0%, #7C5CFF 45%, #9B8AF0 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
@@ -566,25 +568,25 @@ function HeroSection5() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 8,
-                    background: '#5855D4',
+                    background: '#7C5CFF',
                     color: '#fff',
                     fontSize: 16,
                     fontWeight: 700,
                     textDecoration: 'none',
                     padding: '14px 28px',
                     borderRadius: 12,
-                    boxShadow: '0 0 0 1px rgba(88,85,212,0.5), 0 8px 32px rgba(88,85,212,0.45)',
+                    boxShadow: '0 0 0 1px rgba(124, 92, 255,0.5), 0 8px 32px rgba(124, 92, 255,0.45)',
                     transition: 'box-shadow 200ms ease, transform 150ms ease',
                     letterSpacing: '-0.01em',
                   }}
                   onMouseEnter={(e) => {
                     const el = e.currentTarget as HTMLAnchorElement
-                    el.style.boxShadow = '0 0 0 1px rgba(88,85,212,0.9), 0 12px 40px rgba(88,85,212,0.6)'
+                    el.style.boxShadow = '0 0 0 1px rgba(124, 92, 255,0.9), 0 12px 40px rgba(124, 92, 255,0.6)'
                     el.style.transform = 'translateY(-2px)'
                   }}
                   onMouseLeave={(e) => {
                     const el = e.currentTarget as HTMLAnchorElement
-                    el.style.boxShadow = '0 0 0 1px rgba(88,85,212,0.5), 0 8px 32px rgba(88,85,212,0.45)'
+                    el.style.boxShadow = '0 0 0 1px rgba(124, 92, 255,0.5), 0 8px 32px rgba(124, 92, 255,0.45)'
                     el.style.transform = 'translateY(0)'
                   }}
                 >
@@ -623,7 +625,7 @@ function HeroSection5() {
               <div style={{
                 position: 'absolute',
                 inset: '-20%',
-                background: 'radial-gradient(ellipse at center, rgba(88,85,212,0.22) 0%, transparent 65%)',
+                background: 'radial-gradient(ellipse at center, rgba(124, 92, 255,0.22) 0%, transparent 65%)',
                 pointerEvents: 'none',
                 zIndex: 0,
               }} aria-hidden />
@@ -639,11 +641,11 @@ function HeroSection5() {
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(17,24,39,0.4)', backdropFilter: 'blur(8px)' }}>
         <div className="max-w-6xl mx-auto px-8">
           <div className="grid grid-cols-3">
-            {[
-              { value: '3 min', label: 'Average turnaround' },
-              { value: '10×', label: 'More content output' },
-              { value: 'Free', label: 'During beta' },
-            ].map((stat, i) => (
+            {([
+              { to: 3, suffix: ' min', label: 'Average turnaround' },
+              { to: 10, suffix: '×', label: 'More content output' },
+              { text: 'Free', label: 'During beta' },
+            ] as { to?: number; suffix?: string; text?: string; label: string }[]).map((stat, i) => (
               <div
                 key={stat.label}
                 className="flex flex-col items-center gap-1.5 py-9 px-4 text-center"
@@ -653,14 +655,19 @@ function HeroSection5() {
                   fontFamily: 'var(--font-display)',
                   fontWeight: 800,
                   fontSize: 'clamp(24px, 3.5vw, 36px)',
-                  background: 'linear-gradient(135deg, #A5A3F0, #5855D4)',
+                  background: 'linear-gradient(135deg, #A5A3F0, #7C5CFF)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
                   letterSpacing: '-0.04em',
                   lineHeight: 1,
                 }}>
-                  {stat.value}
+                  {stat.text ?? (
+                    <>
+                      <CountUp to={stat.to as number} duration={2} />
+                      {stat.suffix}
+                    </>
+                  )}
                 </span>
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{stat.label}</span>
               </div>

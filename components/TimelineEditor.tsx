@@ -154,7 +154,7 @@ export default function TimelineEditor({
       <div className="flex items-center gap-2">
         <button onClick={splitAtPlayhead}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-semibold transition-all"
-          style={{ background: 'rgba(99,102,241,0.1)', color: '#a5b4fc', border: '0.5px solid rgba(99,102,241,0.25)' }}>
+          style={{ background: 'rgba(124, 92, 255,0.1)', color: '#a5b4fc', border: '0.5px solid rgba(124, 92, 255,0.25)' }}>
           <Scissors className="w-3.5 h-3.5" /> Split here
         </button>
         {selectedSeg !== null && (
@@ -205,10 +205,10 @@ export default function TimelineEditor({
                 left:       timeToPct(seg.start),
                 width:      timeToPct(seg.end - seg.start),
                 background: selectedSeg === i
-                  ? seg.speed !== 1.0 ? 'rgba(250,204,21,0.25)' : 'rgba(99,102,241,0.25)'
-                  : seg.speed !== 1.0 ? 'rgba(250,204,21,0.12)' : 'rgba(99,102,241,0.12)',
+                  ? seg.speed !== 1.0 ? 'rgba(250,204,21,0.25)' : 'rgba(124, 92, 255,0.25)'
+                  : seg.speed !== 1.0 ? 'rgba(250,204,21,0.12)' : 'rgba(124, 92, 255,0.12)',
                 border: selectedSeg === i
-                  ? seg.speed !== 1.0 ? '1px solid rgba(250,204,21,0.5)' : '1px solid rgba(99,102,241,0.5)'
+                  ? seg.speed !== 1.0 ? '1px solid rgba(250,204,21,0.5)' : '1px solid rgba(124, 92, 255,0.5)'
                   : '1px solid rgba(255,255,255,0.08)',
                 borderRadius: 6,
                 zIndex: 2,
@@ -271,7 +271,7 @@ export default function TimelineEditor({
                   onKeyDown={e => e.key === 'Enter' && commitCaption()}
                   style={{
                     fontSize: 10, color: '#FAFAFA', background: '#1e1e24',
-                    border: '1px solid #6366f1', borderRadius: 4,
+                    border: '1px solid #7C5CFF', borderRadius: 4,
                     padding: '1px 5px', width: '100%', outline: 'none',
                     fontFamily: 'inherit',
                   }}
@@ -279,7 +279,7 @@ export default function TimelineEditor({
               ) : (
                 <div
                   className="w-full h-6 flex items-center px-1.5 rounded cursor-pointer overflow-hidden"
-                  style={{ background: 'rgba(99,102,241,0.18)', border: '0.5px solid rgba(99,102,241,0.3)' }}
+                  style={{ background: 'rgba(124, 92, 255,0.18)', border: '0.5px solid rgba(124, 92, 255,0.3)' }}
                   onClick={e => { e.stopPropagation(); setEditCap({ idx: i, text: cap.text }) }}
                   onPointerDown={e => startDrag(e, 'caption', -1, i, cap.start)}>
                   <span style={{ fontSize: 9, color: '#a5b4fc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -302,8 +302,8 @@ export default function TimelineEditor({
           <span style={{ fontSize: 10, color: '#52525B', width: 34 }}>Voice</span>
           <input type="range" min={0} max={100} value={Math.round(voiceVolume * 100)}
             onChange={e => onAudioChange(Number(e.target.value) / 100, musicVolume)}
-            className="flex-1" style={{ accentColor: '#6366f1', height: 3, cursor: 'pointer' }} />
-          <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#6366f1', width: 28, textAlign: 'right' }}>
+            className="flex-1" style={{ accentColor: '#7C5CFF', height: 3, cursor: 'pointer' }} />
+          <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#7C5CFF', width: 28, textAlign: 'right' }}>
             {Math.round(voiceVolume * 100)}%
           </span>
         </div>
@@ -311,8 +311,8 @@ export default function TimelineEditor({
           <span style={{ fontSize: 10, color: '#52525B', width: 34 }}>Music</span>
           <input type="range" min={0} max={100} value={Math.round(musicVolume * 100)}
             onChange={e => onAudioChange(voiceVolume, Number(e.target.value) / 100)}
-            className="flex-1" style={{ accentColor: '#8b5cf6', height: 3, cursor: 'pointer' }} />
-          <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#8b5cf6', width: 28, textAlign: 'right' }}>
+            className="flex-1" style={{ accentColor: '#A78BFA', height: 3, cursor: 'pointer' }} />
+          <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#A78BFA', width: 28, textAlign: 'right' }}>
             {Math.round(musicVolume * 100)}%
           </span>
         </div>
@@ -321,7 +321,7 @@ export default function TimelineEditor({
       {/* ── Legend ───────────────────────────────────────── */}
       <div className="flex gap-4 px-1">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-2 rounded-sm" style={{ background: 'rgba(99,102,241,0.4)' }} />
+          <div className="w-3 h-2 rounded-sm" style={{ background: 'rgba(124, 92, 255,0.4)' }} />
           <span style={{ fontSize: 9, color: '#52525B' }}>Clip</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -333,7 +333,7 @@ export default function TimelineEditor({
           <span style={{ fontSize: 9, color: '#52525B' }}>Trimmed</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-2 rounded-sm" style={{ background: 'rgba(99,102,241,0.18)', border: '0.5px solid rgba(99,102,241,0.3)' }} />
+          <div className="w-3 h-2 rounded-sm" style={{ background: 'rgba(124, 92, 255,0.18)', border: '0.5px solid rgba(124, 92, 255,0.3)' }} />
           <span style={{ fontSize: 9, color: '#52525B' }}>Caption</span>
         </div>
       </div>

@@ -265,8 +265,8 @@ export default function StepBasics({ onComplete }: StepBasicsProps) {
               lineHeight: 1.5,
             }}
             onFocus={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'
-              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1), 0 1px 3px rgba(0,0,0,0.2)'
+              e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.5)'
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(124, 92, 255,0.1), 0 1px 3px rgba(0,0,0,0.2)'
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
@@ -300,8 +300,8 @@ export default function StepBasics({ onComplete }: StepBasicsProps) {
                 lineHeight: 1.6,
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1), 0 1px 3px rgba(0,0,0,0.2)'
+                e.currentTarget.style.borderColor = 'rgba(124, 92, 255,0.5)'
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(124, 92, 255,0.1), 0 1px 3px rgba(0,0,0,0.2)'
               }}
               onBlur={(e) => {
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'

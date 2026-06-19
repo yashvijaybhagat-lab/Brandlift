@@ -135,8 +135,8 @@ export default function ViralScorePage() {
                 <button key={p} onClick={() => setPlatform(p)}
                   style={{
                     padding: '5px 13px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
-                    border: `1px solid ${platform === p ? 'rgba(99,102,241,0.5)' : 'var(--color-border)'}`,
-                    background: platform === p ? 'rgba(99,102,241,0.1)' : 'transparent',
+                    border: `1px solid ${platform === p ? 'rgba(124, 92, 255,0.5)' : 'var(--color-border)'}`,
+                    background: platform === p ? 'rgba(124, 92, 255,0.1)' : 'transparent',
                     color: platform === p ? '#818cf8' : 'var(--color-text-muted)',
                   }}>
                   {p}
@@ -220,14 +220,14 @@ export default function ViralScorePage() {
                 </div>
 
                 {/* Improved hook */}
-                <div style={{ background: 'rgba(99,102,241,0.05)', border: '0.5px solid rgba(99,102,241,0.18)', borderRadius: 16, padding: 20 }}>
+                <div style={{ background: 'rgba(124, 92, 255,0.05)', border: '0.5px solid rgba(124, 92, 255,0.18)', borderRadius: 16, padding: 20 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <TrendingUp className="w-4 h-4" style={{ color: '#818cf8' }} />
                       <p style={{ fontSize: 13, fontWeight: 700, color: '#818cf8' }}>Improved hook</p>
                     </div>
                     <button onClick={copyHook}
-                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 8, background: hookCopied ? 'rgba(34,197,94,0.1)' : 'rgba(99,102,241,0.1)', border: `0.5px solid ${hookCopied ? 'rgba(34,197,94,0.3)' : 'rgba(99,102,241,0.2)'}`, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: hookCopied ? '#22c55e' : '#818cf8' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 8, background: hookCopied ? 'rgba(34,197,94,0.1)' : 'rgba(124, 92, 255,0.1)', border: `0.5px solid ${hookCopied ? 'rgba(34,197,94,0.3)' : 'rgba(124, 92, 255,0.2)'}`, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: hookCopied ? '#22c55e' : '#818cf8' }}>
                       {hookCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                       {hookCopied ? 'Copied' : 'Copy'}
                     </button>
@@ -242,7 +242,7 @@ export default function ViralScorePage() {
                     {result.quickFixes.map((fix, i) => (
                       <motion.div key={i} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
                         style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                        <div style={{ width: 22, height: 22, borderRadius: 7, background: 'rgba(99,102,241,0.12)', border: '0.5px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#818cf8', flexShrink: 0, marginTop: 1 }}>
+                        <div style={{ width: 22, height: 22, borderRadius: 7, background: 'rgba(124, 92, 255,0.12)', border: '0.5px solid rgba(124, 92, 255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#818cf8', flexShrink: 0, marginTop: 1 }}>
                           {i + 1}
                         </div>
                         <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>{fix}</p>

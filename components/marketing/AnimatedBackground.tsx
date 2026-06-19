@@ -1,5 +1,7 @@
 'use client'
 
+import Particles from '@/components/reactbits/Particles'
+
 export function AnimatedBackground() {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -19,6 +21,20 @@ export function AnimatedBackground() {
         }
       `}</style>
 
+      {/* WebGL particle field (React Bits) */}
+      <div className="absolute inset-0" style={{ opacity: 0.45 }} aria-hidden>
+        <Particles
+          particleColors={['#7C5CFF', '#FF6FD8', '#22D3EE']}
+          particleCount={130}
+          particleSpread={12}
+          speed={0.06}
+          particleBaseSize={70}
+          moveParticlesOnHover
+          alphaParticles
+          className=""
+        />
+      </div>
+
       {/* Large top-center hero glow */}
       <div
         className="absolute"
@@ -28,7 +44,7 @@ export function AnimatedBackground() {
           transform: 'translateX(-50%)',
           width: '80%',
           height: '70%',
-          background: 'radial-gradient(ellipse at center, rgba(88,85,212,0.18) 0%, rgba(88,85,212,0.06) 40%, transparent 70%)',
+          background: 'radial-gradient(ellipse at center, rgba(124, 92, 255,0.18) 0%, rgba(124, 92, 255,0.06) 40%, transparent 70%)',
           animation: 'drift1 18s ease-in-out infinite',
         }}
       />
@@ -41,7 +57,7 @@ export function AnimatedBackground() {
           left: '-10%',
           width: '55%',
           height: '55%',
-          background: 'radial-gradient(ellipse at center, rgba(88,85,212,0.10) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse at center, rgba(124, 92, 255,0.10) 0%, transparent 65%)',
           animation: 'drift2 22s ease-in-out infinite',
         }}
       />
@@ -72,7 +88,7 @@ export function AnimatedBackground() {
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse 85% 80% at 50% 40%, transparent 50%, #0B1120 100%)',
+          background: 'radial-gradient(ellipse 85% 80% at 50% 40%, transparent 50%, #08060F 100%)',
         }}
       />
     </div>

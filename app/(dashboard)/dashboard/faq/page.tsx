@@ -32,11 +32,11 @@ function FAQAccordionItem({ item, index }: { item: FAQItem; index: number }) {
       layout
       style={{
         background: 'var(--color-surface)',
-        border: `0.5px solid ${open ? 'rgba(99,102,241,0.3)' : 'var(--color-border)'}`,
+        border: `0.5px solid ${open ? 'rgba(124, 92, 255,0.3)' : 'var(--color-border)'}`,
         borderRadius: 14,
         overflow: 'hidden',
         transition: 'border-color 0.2s, box-shadow 0.2s',
-        boxShadow: open ? '0 0 0 3px rgba(99,102,241,0.06)' : 'none',
+        boxShadow: open ? '0 0 0 3px rgba(124, 92, 255,0.06)' : 'none',
       }}
     >
       <button
@@ -137,7 +137,7 @@ function AskPanel({ onAdded }: { onAdded: () => void }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
           <div style={{
             width: 30, height: 30, borderRadius: 9,
-            background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.25)',
+            background: 'rgba(124, 92, 255,0.1)', border: '0.5px solid rgba(124, 92, 255,0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <Sparkles style={{ width: 14, height: 14, color: '#818cf8' }} />
@@ -175,7 +175,7 @@ function AskPanel({ onAdded }: { onAdded: () => void }) {
             fontFamily: 'inherit',
             transition: 'border-color 0.2s',
           }}
-          onFocus={e => { e.target.style.borderColor = 'rgba(99,102,241,0.4)' }}
+          onFocus={e => { e.target.style.borderColor = 'rgba(124, 92, 255,0.4)' }}
           onBlur={e => { e.target.style.borderColor = 'var(--color-border)' }}
         />
       </div>
@@ -193,11 +193,11 @@ function AskPanel({ onAdded }: { onAdded: () => void }) {
             padding: '10px 20px', borderRadius: 11, border: 'none',
             cursor: question.trim() && !asking ? 'pointer' : 'not-allowed',
             background: question.trim() && !asking
-              ? 'linear-gradient(135deg,#6366f1,#8b5cf6)'
+              ? 'linear-gradient(135deg,#7C5CFF,#A78BFA)'
               : 'var(--color-surface-elevated)',
             color: question.trim() && !asking ? '#fff' : 'var(--color-text-muted)',
             fontSize: 13, fontWeight: 700,
-            boxShadow: question.trim() && !asking ? '0 4px 18px rgba(99,102,241,0.28)' : 'none',
+            boxShadow: question.trim() && !asking ? '0 4px 18px rgba(124, 92, 255,0.28)' : 'none',
             transition: 'all 0.2s',
           }}
         >
@@ -234,8 +234,8 @@ function AskPanel({ onAdded }: { onAdded: () => void }) {
             transition={{ duration: 0.25 }}
             style={{
               borderRadius: 14, padding: '16px 18px',
-              background: response.added ? 'rgba(99,102,241,0.07)' : 'rgba(255,255,255,0.03)',
-              border: `0.5px solid ${response.added ? 'rgba(99,102,241,0.22)' : 'var(--color-border)'}`,
+              background: response.added ? 'rgba(124, 92, 255,0.07)' : 'rgba(255,255,255,0.03)',
+              border: `0.5px solid ${response.added ? 'rgba(124, 92, 255,0.22)' : 'var(--color-border)'}`,
               position: 'relative',
             }}
           >
@@ -251,7 +251,7 @@ function AskPanel({ onAdded }: { onAdded: () => void }) {
                 <>
                   <div style={{
                     width: 22, height: 22, borderRadius: 6,
-                    background: 'rgba(99,102,241,0.15)',
+                    background: 'rgba(124, 92, 255,0.15)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <Check style={{ width: 11, height: 11, color: '#818cf8' }} />
@@ -322,7 +322,7 @@ export default function FAQPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
             <div style={{
               width: 48, height: 48, borderRadius: 14,
-              background: 'rgba(99,102,241,0.1)', border: '0.5px solid rgba(99,102,241,0.25)',
+              background: 'rgba(124, 92, 255,0.1)', border: '0.5px solid rgba(124, 92, 255,0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               <HelpCircle style={{ width: 22, height: 22, color: '#818cf8' }} />
@@ -345,7 +345,7 @@ export default function FAQPage() {
             display: 'flex', alignItems: 'center', gap: 11, padding: '11px 15px',
             transition: 'border-color 0.2s',
           }}
-            onFocusCapture={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.35)' }}
+            onFocusCapture={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124, 92, 255,0.35)' }}
             onBlurCapture={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)' }}
           >
             <Search style={{ width: 15, height: 15, color: 'var(--color-text-muted)', flexShrink: 0 }} />

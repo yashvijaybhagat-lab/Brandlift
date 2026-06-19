@@ -130,8 +130,8 @@ export default function FAQ() {
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
             style={{
-              background: 'rgba(99,102,241,0.08)',
-              border: '0.5px solid rgba(99,102,241,0.2)',
+              background: 'rgba(124, 92, 255,0.08)',
+              border: '0.5px solid rgba(124, 92, 255,0.2)',
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: '0.08em',
