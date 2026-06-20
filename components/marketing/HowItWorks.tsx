@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Upload, Sparkles, Share2, ArrowRight } from 'lucide-react'
+import Aurora from '@/components/reactbits/Aurora'
 
 function useVisible(threshold = 0.2) {
   const ref = useRef<HTMLDivElement>(null)
@@ -234,10 +235,13 @@ export default function HowItWorks() {
     <section
       id="how-it-works"
       ref={ref}
-      className="py-24"
+      className="py-24 relative overflow-hidden"
       style={{ borderTop: '1px solid var(--border-subtle)' }}
     >
-      <div className="max-w-6xl mx-auto px-6 flex flex-col gap-16">
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-25" aria-hidden>
+        <Aurora colorStops={['#7C5CFF', '#FF6FD8', '#22D3EE']} amplitude={1.0} blend={0.6} />
+      </div>
+      <div className="max-w-6xl mx-auto px-6 flex flex-col gap-16 relative z-10">
         {/* Header */}
         <div
           className="flex flex-col items-center gap-4 text-center"

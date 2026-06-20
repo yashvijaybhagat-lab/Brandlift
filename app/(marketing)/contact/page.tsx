@@ -18,11 +18,34 @@ export default function ContactPage() {
   const [topic, setTopic] = useState(TOPICS[0])
   const [message, setMessage] = useState('')
   const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !email.trim() || !message.trim()) return
-    setSent(true)
+    setSending(true)
+    setError('')
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, topic, message }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error((data as { error?: string }).error || 'Something went wrong.')
+      }
+      setSent(true)
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong — please email contact@brandlift.dev directly.'
+      )
+    } finally {
+      setSending(false)
+    }
   }
 
   const inputStyle = {
@@ -183,14 +206,21 @@ export default function ContactPage() {
                   />
                 </div>
 
+                {error && (
+                  <p style={{ fontSize: 13, color: '#f87171', lineHeight: 1.5, margin: 0 }}>{error}</p>
+                )}
                 <button
                   type="submit"
+                  disabled={sending}
                   className="flex items-center justify-center gap-2 py-3.5 rounded-xl text-[14px] font-semibold text-white transition-all duration-200"
                   style={{
                     background: 'linear-gradient(135deg, #7C5CFF 0%, #5558e8 100%)',
                     boxShadow: '0 0 0 1px rgba(124, 92, 255,0.4), 0 8px 24px rgba(124, 92, 255,0.25)',
+                    opacity: sending ? 0.6 : 1,
+                    cursor: sending ? 'default' : 'pointer',
                   }}
                   onMouseEnter={(e) => {
+                    if (sending) return
                     e.currentTarget.style.boxShadow = '0 0 0 1px rgba(124, 92, 255,0.5), 0 12px 32px rgba(124, 92, 255,0.35)'
                     e.currentTarget.style.transform = 'translateY(-1px)'
                   }}
@@ -199,10 +229,12 @@ export default function ContactPage() {
                     e.currentTarget.style.transform = 'translateY(0)'
                   }}
                 >
-                  Send message
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                  </svg>
+                  {sending ? 'Sending…' : 'Send message'}
+                  {!sending && (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                  )}
                 </button>
               </form>
             )}
@@ -238,7 +270,7 @@ export default function ContactPage() {
                   </svg>
                 ),
                 label: 'Based in',
-                value: 'San Francisco, CA',
+                value: 'Cedar Park, TX',
                 href: null,
               },
             ].map(({ icon, label, value, href }) => (

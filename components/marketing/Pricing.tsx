@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sparkles, Zap, Music, Type, Scissors, Palette, MessageSquare, Clock, TrendingUp, Video, Check } from 'lucide-react'
+import Iridescence from '@/components/reactbits/Iridescence'
+import Magnet from '@/components/reactbits/Magnet'
+import ShinyText from '@/components/reactbits/ShinyText'
 
 function ScrollReveal({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -43,14 +46,17 @@ const VALUE_PROPS = [
 export default function Pricing() {
   const router = useRouter()
   return (
-    <section id="pricing" aria-labelledby="pricing-heading" className="py-24" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-      <div className="max-w-5xl mx-auto px-6 flex flex-col gap-14">
+    <section id="pricing" aria-labelledby="pricing-heading" className="py-24 relative overflow-hidden" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.12]" aria-hidden>
+        <Iridescence color={[0.49, 0.36, 1]} amplitude={0.1} speed={0.8} mouseReact={false} />
+      </div>
+      <div className="max-w-5xl mx-auto px-6 flex flex-col gap-14 relative z-10">
 
         {/* Header */}
         <ScrollReveal className="flex flex-col items-center gap-5 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-widest" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--accent-border)', color: 'var(--text-secondary)' }}>
             <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ background: 'var(--success)' }} />
-            Beta · 100% Free
+            <ShinyText text="Beta · 100% Free" color="#A9A2C4" shineColor="#ffffff" speed={4} />
           </div>
           <h2
             id="pricing-heading"
@@ -128,13 +134,15 @@ export default function Pricing() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
-              <button
-                onClick={() => router.push('/sign-up')}
-                className="btn-primary"
-                style={{ height: 44, fontSize: 15, paddingLeft: 32, paddingRight: 32 }}
-              >
-                Claim your free spot
-              </button>
+              <Magnet padding={60} magnetStrength={5}>
+                <button
+                  onClick={() => router.push('/sign-up')}
+                  className="btn-primary"
+                  style={{ height: 44, fontSize: 15, paddingLeft: 32, paddingRight: 32 }}
+                >
+                  Claim your free spot
+                </button>
+              </Magnet>
               <button
                 onClick={() => router.push('/sign-in')}
                 className="btn-ghost"

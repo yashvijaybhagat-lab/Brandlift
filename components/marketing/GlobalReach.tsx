@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { InfiniteSlider } from '@/components/ui/infinite-slider'
+import CountUp from '@/components/reactbits/CountUp'
 
 interface CountryItem {
   code: string
@@ -77,7 +78,7 @@ export default function GlobalReach() {
             <>
               Visited from{' '}
               <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
-                {totalCountries} countries
+                <CountUp to={totalCountries} /> countries
               </span>
             </>
           ) : (

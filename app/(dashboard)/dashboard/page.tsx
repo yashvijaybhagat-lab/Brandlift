@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { TrendingUp, Eye, Video, Lightbulb, BarChart2, X, Clock, Calendar, CheckCircle2, Circle, Zap, Sparkles, Activity, Globe, Users, Repeat2, CalendarDays, HelpCircle, Wand2 } from 'lucide-react'
 import { TopBar } from '@/components/dashboard/TopBar'
 import { ContentIdeasFeed, type ContentIdea } from '@/components/dashboard/ContentIdeasFeed'
+import Particles from '@/components/reactbits/Particles'
+import ShinyText from '@/components/reactbits/ShinyText'
 
 /* ─── Sparkline ───────────────────────────────────────────────────────────── */
 function Sparkline({ data, color = '#7C5CFF' }: { data: number[]; color?: string }) {
@@ -602,7 +604,9 @@ const QUICK_ACTIONS = [
 function QuickActionsBar() {
   return (
     <div className="flex flex-col gap-3">
-      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.02em' }}>Quick Actions</h2>
+      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.02em' }}>
+        <ShinyText text="Quick Actions" color="#A9A2C4" shineColor="#7C5CFF" speed={4} />
+      </h2>
       <div className="flex items-center gap-3 flex-wrap">
         {QUICK_ACTIONS.map(({ label, href, Icon, color, bg, border }) => (
           <Link key={label} href={href}
@@ -925,7 +929,18 @@ export default function DashboardPage() {
   const stats = React.useMemo(() => buildStats(selectedIdea), [selectedIdea])
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 opacity-[0.16]" style={{ zIndex: -1 }} aria-hidden>
+        <Particles
+          particleColors={['#7C5CFF', '#FF6FD8', '#22D3EE']}
+          particleCount={90}
+          particleSpread={14}
+          speed={0.05}
+          particleBaseSize={60}
+          alphaParticles
+          className=""
+        />
+      </div>
       <TopBar />
       <div className="flex-1 overflow-auto">
         <div className="max-w-5xl mx-auto px-8 py-10 flex flex-col gap-10">

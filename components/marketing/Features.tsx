@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState, ReactNode } from 'react'
+import Threads from '@/components/reactbits/Threads'
+import ShinyText from '@/components/reactbits/ShinyText'
 
 /* ─── Scroll-reveal wrapper ──────────────────────────────────────────────── */
 function ScrollReveal({
@@ -386,9 +388,12 @@ export default function Features() {
     <section
       id="features"
       aria-labelledby="features-heading"
-      className="py-24"
+      className="py-24 relative overflow-hidden"
     >
-      <div className="max-w-6xl mx-auto px-6 flex flex-col gap-20">
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.18]" aria-hidden>
+        <Threads color={[0.49, 0.36, 1]} amplitude={1.1} distance={0.12} />
+      </div>
+      <div className="max-w-6xl mx-auto px-6 flex flex-col gap-20 relative z-10">
         {/* Section header */}
         <ScrollReveal className="flex flex-col items-center gap-4 text-center">
           <div
@@ -403,7 +408,7 @@ export default function Features() {
               color: 'var(--text-muted)',
             }}
           >
-            Platform features
+            <ShinyText text="Platform features" color="#9a93c0" shineColor="#ffffff" speed={4} />
           </div>
           <h2
             id="features-heading"

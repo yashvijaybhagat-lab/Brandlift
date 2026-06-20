@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react'
 import Link from 'next/link'
+import ShinyText from '@/components/reactbits/ShinyText'
 
 export default function Footer() {
   const [email, setEmail] = useState('')
@@ -107,7 +108,7 @@ export default function Footer() {
               className="text-sm font-medium"
               style={{ color: 'var(--text-primary)' }}
             >
-              BrandLift
+              <ShinyText text="BrandLift" color="#A9A2C4" shineColor="#7C5CFF" speed={4} />
             </Link>
             <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
               © {new Date().getFullYear()} BrandLift. All rights reserved.

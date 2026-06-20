@@ -66,6 +66,7 @@ const ROUTE_LIMITS: { pattern: RegExp; limit: number; windowMs: number }[] = [
   { pattern: /^\/api\/chat\/upload/,       limit: 20,  windowMs: 60 * 60_000 },
   { pattern: /^\/api\/chat/,              limit: 30,  windowMs: 60_000       },
   { pattern: /^\/api\/subscribe/,         limit: 5,   windowMs: 15 * 60_000 },
+  { pattern: /^\/api\/contact/,           limit: 5,   windowMs: 15 * 60_000 },
   { pattern: /^\/api\/video\/upload/,     limit: 20,  windowMs: 60 * 60_000 },
   { pattern: /^\/api\/video\//,           limit: 30,  windowMs: 60 * 60_000 },
   { pattern: /^\/api\/user\//,            limit: 60,  windowMs: 60 * 60_000 },

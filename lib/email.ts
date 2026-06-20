@@ -44,6 +44,36 @@ function wrap(content: string, email: string) {
   `
 }
 
+export async function sendContactEmail(params: { name: string; email: string; topic: string; message: string }) {
+  const { name, email, topic, message } = params
+  const safe = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return getResend().emails.send({
+    from: FROM,
+    to: 'contact@brandlift.dev',
+    replyTo: email,
+    subject: `[Contact · ${topic}] ${name}`,
+    text: `New contact form submission\n\nName: ${name}\nEmail: ${email}\nTopic: ${topic}\n\n${message}`,
+    html: `
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+        <tr><td align="center">
+          <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;padding:36px;max-width:600px;width:100%;">
+            <tr><td>
+              <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6366f1;margin:0 0 16px;">New contact message</p>
+              <h1 style="font-size:20px;font-weight:800;color:#111827;letter-spacing:-0.02em;margin:0 0 20px;">${safe(topic)}</h1>
+              <table cellpadding="0" cellspacing="0" style="font-size:14px;color:#374151;line-height:1.7;margin:0 0 20px;">
+                <tr><td style="color:#9ca3af;padding-right:12px;">Name</td><td style="font-weight:600;">${safe(name)}</td></tr>
+                <tr><td style="color:#9ca3af;padding-right:12px;">Email</td><td style="font-weight:600;"><a href="mailto:${safe(email)}" style="color:#6366f1;">${safe(email)}</a></td></tr>
+              </table>
+              <div style="background:#f3f4f6;border-left:3px solid #6366f1;border-radius:6px;padding:16px 20px;font-size:15px;color:#111827;line-height:1.7;white-space:pre-wrap;">${safe(message)}</div>
+              <p style="font-size:12px;color:#9ca3af;margin-top:24px;">Reply directly to this email to respond to ${safe(name)}.</p>
+            </td></tr>
+          </table>
+        </td></tr>
+      </table>
+    `,
+  })
+}
+
 export async function sendWelcomeEmail(email: string) {
   return getResend().emails.send({
     from: FROM,
