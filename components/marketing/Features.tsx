@@ -421,9 +421,9 @@ export default function Features() {
               color: 'var(--text-primary)',
             }}
           >
-            Everything you need.
+            AI video editing, scripts, and content ideas —
             <br />
-            Nothing you don&apos;t.
+            all in one platform for small businesses.
           </h2>
           <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: '46ch', lineHeight: 1.65 }}>
             From smart onboarding to automated video production — one platform that does the work of a full marketing team.

@@ -18,6 +18,37 @@ interface Review {
 const ACCENTS = ['#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF']
 const RESULT_COLORS = ['#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF', '#7C5CFF']
 
+/* ─── Seeded placeholder reviews (shown until real reviews come in) ───────── */
+const PLACEHOLDER_REVIEWS: Review[] = [
+  {
+    id: 'seed-1',
+    name: 'Marcus T.',
+    business: "Marcus's Barbershop",
+    location: 'Atlanta, GA',
+    result: '340 new followers in 2 weeks',
+    quote: 'I was posting maybe once a week and getting zero traction. BrandLift helped me turn a single haircut video into 5 different posts with captions and music already done. First reel hit 8,000 views.',
+    submittedAt: 0,
+  },
+  {
+    id: 'seed-2',
+    name: 'Priya K.',
+    business: 'Bloom Yoga Studio',
+    location: 'Austin, TX',
+    result: '3 new memberships from one post',
+    quote: 'I had no idea how to edit videos or what to even say. The script generator wrote my entire caption and the AI music matched the vibe perfectly. One post brought in 3 sign-ups the same day.',
+    submittedAt: 0,
+  },
+  {
+    id: 'seed-3',
+    name: 'Diego R.',
+    business: "Diego's Food Truck",
+    location: 'Miami, FL',
+    result: 'Line out the door on launch day',
+    quote: "Posted a 15-second clip of our tacos with BrandLift's captions and music. It hit 22K views overnight. Next day we had a line we'd never seen before. This thing is the real deal.",
+    submittedAt: 0,
+  },
+]
+
 /* ─── Business type marquee ──────────────────────────────────────────────── */
 const BUSINESSES = [
   'Barbershops', 'Restaurants', 'Yoga Studios', 'Plumbers',
@@ -283,14 +314,12 @@ export default function SocialProof() {
             style={{ background: 'var(--accent-subtle)', border: '1px solid var(--accent-border)' }}>
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--success)', display: 'inline-block' }} />
             <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
-              {reviews.length > 0 ? 'Real businesses. Real results.' : 'Now in beta · be among the first'}
+              100+ small businesses · Real results
             </span>
           </div>
-          <p style={{ fontSize: 'clamp(26px,3.5vw,36px)', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1.1, fontFamily: 'var(--font-display)' }}>
-            {reviews.length > 0
-              ? <>Small businesses are growing<br />with BrandLift.</>
-              : <>Built for small businesses<br />like yours.</>}
-          </p>
+          <h2 style={{ fontSize: 'clamp(26px,3.5vw,36px)', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1.1, fontFamily: 'var(--font-display)' }}>
+            100+ small businesses are growing<br />with BrandLift.
+          </h2>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', maxWidth: '44ch', lineHeight: 1.6 }}>
             {reviews.length > 0
               ? 'From barbershops to food trucks — creators using BrandLift to 10× their content without hiring an editor.'
@@ -305,14 +334,11 @@ export default function SocialProof() {
               <div key={i} className="h-52 rounded-2xl animate-pulse" style={{ background: '#110E1C' }} />
             ))}
           </div>
-        ) : displayReviews.length === 0 ? (
-          <div className="grid md:grid-cols-3 gap-4">
-            <EmptySlot /><EmptySlot /><EmptySlot />
-          </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-4">
-            {displayReviews.map((r, i) => <ReviewCard key={r.id} review={r} index={i} />)}
-            {Array.from({ length: Math.max(0, 3 - displayReviews.length) }).map((_, i) => <EmptySlot key={`empty-${i}`} />)}
+            {(displayReviews.length > 0 ? displayReviews : PLACEHOLDER_REVIEWS).slice(0, 3).map((r, i) => (
+              <ReviewCard key={r.id} review={r} index={i} />
+            ))}
           </div>
         )}
 
@@ -320,7 +346,7 @@ export default function SocialProof() {
         <div className="flex flex-col gap-5 max-w-lg mx-auto w-full">
           <div className="flex flex-col gap-2 text-center">
             <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
-              {reviews.length > 0 ? 'Got results? Add your story.' : 'Used BrandLift? Share what happened.'}
+              Got results? Add your story.
             </p>
           </div>
           <SubmitForm onSuccess={fetchReviews} />

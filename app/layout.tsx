@@ -13,9 +13,9 @@ const inter = Inter({
 })
 
 const SITE_URL = 'https://brandlift.dev'
-const SITE_TITLE = 'BrandLift — Turn Raw Footage Into Polished Content in Minutes'
+const SITE_TITLE = 'BrandLift — AI Video Editor for Small Businesses | Free'
 const SITE_DESCRIPTION =
-  'AI-powered video editing for small businesses. Upload your raw iPhone clips and get back polished, platform-ready content for TikTok, Instagram, and YouTube — in minutes. Free during beta.'
+  'BrandLift turns your iPhone clips into polished TikTok, Instagram, and YouTube content — AI scripts, captions, music, and 4K enhancement included. Built for small businesses. Free during beta.'
 
 export const metadata: Metadata = {
   title: {

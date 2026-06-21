@@ -349,7 +349,7 @@ export default function Hero() {
                 
                 {stats
                   ? `${formatVisitors(stats.visitors)} visits · ${stats.countries} countries`
-                  : 'Now in beta · free to join'
+                  : 'Open beta · no waitlist · free forever to start'
                 }
               </div>
             </Reveal>
@@ -369,22 +369,9 @@ export default function Hero() {
                   }}
                 >
                   You run a great business.
+                  <br />
+                  <span style={{ color: '#7C5CFF' }}>Nobody knows it yet.</span>
                 </h1>
-              </Reveal>
-              <Reveal delay={160}>
-                <h2
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: 'clamp(42px, 6vw, 72px)',
-                    lineHeight: 1.05,
-                    color: '#7C5CFF',
-                    letterSpacing: '-0.04em',
-                    fontWeight: 800,
-                    margin: 0,
-                  }}
-                >
-                  Nobody knows it yet.
-                </h2>
               </Reveal>
             </div>
 
@@ -399,7 +386,7 @@ export default function Hero() {
                   fontWeight: 400,
                 }}
               >
-                We build your digital presence and keep it running — you just show up.
+                Turn one iPhone clip into a week of TikTok, Instagram, and YouTube content — captions, music, and all.
               </p>
             </Reveal>
 
@@ -432,6 +419,28 @@ export default function Hero() {
               <p style={{ fontSize: 13, color: '#484F58' }}>
                 Free to start · No credit card · Live in 5 minutes
               </p>
+            </Reveal>
+
+            {/* Platform trust strip */}
+            <Reveal delay={400}>
+              <div className="flex items-center gap-2.5" style={{ marginTop: -8 }}>
+                <span style={{ fontSize: 11, color: '#484F58', fontWeight: 500 }}>Works with</span>
+                {/* TikTok */}
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#E4E4E7" aria-hidden><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.82a8.18 8.18 0 0 0 4.78 1.52V6.89a4.85 4.85 0 0 1-1.01-.2z"/></svg>
+                  <span style={{ fontSize: 11, color: '#8B949E', fontWeight: 500 }}>TikTok</span>
+                </div>
+                {/* Instagram */}
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden><rect x="2" y="2" width="20" height="20" rx="5" stroke="#E4E4E7" strokeWidth="2"/><circle cx="12" cy="12" r="4" stroke="#E4E4E7" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1" fill="#E4E4E7"/></svg>
+                  <span style={{ fontSize: 11, color: '#8B949E', fontWeight: 500 }}>Instagram</span>
+                </div>
+                {/* YouTube */}
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#E4E4E7" aria-hidden><path d="M23 7s-.3-2-1.2-2.7c-1.1-1.2-2.4-1.2-3-1.3C16.6 3 12 3 12 3s-4.6 0-6.8.1c-.6.1-1.9.1-3 1.3C1.3 5 1 7 1 7S.7 9.1.7 11.3v2c0 2.1.3 4.2.3 4.2s.3 2 1.2 2.7c1.1 1.2 2.6 1.1 3.3 1.2C7.3 21.3 12 21.3 12 21.3s4.6 0 6.8-.2c.6-.1 1.9-.1 3-1.3.9-.7 1.2-2.7 1.2-2.7s.3-2.1.3-4.2v-2C23.3 9.1 23 7 23 7zM9.7 15.5V8.3l8.1 3.6-8.1 3.6z"/></svg>
+                  <span style={{ fontSize: 11, color: '#8B949E', fontWeight: 500 }}>YouTube</span>
+                </div>
+              </div>
             </Reveal>
           </div>
 

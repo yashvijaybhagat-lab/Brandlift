@@ -62,8 +62,8 @@ export default function Pricing() {
             id="pricing-heading"
             style={{ fontSize: 'clamp(30px, 4vw, 48px)', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--text-primary)', lineHeight: 1.05, fontFamily: 'var(--font-display)' }}
           >
-            No subscriptions.<br />
-            No paywalls. No catch.
+            Every AI feature, free during beta.<br />
+            No credit card. No catch.
           </h2>
           <p className="max-w-lg text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             BrandLift is in private beta. Every feature — AI video, scripts, captions, website analysis, and exports — is completely free while we build.
@@ -118,10 +118,10 @@ export default function Pricing() {
             }}
           >
             <p className="text-[22px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', letterSpacing: '-0.03em' }}>
-              Ready to 10x your content output?
+              Stop posting twice a week.<br />Start publishing every day.
             </p>
             <p className="text-[14px] max-w-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}>
-              Early beta — every feature is free. Lock in your spot before paid plans launch.
+              Every feature is free during beta. Lock in your spot before paid plans launch.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">

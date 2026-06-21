@@ -151,7 +151,7 @@ export default function FAQ() {
               color: '#FAFAFA',
             }}
           >
-            Questions? We&apos;ve got answers.
+            Frequently asked questions about BrandLift.
           </h2>
           <p style={{ fontSize: 15, color: '#71717A', maxWidth: '40ch', lineHeight: 1.65 }}>
             Everything you need to know before you start. Still curious? Talk to us.

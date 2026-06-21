@@ -76,14 +76,14 @@ export default function GlobalReach() {
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#FAFAFA]">
           {isConfigured && totalCountries ? (
             <>
-              Visited from{' '}
+              BrandLift reaches small business creators in{' '}
               <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
                 <CountUp to={totalCountries} /> countries
               </span>
             </>
           ) : (
             <>
-              Creators{' '}
+              Small business creators using BrandLift{' '}
               <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
                 worldwide
               </span>
