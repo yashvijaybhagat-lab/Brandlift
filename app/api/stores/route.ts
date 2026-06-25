@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { getServerSupabase } from '@/lib/supabase'
+import { getServerSupabase, getServiceSupabase } from '@/lib/supabase'
 
 export async function GET() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const supabase = getServerSupabase()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sb = supabase as any
-
+  const sb = getServerSupabase() as any
   const { data: user } = await sb.from('users').select('id').eq('email', session.user.email).single()
   if (!user) return NextResponse.json({ stores: [] })
 
@@ -30,30 +28,26 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json()
   const { name, slug, description, theme, page_sections } = body
-
   if (!name || !slug) return NextResponse.json({ error: 'name and slug are required' }, { status: 400 })
 
-  const supabase = getServerSupabase()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sb = supabase as any
+  const sb = getServiceSupabase() as any
 
-  const { data: user } = await sb.from('users').select('id').eq('email', session.user.email).single()
-  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  // Upsert user record
+  const { data: user } = await sb
+    .from('users')
+    .upsert({ email: session.user.email, name: session.user.name ?? null, avatar_url: session.user.image ?? null }, { onConflict: 'email' })
+    .select('id')
+    .single()
+
+  if (!user) return NextResponse.json({ error: 'Failed to resolve user' }, { status: 500 })
 
   const { data: existing } = await sb.from('stores').select('id').eq('slug', slug).single()
   if (existing) return NextResponse.json({ error: 'This URL is already taken' }, { status: 409 })
 
   const { data: store, error } = await sb
     .from('stores')
-    .insert({
-      user_id: user.id,
-      name,
-      slug,
-      description: description ?? null,
-      theme: theme ?? 'minimal',
-      page_sections: page_sections ?? [],
-      is_published: true,
-    })
+    .insert({ user_id: user.id, name, slug, description: description ?? null, theme: theme ?? 'minimal', page_sections: page_sections ?? [], is_published: true })
     .select()
     .single()
 
