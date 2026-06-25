@@ -214,7 +214,14 @@ export function createServerClient(): SupabaseClient<Database> {
   })
 }
 
-export const supabase = createBrowserClient()
-export function getServerSupabase(): SupabaseClient<Database> {
-  return createServerClient()
+// Service role client — bypasses RLS, use only in server API routes for writes
+export function createServiceClient(): SupabaseClient<Database> {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? getSupabaseAnonKey()
+  return createClient<Database>(getSupabaseUrl(), key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
 }
+
+export const supabase = createBrowserClient()
+export function getServerSupabase(): SupabaseClient<Database> { return createServerClient() }
+export function getServiceSupabase(): SupabaseClient<Database> { return createServiceClient() }
