@@ -1,105 +1,93 @@
 'use client'
-
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
+import { Menu, X } from 'lucide-react'
 
-export default function Nav() {
+const NAV_LINKS = [
+  { label: 'Features', href: '#features' },
+  { label: 'How it works', href: '#how-it-works' },
+  { label: 'Pricing', href: '#pricing' },
+]
+
+export function Nav() {
   const [scrolled, setScrolled] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const { data: session } = useSession()
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    // Animate in on mount
-    const t = requestAnimationFrame(() => setMounted(true))
-
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 12)
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => {
-      cancelAnimationFrame(t)
-      window.removeEventListener('scroll', handleScroll)
-    }
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   return (
-    <nav
-      aria-label="Main navigation"
+    <header
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       style={{
-        opacity: mounted ? 1 : 0,
-        transform: mounted ? 'translateY(0)' : 'translateY(-8px)',
-        backgroundColor: scrolled ? 'rgba(13, 17, 23, 0.8)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(12px)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
-        borderBottom: scrolled ? '0.5px solid var(--color-border)' : '0.5px solid transparent',
-        transition: [
-          'opacity 280ms var(--ease-out)',
-          'transform 280ms var(--ease-out)',
-          'background-color 200ms var(--ease-out)',
-          'border-color 200ms var(--ease-out)',
-          'backdrop-filter 200ms var(--ease-out)',
-        ].join(', '),
+        background: scrolled ? 'rgba(13,13,15,0.85)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
       }}
-      className="fixed top-0 left-0 right-0 z-50"
     >
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="flex items-center gap-2.5"
-          style={{ textDecoration: 'none' }}
-        >
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#7C5CFF' }}>
+      <div className="max-w-6xl mx-auto px-6 flex items-center justify-between h-16">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div
+            className="w-8 h-8 rounded-xl flex items-center justify-center"
+            style={{ background: '#7C5CFF', boxShadow: '0 0 0 1px rgba(124,92,255,0.3), 0 4px 16px rgba(124,92,255,0.3)' }}
+          >
             <svg viewBox="0 0 28 28" fill="none" width="18" height="18">
-              <path d="M4 5h9a4.5 4.5 0 0 1 0 9H4V5zm0 9h9.5a5 5 0 0 1 0 10H4V14z" fill="white" opacity="0.95" />
+              <path d="M4 5h8a4 4 0 0 1 0 8H4V5zm0 8h8.5a4.5 4.5 0 0 1 0 9H4V13z" fill="white" opacity="0.95" />
             </svg>
           </div>
-          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, color: '#E6EDF3', letterSpacing: '-0.03em' }}>BrandLift</span>
+          <span className="font-bold text-[17px] text-[#FAFAFA]" style={{ letterSpacing: '-0.03em' }}>BrandLift</span>
         </Link>
 
-        {/* Nav links */}
-        <div className="hidden md:flex items-center gap-7">
-          {[              
-            { label: 'Features', href: '#features' },
-            { label: 'Pricing', href: '#pricing' },
-            { label: 'Examples', href: '#examples' },
-            session && session.user?.email === 'yash@brandlift.app' && { label: 'Admin', href: '/admin' },
-          ].filter(Boolean).map(({ label, href }: any) => (
-            <a
-              key={label}
-              href={href}
-              className="text-sm transition-colors"
-              style={{
-                color: 'var(--color-text-secondary)',
-                transitionDuration: '160ms',
-                transitionTimingFunction: 'var(--ease-out)',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLAnchorElement).style.color = 'var(--color-text)'
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLAnchorElement).style.color = 'var(--color-text-secondary)'
-              }}
-            >
-              {label}
+        <nav className="hidden md:flex items-center gap-8">
+          {NAV_LINKS.map((l) => (
+            <a key={l.href} href={l.href} className="text-[13px] text-[#71717A] hover:text-[#FAFAFA] transition-colors duration-150">
+              {l.label}
             </a>
           ))}
+        </nav>
+
+        <div className="hidden md:flex items-center gap-3">
+          <Link href="/sign-in" className="text-[13px] text-[#71717A] hover:text-[#FAFAFA] transition-colors duration-150">
+            Sign in
+          </Link>
+          <Link
+            href="/sign-up"
+            className="px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-all duration-150 hover:opacity-90"
+            style={{ background: '#7C5CFF', boxShadow: '0 0 0 1px rgba(124,92,255,0.4), 0 4px 16px rgba(124,92,255,0.25)' }}
+          >
+            Start for free
+          </Link>
         </div>
 
-        {/* CTA */}
-        <Link
-          href="/sign-up"
-          className="pressable text-sm font-medium px-4 py-2 rounded-interactive"
-          style={{
-            backgroundColor: 'var(--color-primary)',
-            color: '#08060F',
-          }}
-        >
-          Get started free
-        </Link>
+        <button className="md:hidden p-2 text-[#71717A] hover:text-[#FAFAFA]" onClick={() => setOpen(!open)}>
+          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </div>
-    </nav>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden border-t px-6 py-4 flex flex-col gap-4"
+            style={{ background: 'rgba(13,13,15,0.98)', borderColor: 'rgba(255,255,255,0.06)' }}
+          >
+            {NAV_LINKS.map((l) => (
+              <a key={l.href} href={l.href} className="text-[14px] text-[#A1A1AA]" onClick={() => setOpen(false)}>{l.label}</a>
+            ))}
+            <div className="flex flex-col gap-2 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+              <Link href="/sign-in" className="text-center py-2.5 rounded-xl text-[13px] text-[#71717A] border" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>Sign in</Link>
+              <Link href="/sign-up" className="text-center py-2.5 rounded-xl text-[13px] font-semibold text-white" style={{ background: '#7C5CFF' }}>Start for free</Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
   )
 }

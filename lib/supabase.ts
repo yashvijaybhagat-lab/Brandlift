@@ -6,53 +6,47 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 export interface DatabaseTables {
   subscribers: {
-    Row: {
-      id: string
-      email: string
-      subscribed_at: string
-    }
-    Insert: {
-      id?: string
-      email: string
-      subscribed_at?: string
-    }
+    Row: { id: string; email: string; subscribed_at: string }
+    Insert: { id?: string; email: string; subscribed_at?: string }
     Update: Partial<DatabaseTables['subscribers']['Insert']>
   }
   users: {
     Row: {
       id: string
-      clerk_id: string
       email: string
+      name: string | null
+      avatar_url: string | null
+      plan: 'free' | 'starter' | 'pro'
+      stripe_customer_id: string | null
       created_at: string
       updated_at: string
-      stripe_customer_id: string | null
-      plan: 'free' | 'starter' | 'pro' | 'agency'
     }
     Insert: {
       id?: string
-      clerk_id: string
       email: string
+      name?: string | null
+      avatar_url?: string | null
+      plan?: 'free' | 'starter' | 'pro'
+      stripe_customer_id?: string | null
       created_at?: string
       updated_at?: string
-      stripe_customer_id?: string | null
-      plan?: 'free' | 'starter' | 'pro' | 'agency'
     }
     Update: Partial<DatabaseTables['users']['Insert']>
   }
-  businesses: {
+  stores: {
     Row: {
       id: string
       user_id: string
       name: string
+      slug: string
       description: string | null
-      audience: string | null
-      location: string | null
-      services: string[]
-      differentiator: string | null
-      tone: string | null
-      platforms: string[]
-      style: string | null
       logo_url: string | null
+      banner_url: string | null
+      theme: 'minimal' | 'bold' | 'luxury' | 'tech'
+      theme_config: Record<string, unknown>
+      custom_domain: string | null
+      is_published: boolean
+      page_sections: PageSection[]
       created_at: string
       updated_at: string
     }
@@ -60,66 +54,115 @@ export interface DatabaseTables {
       id?: string
       user_id: string
       name: string
+      slug: string
       description?: string | null
-      audience?: string | null
-      location?: string | null
-      services?: string[]
-      differentiator?: string | null
-      tone?: string | null
-      platforms?: string[]
-      style?: string | null
       logo_url?: string | null
+      banner_url?: string | null
+      theme?: 'minimal' | 'bold' | 'luxury' | 'tech'
+      theme_config?: Record<string, unknown>
+      custom_domain?: string | null
+      is_published?: boolean
+      page_sections?: PageSection[]
       created_at?: string
       updated_at?: string
     }
-    Update: Partial<DatabaseTables['businesses']['Insert']>
+    Update: Partial<DatabaseTables['stores']['Insert']>
   }
-  content_pieces: {
+  products: {
     Row: {
       id: string
-      business_id: string
-      platform: string
-      content_type: string
-      body: string
-      status: 'draft' | 'approved' | 'published' | 'archived'
-      scheduled_at: string | null
-      published_at: string | null
+      store_id: string
+      name: string
+      slug: string
+      description: string | null
+      price: number
+      compare_at_price: number | null
+      images: string[]
+      inventory: number | null
+      is_available: boolean
+      variants: ProductVariant[]
       created_at: string
       updated_at: string
     }
     Insert: {
       id?: string
-      business_id: string
-      platform: string
-      content_type: string
-      body: string
-      status?: 'draft' | 'approved' | 'published' | 'archived'
-      scheduled_at?: string | null
-      published_at?: string | null
+      store_id: string
+      name: string
+      slug: string
+      description?: string | null
+      price: number
+      compare_at_price?: number | null
+      images?: string[]
+      inventory?: number | null
+      is_available?: boolean
+      variants?: ProductVariant[]
       created_at?: string
       updated_at?: string
     }
-    Update: Partial<DatabaseTables['content_pieces']['Insert']>
+    Update: Partial<DatabaseTables['products']['Insert']>
   }
-  brand_assets: {
+  orders: {
     Row: {
       id: string
-      business_id: string
-      type: 'logo' | 'banner' | 'photo' | 'icon'
-      url: string
-      alt_text: string | null
+      store_id: string
+      customer_email: string
+      customer_name: string
+      items: OrderItem[]
+      subtotal: number
+      total: number
+      status: 'pending' | 'paid' | 'fulfilled' | 'cancelled'
+      shipping_address: ShippingAddress | null
+      stripe_payment_intent: string | null
       created_at: string
+      updated_at: string
     }
     Insert: {
       id?: string
-      business_id: string
-      type: 'logo' | 'banner' | 'photo' | 'icon'
-      url: string
-      alt_text?: string | null
+      store_id: string
+      customer_email: string
+      customer_name: string
+      items: OrderItem[]
+      subtotal: number
+      total: number
+      status?: 'pending' | 'paid' | 'fulfilled' | 'cancelled'
+      shipping_address?: ShippingAddress | null
+      stripe_payment_intent?: string | null
       created_at?: string
+      updated_at?: string
     }
-    Update: Partial<DatabaseTables['brand_assets']['Insert']>
+    Update: Partial<DatabaseTables['orders']['Insert']>
   }
+}
+
+export interface PageSection {
+  id: string
+  type: 'hero' | 'features' | 'gallery' | 'testimonials' | 'cta' | 'text' | 'products'
+  content: Record<string, unknown>
+  order: number
+}
+
+export interface ProductVariant {
+  id: string
+  name: string
+  options: string[]
+  price_modifier?: number
+}
+
+export interface OrderItem {
+  product_id: string
+  product_name: string
+  price: number
+  quantity: number
+  variant?: string
+}
+
+export interface ShippingAddress {
+  line1: string
+  line2?: string
+  city: string
+  state: string
+  zip: string
+  country: string
 }
 
 export type Database = {
@@ -137,7 +180,6 @@ export type Database = {
 
 function getSupabaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  // Return a no-op placeholder if not configured so builds don't crash
   if (!url || !url.startsWith('http') || url.includes('your_supabase')) {
     return 'https://placeholder.supabase.co'
   }
@@ -156,39 +198,23 @@ let browserClient: SupabaseClient<Database> | null = null
 
 export function createBrowserClient(): SupabaseClient<Database> {
   if (browserClient) return browserClient
-
   browserClient = createClient<Database>(getSupabaseUrl(), getSupabaseAnonKey(), {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
   })
-
   return browserClient
 }
 
 // ─────────────────────────────────────────────
-// Server client (new instance per request — no singleton)
+// Server client
 // ─────────────────────────────────────────────
 
 export function createServerClient(): SupabaseClient<Database> {
   return createClient<Database>(getSupabaseUrl(), getSupabaseAnonKey(), {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
+    auth: { persistSession: false, autoRefreshToken: false },
   })
 }
 
-// ─────────────────────────────────────────────
-// Convenience exports
-// ─────────────────────────────────────────────
-
-/** Use in client components */
 export const supabase = createBrowserClient()
-
-/** Use in server components / API routes */
 export function getServerSupabase(): SupabaseClient<Database> {
   return createServerClient()
 }

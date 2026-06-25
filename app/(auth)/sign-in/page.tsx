@@ -109,10 +109,10 @@ function LeftPanel() {
 
       {/* Floating stat cards */}
       <div className="absolute inset-0">
-        <FloatCard icon={Eye} label="Monthly reach" value="142K" delta="+28%" delay={0.3} x={-80} y={-140} />
-        <FloatCard icon={Video} label="Videos published" value="8" delta="+3" delay={0.45} x={80} y={-40} />
-        <FloatCard icon={TrendingUp} label="Avg. engagement" value="4.2%" delta="+0.8%" delay={0.6} x={-60} y={100} />
-        <FloatCard icon={Lightbulb} label="Ideas saved" value="24" delta="+12" delay={0.75} x={100} y={170} />
+        <FloatCard icon={TrendingUp} label="Store visits" value="3.2K" delta="+18%" delay={0.3} x={-80} y={-140} />
+        <FloatCard icon={Eye} label="Products live" value="12" delta="+4" delay={0.45} x={80} y={-40} />
+        <FloatCard icon={Video} label="Orders today" value="7" delta="+3" delay={0.6} x={-60} y={100} />
+        <FloatCard icon={Lightbulb} label="Revenue (30d)" value="$840" delta="+22%" delay={0.75} x={100} y={170} />
       </div>
 
       {/* Center logo */}
@@ -156,10 +156,10 @@ function LeftPanel() {
         </p>
         <div className="flex flex-col gap-3">
           {[
-            'AI scripts that actually sound like you',
-            'Content ideas tailored to your business',
-            'Video upload & cloud storage',
-            'Best posting times for your platform',
+            'AI builds your full storefront in seconds',
+            'Beautiful product pages that convert',
+            'Free yourstore.brandlift.app subdomain',
+            'Built-in cart, checkout, and orders',
           ].map((f) => (
             <div key={f} className="flex items-center gap-2.5">
               <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(124, 92, 255,0.15)', border: '0.5px solid rgba(124, 92, 255,0.3)' }}>

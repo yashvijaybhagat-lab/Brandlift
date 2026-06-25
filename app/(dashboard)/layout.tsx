@@ -1,59 +1,20 @@
 'use client'
-
 import * as React from 'react'
 import { useSession } from 'next-auth/react'
-import { Sidebar } from '@/components/dashboard/Sidebar'
-import { LyraChat } from '@/components/chat/LyraChat'
-import { FounderBar } from '@/components/founder/FounderBar'
-import { BetaModalProvider } from '@/components/beta/BetaModal'
+import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar'
 
-const STORAGE_KEY = 'brandlift:sidebar-collapsed'
-
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  // Initialise from localStorage synchronously to avoid flash
-  const [collapsed, setCollapsed] = React.useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    try {
-      return localStorage.getItem(STORAGE_KEY) === 'true'
-    } catch {
-      return false
-    }
-  })
-
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession()
-
-  const handleCollapsedChange = React.useCallback((next: boolean) => {
-    setCollapsed(next)
-    try {
-      localStorage.setItem(STORAGE_KEY, String(next))
-    } catch {}
-  }, [])
-
-  const userEmail = session?.user?.email ?? 'hello@yourbusiness.com'
-  const businessName = session?.user?.name ?? 'Your Business'
+  const userName = session?.user?.name ?? 'Your Store'
+  const userEmail = session?.user?.email ?? ''
+  const avatarUrl = session?.user?.image ?? undefined
 
   return (
-    <BetaModalProvider>
-    <div className="flex h-screen overflow-hidden bg-[#0D1117]">
-      <Sidebar
-        collapsed={collapsed}
-        onCollapsedChange={handleCollapsedChange}
-        businessName={businessName}
-        userEmail={userEmail}
-      />
-
-      {/* Main content area */}
+    <div className="flex h-screen overflow-hidden bg-[#0D0D0F]">
+      <DashboardSidebar userName={userName} userEmail={userEmail} avatarUrl={avatarUrl} />
       <main className="flex-1 overflow-auto min-w-0">
         {children}
       </main>
-
-      <LyraChat />
-      <FounderBar />
     </div>
-    </BetaModalProvider>
   )
 }
